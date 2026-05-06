@@ -1,9 +1,9 @@
 import dayjs from "@/lib/dayjs";
 
 interface ReportPageProps {
-  params: {
-    company: Promise<string>;
-  };
+  params: Promise<{
+    company: string;
+  }>;
 }
 
 export default async function ReportPage({ params }: ReportPageProps) {
