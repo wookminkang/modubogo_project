@@ -85,7 +85,7 @@ export default function MonthlyTrendChart({ data, currentMonth }: Props) {
             tickLine={false}
             width={40}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: "#f1f5f9" }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
           <Bar dataKey="payment" radius={[6, 6, 0, 0]}>
             {data.map((item, index) => (
               <Cell

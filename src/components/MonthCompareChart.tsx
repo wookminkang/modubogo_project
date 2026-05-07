@@ -147,6 +147,7 @@ export default function MonthCompareChart({
                   ? [`₩${value.toLocaleString()}`, ""]
                   : [String(value ?? ""), ""]
               }
+              cursor={{ fill: "rgba(0,0,0,0.04)" }}
               contentStyle={{
                 borderRadius: "12px",
                 border: "1px solid #e5e7eb",
