@@ -1,6 +1,6 @@
 export default function ReportHeader() {
   return (
-    <header className="fixed top-0 left-0 w-full bg-white border-b border-gray-100 z-10">
+    <header className="fixed top-0 left-0 w-full bg-white border-b border-gray-100 z-15">
       <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
         <span className="text-base font-bold text-[#0e299c] tracking-tight">
           모두보고<span className="text-red-500">.</span>
