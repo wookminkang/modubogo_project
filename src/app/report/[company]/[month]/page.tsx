@@ -2,6 +2,7 @@ import dayjs from "@/lib/dayjs";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getReport, getReportsByCompany, getTotalAmount } from "@/lib/mockData";
+import MonthCompareChart from "@/components/MonthCompareChart";
 
 interface ReportPageProps {
   params: Promise<{ company: string; month: string }>;
@@ -24,6 +25,12 @@ export default async function ReportPage({ params }: ReportPageProps) {
   const year = month.slice(0, 4);
   const allReports = getReportsByCompany(decoded).filter((r) => r.month.startsWith(year));
   const ytd = allReports.reduce((sum, r) => sum + getTotalAmount(r.categories), 0);
+
+  // 전월 비교
+  const prevMonthStr = dayjs(month, "YYYY-MM").subtract(1, "month").format("YYYY-MM");
+  const prevReport = getReport(decoded, prevMonthStr);
+  const prevTotal = prevReport ? getTotalAmount(prevReport.categories) : 0;
+  const prevCategories = prevReport?.categories ?? [];
 
   // 월별 추이 차트
   const chartData = allReports
@@ -186,6 +193,16 @@ export default async function ReportPage({ params }: ReportPageProps) {
             </tfoot>
           </table>
         </div>
+
+        {/* 전월 대비 비교 */}
+        <MonthCompareChart
+          currentMonth={month}
+          prevMonth={prevMonthStr}
+          currentCategories={categories}
+          prevCategories={prevCategories}
+          currentTotal={total}
+          prevTotal={prevTotal}
+        />
 
         {/* 유효기간 */}
         {report.validity.length > 0 && (
