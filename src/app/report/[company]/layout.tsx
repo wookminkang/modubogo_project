@@ -9,7 +9,7 @@ export default function ReportLayout({
   return (
     <div>
       <ReportHeader />
-      <div className="mt-[50px] max-w-6xl mx-auto py-6">{children}</div>
+      <div className="mt-[50px] max-w-6xl mx-auto pt-6">{children}</div>
       <ReportFooter />
     </div>
   );

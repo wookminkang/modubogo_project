@@ -142,11 +142,15 @@ export default function MonthCompareChart({
             />
             <Tooltip
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              formatter={(value: any) =>
-                typeof value === "number"
-                  ? [`₩${value.toLocaleString()}`, ""]
-                  : [String(value ?? ""), ""]
-              }
+              formatter={(value: any, name: any) => {
+                const label =
+                  name === "이번달"
+                    ? `${Number(currentMonth.slice(5))}월`
+                    : `${Number(prevMonth.slice(5))}월`;
+                return typeof value === "number"
+                  ? [`₩${value.toLocaleString()}`, label]
+                  : [String(value ?? ""), label];
+              }}
               cursor={{ fill: "rgba(0,0,0,0.04)" }}
               contentStyle={{
                 borderRadius: "12px",
