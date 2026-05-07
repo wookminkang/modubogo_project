@@ -42,6 +42,7 @@ export default async function ReportPage({ params }: ReportPageProps) {
     .map((r) => ({
       month: r.month.slice(5),
       payment: getTotalAmount(r.categories),
+      categories: r.categories,
     }))
     .sort((a, b) => a.month.localeCompare(b.month));
   const currentMonthNum = month.slice(5);
