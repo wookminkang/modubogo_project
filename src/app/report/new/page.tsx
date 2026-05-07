@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { MonthPicker } from "@/components/ui/month-picker";
+import { DatePicker } from "@/components/ui/date-picker";
 
 interface CategoryField {
   category: string;
@@ -200,10 +201,12 @@ export default function ReportNewPage() {
                   />
                   <div className="flex flex-col gap-1.5">
                     <Label className="text-gray-500 font-normal text-xs">유효기간</Label>
-                    <Input
-                      {...register(`validity.${index}.expiryDate`)}
-                      type="date"
-                      className="h-11 rounded-xl border-gray-200 text-gray-900 focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/20"
+                    <Controller
+                      control={control}
+                      name={`validity.${index}.expiryDate`}
+                      render={({ field }) => (
+                        <DatePicker value={field.value} onChange={field.onChange} />
+                      )}
                     />
                   </div>
                 </div>
