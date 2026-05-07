@@ -6,7 +6,9 @@ interface CompanyReportListPageProps {
   params: Promise<{ company: string }>;
 }
 
-export default async function CompanyReportListPage({ params }: CompanyReportListPageProps) {
+export default async function CompanyReportListPage({
+  params,
+}: CompanyReportListPageProps) {
   const { company } = await params;
   const decoded = decodeURIComponent(company);
   const reports = getReportsByCompany(decoded);
@@ -18,7 +20,9 @@ export default async function CompanyReportListPage({ params }: CompanyReportLis
       <div className="px-4 py-6 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div>
-            <Link href="/report" className="text-sm text-gray-400 mb-1 block">← 전체 목록</Link>
+            <Link href="/report" className="text-sm text-gray-400 mb-1 block">
+              ← 전체 목록
+            </Link>
             <h1 className="text-2xl font-bold text-[#0e299c]">{decoded}</h1>
           </div>
           <Link
@@ -39,7 +43,9 @@ export default async function CompanyReportListPage({ params }: CompanyReportLis
                 className="bg-white rounded-2xl p-5 shadow-sm flex items-center justify-between"
               >
                 <div>
-                  <p className="font-bold text-base text-gray-900">{report.month}</p>
+                  <p className="font-bold text-base text-gray-900">
+                    {report.month}
+                  </p>
                   <p className="text-sm text-gray-400 mt-1">
                     ₩{total.toLocaleString()} · {report.categories.length}건
                   </p>

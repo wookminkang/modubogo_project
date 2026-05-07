@@ -49,9 +49,18 @@ export default async function ReportPage({ params }: ReportPageProps) {
   const currentMonthNum = month.slice(5);
 
   return (
-    <div className="min-h-screen bg-[#F0F4FA]">
+    <div className="min-h-screen">
+      <div className="relative z-10">
+        <Image
+          src="/images/test_ct_05.png"
+          width={500}
+          height={500}
+          alt="모두보고 캐릭터 아이콘"
+        />
+      </div>
+
       {/* 헤더 */}
-      <header className="bg-[#0e299c] text-white px-6 pt-10 pb-8">
+      <header className="relative top-[-23px] bg-[#0e299c] text-white px-6 pt-10 pb-8">
         <p className="text-sm text-blue-300 mb-3">
           {dayjs().format("YYYY.MM.DD (ddd)")} · 광고 운영보고
         </p>
@@ -86,16 +95,7 @@ export default async function ReportPage({ params }: ReportPageProps) {
         </div>
       </header>
 
-      <div className="relative">
-        <Image
-          src="/images/test_ct_01.png"
-          width={500}
-          height={500}
-          alt="모두보고 캐릭터 아이콘"
-        />
-      </div>
-
-      <div className="px-4 py-6 flex flex-col gap-5">
+      <div className="px-4 py-6 flex flex-col gap-5 bg-[#F0F4FA]">
         <div>
           <CardTitle
             title={` ${total.toLocaleString()}원`}

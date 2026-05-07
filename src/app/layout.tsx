@@ -14,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-[#F0F4FA]">
+      <body className="min-h-full flex flex-col ">
         <QueryProvider>
           <main className="flex-1">{children}</main>
         </QueryProvider>
