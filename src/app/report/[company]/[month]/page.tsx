@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getReport, getReportsByCompany, getTotalAmount } from "@/lib/mockData";
 import MonthCompareChart from "@/components/MonthCompareChart";
 import CategoryDonutChart from "@/components/CategoryDonutChart";
+import MonthlyTrendChart from "@/components/MonthlyTrendChart";
 
 interface ReportPageProps {
   params: Promise<{ company: string; month: string }>;
@@ -37,7 +38,6 @@ export default async function ReportPage({ params }: ReportPageProps) {
   const chartData = allReports
     .map((r) => ({ month: r.month.slice(5), payment: getTotalAmount(r.categories) }))
     .sort((a, b) => a.month.localeCompare(b.month));
-  const chartMax = Math.max(...chartData.map((d) => d.payment));
   const currentMonthNum = month.slice(5);
 
   return (
@@ -108,29 +108,7 @@ export default async function ReportPage({ params }: ReportPageProps) {
         </div>
 
         {/* 월별 집행 추이 */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm">
-          <p className="text-base font-semibold text-[#0e299c]">월별 집행 추이</p>
-          <div className="flex items-end gap-3 h-[140px] mt-16">
-            {chartData.map((item) => {
-              const height = Math.round((item.payment / chartMax) * 140);
-              const isCurrent = item.month === currentMonthNum;
-              return (
-                <div key={item.month} className="w-24 flex flex-col items-center gap-2 relative">
-                  <p className="absolute -top-6 text-xs font-medium text-gray-500 whitespace-nowrap">
-                    {item.payment.toLocaleString()}원
-                  </p>
-                  <div
-                    className={`w-full rounded-t-lg ${isCurrent ? "bg-[#0e299c]" : "bg-gray-200"}`}
-                    style={{ height: `${height}px` }}
-                  />
-                  <p className={`text-sm font-semibold ${isCurrent ? "text-[#0e299c]" : "text-gray-400"}`}>
-                    {item.month}월
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <MonthlyTrendChart data={chartData} currentMonth={currentMonthNum} />
 
         {/* 카테고리별 분포 */}
         <CategoryDonutChart categories={categories} total={total} />
