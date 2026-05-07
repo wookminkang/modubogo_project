@@ -1,5 +1,7 @@
 "use client";
 
+import { CardTitle } from "./CardTitle";
+
 import {
   BarChart,
   Bar,
@@ -61,12 +63,10 @@ export default function MonthCompareChart({
 
   return (
     <div className="bg-white rounded-2xl p-5 shadow-sm flex flex-col">
-      <p className="text-base font-semibold text-[#0e299c]">
-        전월 대비 광고비 비교
-      </p>
-      <p className="text-[12px] mb-4 text-gray-500 mb-4">
-        이전 달과 비교한 광고비 변동 내용을 확인할 수 있어요
-      </p>
+      <CardTitle
+        title="전월 대비 광고비 비교"
+        description="이전 달과 비교한 광고비 변동 내용을 확인할 수 있어요"
+      />
 
       {/* 요약 수치 */}
       <div className="grid grid-cols-3 gap-3 mb-5">
@@ -158,7 +158,7 @@ export default function MonthCompareChart({
               iconSize={8}
               wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }}
             />
-            <Bar dataKey="전월" fill="#e2e8f0" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="전월" fill="#94a3b8" radius={[4, 4, 0, 0]} />
             <Bar dataKey="이번달" fill="#0e299c" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
