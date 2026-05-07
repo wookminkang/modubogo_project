@@ -1,6 +1,6 @@
 "use client";
 
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm, Controller } from "react-hook-form";
 import Link from "next/link";
 import { use } from "react";
 import { getReport } from "@/lib/mockData";
@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { MonthPicker } from "@/components/ui/month-picker";
 
 interface CategoryField {
   category: string;
@@ -91,12 +92,14 @@ export default function ReportEditPage({
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="month" className="text-gray-500 font-normal">보고 월</Label>
-                <Input
-                  id="month"
-                  {...register("month", { required: true })}
-                  type="month"
-                  className="h-11 rounded-xl border-gray-200 text-gray-900 focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/20"
+                <Label className="text-gray-500 font-normal">보고 월</Label>
+                <Controller
+                  control={control}
+                  name="month"
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <MonthPicker value={field.value} onChange={field.onChange} />
+                  )}
                 />
               </div>
               <div className="flex flex-col gap-1.5">
