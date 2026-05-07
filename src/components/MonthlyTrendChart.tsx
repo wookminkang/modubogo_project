@@ -32,10 +32,23 @@ export default function MonthlyTrendChart({ data, currentMonth }: Props) {
 
   return (
     <div className="bg-white rounded-2xl p-5 shadow-sm">
-      <p className="text-base font-semibold text-[#0e299c] mb-4">월별 집행 추이</p>
+      <p className="text-base font-semibold text-[#0e299c] ">
+        월별 광고 집행 현황
+      </p>
+      <p className="text-[12px] mb-4 text-gray-500">
+        광고 운영 흐름과 예산 변화를 쉽게 확인할 수 있어요
+      </p>
       <ResponsiveContainer width="100%" height={220}>
-        <BarChart data={data} barCategoryGap="35%" margin={{ top: 24, right: 4, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+        <BarChart
+          data={data}
+          barCategoryGap="35%"
+          margin={{ top: 24, right: 4, left: 0, bottom: 0 }}
+        >
+          <CartesianGrid
+            strokeDasharray="3 3"
+            vertical={false}
+            stroke="#f0f0f0"
+          />
           <XAxis
             dataKey="month"
             tickFormatter={(v) => `${v}월`}
@@ -53,7 +66,9 @@ export default function MonthlyTrendChart({ data, currentMonth }: Props) {
           <Tooltip
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             formatter={(value: any) =>
-              typeof value === "number" ? [`₩${value.toLocaleString()}`, "집행액"] : [String(value ?? ""), "집행액"]
+              typeof value === "number"
+                ? [`₩${value.toLocaleString()}`, "집행액"]
+                : [String(value ?? ""), "집행액"]
             }
             labelFormatter={(label) => `${label}월`}
             contentStyle={{
@@ -73,7 +88,9 @@ export default function MonthlyTrendChart({ data, currentMonth }: Props) {
               dataKey="payment"
               position="top"
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              formatter={(v: any) => (typeof v === "number" ? formatAmount(v) : "")}
+              formatter={(v: any) =>
+                typeof v === "number" ? formatAmount(v) : ""
+              }
               style={{ fontSize: 10, fill: "#6b7280" }}
             />
           </Bar>

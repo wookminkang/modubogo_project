@@ -39,7 +39,7 @@ export default function MonthCompareChart({
     new Set([
       ...currentCategories.map((c) => c.category),
       ...prevCategories.map((c) => c.category),
-    ])
+    ]),
   );
 
   const chartData = allCategories.map((cat) => {
@@ -60,20 +60,29 @@ export default function MonthCompareChart({
   };
 
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm flex flex-col gap-5">
-      <p className="text-base font-semibold text-[#0e299c]">전월 대비 비교</p>
+    <div className="bg-white rounded-2xl p-5 shadow-sm flex flex-col">
+      <p className="text-base font-semibold text-[#0e299c]">
+        전월 대비 광고비 비교
+      </p>
+      <p className="text-[12px] mb-4 text-gray-500 mb-4">
+        이전 달과 비교한 광고비 변동 내용을 확인할 수 있어요
+      </p>
 
       {/* 요약 수치 */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-3 mb-5">
         <div className="bg-[#F0F4FA] rounded-xl p-4">
           <p className="text-xs text-gray-400 mb-1">{prevMonth.slice(5)}월</p>
           <p className="text-lg font-bold text-gray-700">
             {prevTotal > 0 ? formatAmount(prevTotal) : "-"}
-            {prevTotal > 0 && <span className="text-xs font-normal text-gray-400 ml-1">원</span>}
+            {prevTotal > 0 && (
+              <span className="text-xs font-normal text-gray-400 ml-1">원</span>
+            )}
           </p>
         </div>
         <div className="bg-[#F0F4FA] rounded-xl p-4">
-          <p className="text-xs text-gray-400 mb-1">{currentMonth.slice(5)}월</p>
+          <p className="text-xs text-gray-400 mb-1">
+            {currentMonth.slice(5)}월
+          </p>
           <p className="text-lg font-bold text-[#0e299c]">
             {formatAmount(currentTotal)}
             <span className="text-xs font-normal text-gray-400 ml-1">원</span>
@@ -81,11 +90,7 @@ export default function MonthCompareChart({
         </div>
         <div
           className={`rounded-xl p-4 ${
-            isFlat
-              ? "bg-gray-50"
-              : isUp
-              ? "bg-red-50"
-              : "bg-blue-50"
+            isFlat ? "bg-gray-50" : isUp ? "bg-red-50" : "bg-blue-50"
           }`}
         >
           <p className="text-xs text-gray-400 mb-1">증감</p>
@@ -94,7 +99,11 @@ export default function MonthCompareChart({
               isFlat ? "text-gray-400" : isUp ? "text-red-500" : "text-blue-500"
             }`}
           >
-            {isFlat ? "±0" : isUp ? `+${formatAmount(diff)}` : formatAmount(diff)}
+            {isFlat
+              ? "±0"
+              : isUp
+                ? `+${formatAmount(diff)}`
+                : formatAmount(diff)}
             <span className="text-xs font-normal ml-1">원</span>
           </p>
           {diffPct !== null && !isFlat && (
@@ -113,7 +122,11 @@ export default function MonthCompareChart({
       {prevTotal > 0 ? (
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={chartData} barCategoryGap="30%" barGap={4}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              stroke="#f0f0f0"
+            />
             <XAxis
               dataKey="name"
               tick={{ fontSize: 11, fill: "#9ca3af" }}
@@ -130,7 +143,9 @@ export default function MonthCompareChart({
             <Tooltip
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               formatter={(value: any) =>
-                typeof value === "number" ? [`₩${value.toLocaleString()}`, ""] : [String(value ?? ""), ""]
+                typeof value === "number"
+                  ? [`₩${value.toLocaleString()}`, ""]
+                  : [String(value ?? ""), ""]
               }
               contentStyle={{
                 borderRadius: "12px",

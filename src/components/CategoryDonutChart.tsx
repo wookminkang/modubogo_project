@@ -28,11 +28,19 @@ export default function CategoryDonutChart({ categories, total }: Props) {
 
   return (
     <div className="bg-white rounded-2xl p-5 shadow-sm">
-      <p className="text-base font-semibold text-[#0e299c] mb-4">카테고리별 분포</p>
+      <p className="text-base font-semibold text-[#0e299c]">
+        광고 채널별 운영 현황
+      </p>
+      <p className="text-[12px] mb-4 text-gray-500">
+        각 광고 채널의 운영 현황 및 집행 비중을 확인할 수 있어요
+      </p>
 
       <div className="flex items-center gap-4">
         {/* 도넛 차트 */}
-        <div className="relative flex-shrink-0" style={{ width: 160, height: 160 }}>
+        <div
+          className="relative flex-shrink-0"
+          style={{ width: 160, height: 160 }}
+        >
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -47,13 +55,19 @@ export default function CategoryDonutChart({ categories, total }: Props) {
                 endAngle={-270}
               >
                 {data.map((_, index) => (
-                  <Cell key={index} fill={COLORS[index % COLORS.length]} stroke="none" />
+                  <Cell
+                    key={index}
+                    fill={COLORS[index % COLORS.length]}
+                    stroke="none"
+                  />
                 ))}
               </Pie>
               <Tooltip
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 formatter={(value: any) =>
-                  typeof value === "number" ? [`₩${value.toLocaleString()}`, ""] : [String(value ?? ""), ""]
+                  typeof value === "number"
+                    ? [`₩${value.toLocaleString()}`, ""]
+                    : [String(value ?? ""), ""]
                 }
                 contentStyle={{
                   borderRadius: "12px",
@@ -70,8 +84,8 @@ export default function CategoryDonutChart({ categories, total }: Props) {
               {total >= 10000000
                 ? `${(total / 10000000).toFixed(1)}천만`
                 : total >= 1000000
-                ? `${(total / 1000000).toFixed(0)}백만`
-                : `${(total / 10000).toFixed(0)}만`}
+                  ? `${(total / 1000000).toFixed(0)}백만`
+                  : `${(total / 10000).toFixed(0)}만`}
             </p>
           </div>
         </div>
@@ -79,16 +93,23 @@ export default function CategoryDonutChart({ categories, total }: Props) {
         {/* 범례 */}
         <div className="flex flex-col gap-2.5 flex-1 min-w-0">
           {data.map((item, index) => (
-            <div key={index} className="flex items-center justify-between gap-2">
+            <div
+              key={index}
+              className="flex items-center justify-between gap-2"
+            >
               <div className="flex items-center gap-2 min-w-0">
                 <span
                   className="flex-shrink-0 w-2.5 h-2.5 rounded-full"
                   style={{ backgroundColor: COLORS[index % COLORS.length] }}
                 />
-                <span className="text-sm text-gray-700 truncate">{item.name}</span>
+                <span className="text-sm text-gray-700 truncate">
+                  {item.name}
+                </span>
               </div>
               <div className="flex-shrink-0 text-right">
-                <span className="text-sm font-bold text-[#0e299c]">{item.pct}%</span>
+                <span className="text-sm font-bold text-[#0e299c]">
+                  {item.pct}%
+                </span>
               </div>
             </div>
           ))}

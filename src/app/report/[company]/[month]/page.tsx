@@ -19,24 +19,27 @@ export default async function ReportPage({ params }: ReportPageProps) {
 
   const categories = report.categories;
   const total = getTotalAmount(categories);
-  const maxAmount = Math.max(...categories.map((c) => Number(c.amount)));
-  const maxCategory = categories.find((c) => Number(c.amount) === maxAmount);
   const uniqueAgencies = new Set(categories.map((c) => c.agency)).size;
 
-  // YTD: 같은 회사 올해 전체 합산
   const year = month.slice(0, 4);
-  const allReports = getReportsByCompany(decoded).filter((r) => r.month.startsWith(year));
-  const ytd = allReports.reduce((sum, r) => sum + getTotalAmount(r.categories), 0);
+  const allReports = getReportsByCompany(decoded).filter((r) =>
+    r.month.startsWith(year),
+  );
 
   // 전월 비교
-  const prevMonthStr = dayjs(month, "YYYY-MM").subtract(1, "month").format("YYYY-MM");
+  const prevMonthStr = dayjs(month, "YYYY-MM")
+    .subtract(1, "month")
+    .format("YYYY-MM");
   const prevReport = getReport(decoded, prevMonthStr);
   const prevTotal = prevReport ? getTotalAmount(prevReport.categories) : 0;
   const prevCategories = prevReport?.categories ?? [];
 
   // 월별 추이 차트
   const chartData = allReports
-    .map((r) => ({ month: r.month.slice(5), payment: getTotalAmount(r.categories) }))
+    .map((r) => ({
+      month: r.month.slice(5),
+      payment: getTotalAmount(r.categories),
+    }))
     .sort((a, b) => a.month.localeCompare(b.month));
   const currentMonthNum = month.slice(5);
 
@@ -52,13 +55,21 @@ export default async function ReportPage({ params }: ReportPageProps) {
           <span className="inline-block w-2.5 h-2.5 bg-red-500 rounded-full ml-2 mb-1" />
         </h1>
         <p className="text-sm text-blue-200 leading-relaxed">
-          이번 달 진행 중인 광고 항목과<br />매체 운영 현황을 정리한 보고서예요.
+          이번 달 진행 중인 광고 항목과
+          <br />
+          매체 운영 현황을 정리한 보고서예요.
         </p>
         <div className="mt-4 flex gap-2">
-          <Link href={`/report/${company}`} className="text-xs text-blue-300 bg-white/10 px-3 py-1.5 rounded-lg">
+          <Link
+            href={`/report/${company}`}
+            className="text-xs text-blue-300 bg-white/10 px-3 py-1.5 rounded-lg"
+          >
             ← 목록
           </Link>
-          <Link href={`/report/${company}/${month}/edit`} className="text-xs text-white bg-white/20 px-3 py-1.5 rounded-lg">
+          <Link
+            href={`/report/${company}/${month}/edit`}
+            className="text-xs text-white bg-white/20 px-3 py-1.5 rounded-lg"
+          >
             수정
           </Link>
         </div>
@@ -74,22 +85,27 @@ export default async function ReportPage({ params }: ReportPageProps) {
         {/* 요약 통계 */}
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-white rounded-2xl p-5 shadow-sm">
-            <p className="text-sm text-gray-400 mb-2">{month} 집행 합계</p>
+            <p className="text-sm text-gray-400 mb-2">
+              <span className="text-[#0e299c] bold">{month}</span>월 총 광고비
+            </p>
             <p className="text-2xl font-bold text-[#0e299c]">
               {total.toLocaleString()}
               <span className="text-sm ml-1 font-normal text-gray-400">원</span>
             </p>
-            <p className="text-sm text-gray-400 mt-2">{categories.length}건 집행</p>
+            {/* <p className="text-sm text-gray-400 mt-2">
+              {categories.length}건 집행
+            </p> */}
           </div>
           <div className="bg-white rounded-2xl p-5 shadow-sm">
-            <p className="text-sm text-gray-400 mb-2">결제처</p>
+            <p className="text-sm text-gray-400 mb-2">외주업체</p>
             <p className="text-2xl font-bold text-[#0e299c]">
               {uniqueAgencies}
               <span className="text-sm ml-1 font-normal text-gray-400">곳</span>
             </p>
-            <p className="text-sm text-gray-400 mt-2">집행사 수</p>
+            {/* <p className="text-sm text-gray-400 mt-2">집행사 수</p> */}
           </div>
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
+
+          {/* <div className="bg-white rounded-2xl p-5 shadow-sm">
             <p className="text-sm text-gray-400 mb-2">최대 결제 항목</p>
             <p className="text-2xl font-bold text-[#0e299c]">
               {maxAmount.toLocaleString()}
@@ -97,6 +113,7 @@ export default async function ReportPage({ params }: ReportPageProps) {
             </p>
             <p className="text-sm text-gray-400 mt-2">{maxCategory?.channel ?? "-"}</p>
           </div>
+
           <div className="bg-white rounded-2xl p-5 shadow-sm">
             <p className="text-sm text-gray-400 mb-2">YTD 누적</p>
             <p className="text-2xl font-bold text-[#0e299c]">
@@ -104,10 +121,10 @@ export default async function ReportPage({ params }: ReportPageProps) {
               <span className="text-sm ml-1 font-normal text-gray-400">원</span>
             </p>
             <p className="text-sm text-gray-400 mt-2">올해 누적 집행액</p>
-          </div>
+          </div> */}
         </div>
 
-        {/* 월별 집행 추이 */}
+        {/* 월별 광고 집행 현황 */}
         <MonthlyTrendChart data={chartData} currentMonth={currentMonthNum} />
 
         {/* 카테고리별 분포 */}
@@ -115,7 +132,13 @@ export default async function ReportPage({ params }: ReportPageProps) {
 
         {/* 카테고리별 집행 내역 */}
         <div className="bg-white rounded-2xl p-5 shadow-sm">
-          <p className="text-base font-semibold text-[#0e299c] mb-4">카테고리별 집행 내역</p>
+          <p className="text-base font-semibold text-[#0e299c]">
+            매체별 운영 현황
+          </p>
+          <p className="text-[12px] mb-4 text-gray-500">
+            각 광고 매체의 운영 업체 및 계약 내용을 확인할 수 있어요.
+          </p>
+
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b text-gray-400 text-left">
@@ -141,7 +164,9 @@ export default async function ReportPage({ params }: ReportPageProps) {
             </tbody>
             <tfoot>
               <tr className="border-t">
-                <td colSpan={4} className="pt-3 text-gray-400">합계</td>
+                <td colSpan={4} className="pt-3 text-gray-400">
+                  합계
+                </td>
                 <td className="pt-3 text-right font-bold text-[#0e299c]">
                   ₩{total.toLocaleString()}
                 </td>
@@ -150,7 +175,7 @@ export default async function ReportPage({ params }: ReportPageProps) {
           </table>
         </div>
 
-        {/* 전월 대비 비교 */}
+        {/* 전월 대비 광고 비교 */}
         <MonthCompareChart
           currentMonth={month}
           prevMonth={prevMonthStr}
@@ -160,10 +185,16 @@ export default async function ReportPage({ params }: ReportPageProps) {
           prevTotal={prevTotal}
         />
 
-        {/* 유효기간 */}
+        {/* 광고 심의 및 운영 현황 */}
         {report.validity.length > 0 && (
           <div className="bg-white rounded-2xl p-5 shadow-sm">
-            <p className="text-base font-semibold text-[#0e299c] mb-4">유효기간</p>
+            <p className="text-base font-semibold text-[#0e299c] ">
+              광고 계약·심의 관리 현황
+            </p>
+            <p className="text-[12px] mb-4 text-gray-500">
+              광고 계약 및 심의 유효기간 관리 현황을 쉽게 확인할 수 있어요
+            </p>
+
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-gray-400 text-left">
@@ -176,14 +207,32 @@ export default async function ReportPage({ params }: ReportPageProps) {
               <tbody>
                 {report.validity.map((item, index) => {
                   const diff = dayjs(item.expiryDate).diff(dayjs(), "day");
-                  const dday = diff === 0 ? "D-day" : diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`;
-                  const ddayColor = diff < 0 ? "text-red-500" : diff <= 7 ? "text-orange-500" : "text-[#0e299c]";
+                  const dday =
+                    diff === 0
+                      ? "D-day"
+                      : diff > 0
+                        ? `D-${diff}`
+                        : `D+${Math.abs(diff)}`;
+                  const ddayColor =
+                    diff < 0
+                      ? "text-red-500"
+                      : diff <= 7
+                        ? "text-orange-500"
+                        : "text-[#0e299c]";
                   return (
                     <tr key={index} className="border-b last:border-0">
-                      <td className="py-3 pr-2 text-gray-800">{item.category}</td>
-                      <td className="py-3 pr-2 text-gray-800">{item.subject}</td>
-                      <td className="py-3 pr-2 text-gray-400">{item.expiryDate}</td>
-                      <td className={`py-3 text-right font-bold ${ddayColor}`}>{dday}</td>
+                      <td className="py-3 pr-2 text-gray-800">
+                        {item.category}
+                      </td>
+                      <td className="py-3 pr-2 text-gray-800">
+                        {item.subject}
+                      </td>
+                      <td className="py-3 pr-2 text-gray-400">
+                        {item.expiryDate}
+                      </td>
+                      <td className={`py-3 text-right font-bold ${ddayColor}`}>
+                        {dday}
+                      </td>
                     </tr>
                   );
                 })}
