@@ -41,7 +41,7 @@ function CustomTooltip({ active, payload, label }: any) {
       <p className="font-semibold text-gray-700 mb-2">{label}월 집행 내역</p>
       {item.categories.map((cat, i) => (
         <div key={i} className="flex justify-between gap-4 py-0.5">
-          <span className="text-gray-500 truncate max-w-[90px]">{cat.channel}</span>
+          <span className="text-gray-500 truncate max-w-[90px]">{cat.category}</span>
           <span className="font-medium text-[#0e299c]">₩{Number(cat.amount).toLocaleString()}</span>
         </div>
       ))}
