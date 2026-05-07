@@ -2,6 +2,7 @@
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import type { ReportCategory } from "@/lib/mockData";
+import { CardTitle } from "./CardTitle";
 
 const COLORS = [
   "#0e299c",
@@ -28,12 +29,10 @@ export default function CategoryDonutChart({ categories, total }: Props) {
 
   return (
     <div className="bg-white rounded-2xl p-5 shadow-sm">
-      <p className="text-base font-semibold text-[#0e299c]">
-        광고 채널별 운영 현황
-      </p>
-      <p className="text-[12px] mb-4 text-gray-500">
-        각 광고 채널의 운영 현황 및 집행 비중을 확인할 수 있어요
-      </p>
+      <CardTitle
+        title="광고 채널별 운영 현황"
+        description="각 광고 채널의 운영 현황 및 집행 비중을 확인할 수 있어요"
+      />
 
       <div className="flex items-center gap-4">
         {/* 도넛 차트 */}
@@ -73,7 +72,10 @@ export default function CategoryDonutChart({ categories, total }: Props) {
                   borderRadius: "12px",
                   border: "1px solid #e5e7eb",
                   fontSize: "12px",
+                  backgroundColor: "#ffffff",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                 }}
+                wrapperStyle={{ zIndex: 10 }}
               />
             </PieChart>
           </ResponsiveContainer>
