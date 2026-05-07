@@ -52,7 +52,7 @@ export default function ReportEditPage({
           categories: report.categories,
           validity: report.validity,
         }
-      : { categories: [{ category: "", channel: "", agency: "", period: "1", amount: "" }], validity: [] },
+      : { categories: [{ category: "", channel: "", agency: "", period: "1", amount: "" }], validity: [{ category: "", subject: "", expiryDate: "" }] },
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: "categories" });
@@ -194,15 +194,17 @@ export default function ReportEditPage({
                 <div key={field.id} className="border border-gray-100 rounded-xl p-4 flex flex-col gap-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700">항목 {index + 1}</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="xs"
-                      onClick={() => vRemove(index)}
-                      className="text-red-400 hover:text-red-500 hover:bg-red-50"
-                    >
-                      삭제
-                    </Button>
+                    {vFields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="xs"
+                        onClick={() => vRemove(index)}
+                        className="text-red-400 hover:text-red-500 hover:bg-red-50"
+                      >
+                        삭제
+                      </Button>
+                    )}
                   </div>
                   <Input
                     {...register(`validity.${index}.category`)}
