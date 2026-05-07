@@ -6,6 +6,8 @@ import MonthCompareChart from "@/components/MonthCompareChart";
 import CategoryDonutChart from "@/components/CategoryDonutChart";
 import MonthlyTrendChart from "@/components/MonthlyTrendChart";
 import CategoryTable from "@/components/CategoryTable";
+import { CardTitle } from "@/components/CardTitle";
+import ValidityTable from "@/components/ValidityTable";
 
 interface ReportPageProps {
   params: Promise<{ company: string; month: string }>;
@@ -83,46 +85,19 @@ export default async function ReportPage({ params }: ReportPageProps) {
       </header>
 
       <div className="px-4 py-6 flex flex-col gap-5">
-        {/* 요약 통계 */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
-            <p className="text-sm text-gray-400 mb-2">
-              <span className="text-[#0e299c] bold">{month}</span>월 총 광고비
-            </p>
-            <p className="text-2xl font-bold text-[#0e299c]">
-              {total.toLocaleString()}
-              <span className="text-sm ml-1 font-normal text-gray-400">원</span>
-            </p>
-            {/* <p className="text-sm text-gray-400 mt-2">
-              {categories.length}건 집행
-            </p> */}
-          </div>
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
-            <p className="text-sm text-gray-400 mb-2">외주업체</p>
-            <p className="text-2xl font-bold text-[#0e299c]">
-              {uniqueAgencies}
-              <span className="text-sm ml-1 font-normal text-gray-400">곳</span>
-            </p>
-            {/* <p className="text-sm text-gray-400 mt-2">집행사 수</p> */}
-          </div>
-
-          {/* <div className="bg-white rounded-2xl p-5 shadow-sm">
-            <p className="text-sm text-gray-400 mb-2">최대 결제 항목</p>
-            <p className="text-2xl font-bold text-[#0e299c]">
-              {maxAmount.toLocaleString()}
-              <span className="text-sm ml-1 font-normal text-gray-400">원</span>
-            </p>
-            <p className="text-sm text-gray-400 mt-2">{maxCategory?.channel ?? "-"}</p>
-          </div>
-
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
-            <p className="text-sm text-gray-400 mb-2">YTD 누적</p>
-            <p className="text-2xl font-bold text-[#0e299c]">
-              {ytd.toLocaleString()}
-              <span className="text-sm ml-1 font-normal text-gray-400">원</span>
-            </p>
-            <p className="text-sm text-gray-400 mt-2">올해 누적 집행액</p>
-          </div> */}
+        <div>
+          <CardTitle
+            title={` ${total.toLocaleString()}원`}
+            description={`${dayjs(month).format("YYYY.MM")}월 총 광고비`}
+            right={
+              <div className="flex flex-col text-right">
+                <span>
+                  외주업체{" "}
+                  <b className="font-bold text-[#0e299c]">{uniqueAgencies}</b>곳
+                </span>
+              </div>
+            }
+          />
         </div>
 
         {/* 월별 광고 집행 현황 */}
@@ -145,60 +120,7 @@ export default async function ReportPage({ params }: ReportPageProps) {
         />
 
         {/* 광고 심의 및 운영 현황 */}
-        {report.validity.length > 0 && (
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
-            <p className="text-base font-semibold text-[#0e299c] ">
-              광고 계약·심의 관리 현황
-            </p>
-            <p className="text-[12px] mb-4 text-gray-500">
-              광고 계약 및 심의 유효기간 관리 현황을 쉽게 확인할 수 있어요
-            </p>
-
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b text-gray-400 text-left">
-                  <th className="pb-3 pr-2 font-normal">구분</th>
-                  <th className="pb-3 pr-2 font-normal">주제</th>
-                  <th className="pb-3 pr-2 font-normal">유효기간</th>
-                  <th className="pb-3 text-right font-normal">D-day</th>
-                </tr>
-              </thead>
-              <tbody>
-                {report.validity.map((item, index) => {
-                  const diff = dayjs(item.expiryDate).diff(dayjs(), "day");
-                  const dday =
-                    diff === 0
-                      ? "D-day"
-                      : diff > 0
-                        ? `D-${diff}`
-                        : `D+${Math.abs(diff)}`;
-                  const ddayColor =
-                    diff < 0
-                      ? "text-red-500"
-                      : diff <= 7
-                        ? "text-orange-500"
-                        : "text-[#0e299c]";
-                  return (
-                    <tr key={index} className="border-b last:border-0">
-                      <td className="py-3 pr-2 text-gray-800">
-                        {item.category}
-                      </td>
-                      <td className="py-3 pr-2 text-gray-800">
-                        {item.subject}
-                      </td>
-                      <td className="py-3 pr-2 text-gray-400">
-                        {item.expiryDate}
-                      </td>
-                      <td className={`py-3 text-right font-bold ${ddayColor}`}>
-                        {dday}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <ValidityTable validity={report.validity} />
       </div>
     </div>
   );
