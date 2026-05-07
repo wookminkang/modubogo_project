@@ -109,7 +109,7 @@ export default async function ReportPage({ params }: ReportPageProps) {
             010.8782.1285
           </a>
           <a
-            href="https://open.kakao.com"
+            href="http://pf.kakao.com/_UaWgn"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 text-xs text-blue-200 bg-white/10 px-3 py-1.5 rounded-lg"
