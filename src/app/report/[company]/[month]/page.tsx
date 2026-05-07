@@ -60,7 +60,7 @@ export default async function ReportPage({ params }: ReportPageProps) {
       </div>
 
       {/* 헤더 */}
-      <header className="relative top-[-23px] bg-[#0e299c] text-white px-6 pt-10 pb-8">
+      <header className="relative top-[-5.9vw] bg-[#0e299c] text-white px-6 pt-10 pb-8">
         <p className="text-sm text-blue-300 mb-3">
           {dayjs().format("YYYY.MM.DD (ddd)")} · 광고 운영보고
         </p>
