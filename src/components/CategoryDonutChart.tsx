@@ -20,6 +20,25 @@ interface Props {
   total: number;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function DonutTooltip({ active, payload }: any) {
+  if (!active || !payload?.length) return null;
+  const item = payload[0];
+  return (
+    <div style={{
+      backgroundColor: "#ffffff",
+      border: "1px solid #e5e7eb",
+      borderRadius: "12px",
+      padding: "8px 12px",
+      fontSize: "12px",
+      boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+    }}>
+      <p style={{ color: "#374151", fontWeight: 600, marginBottom: 4 }}>{item.name}</p>
+      <p style={{ color: "#0e299c", fontWeight: 700 }}>₩{Number(item.value).toLocaleString()}</p>
+    </div>
+  );
+}
+
 export default function CategoryDonutChart({ categories, total }: Props) {
   const data = categories.map((c) => ({
     name: c.category,
@@ -61,22 +80,7 @@ export default function CategoryDonutChart({ categories, total }: Props) {
                   />
                 ))}
               </Pie>
-              <Tooltip
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                formatter={(value: any) =>
-                  typeof value === "number"
-                    ? [`₩${value.toLocaleString()}`, ""]
-                    : [String(value ?? ""), ""]
-                }
-                contentStyle={{
-                  borderRadius: "12px",
-                  border: "1px solid #e5e7eb",
-                  fontSize: "12px",
-                  backgroundColor: "#ffffff",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                }}
-                wrapperStyle={{ zIndex: 10 }}
-              />
+              <Tooltip content={<DonutTooltip />} wrapperStyle={{ zIndex: 10 }} />
             </PieChart>
           </ResponsiveContainer>
           {/* 중앙 텍스트 */}
