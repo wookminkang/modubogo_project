@@ -50,7 +50,7 @@ export default async function ReportPage({ params }: ReportPageProps) {
 
   return (
     <div className="min-h-screen">
-      <div className="relative z-10">
+      <div className="relative z-10 flex justify-center">
         <Image
           src="/images/test_ct_05.png"
           width={500}
@@ -87,16 +87,71 @@ export default async function ReportPage({ params }: ReportPageProps) {
             수정
           </Link>
         </div>
-        <div className="mt-6 pt-5 border-t border-white/10 flex items-center justify-between">
-          <span className="text-sm text-blue-300">보고자</span>
-          <span className="text-sm font-medium text-white">
-            {report.reporter} · {report.email}
-          </span>
+        <div className="mt-6 pt-5 border-t border-white/10 flex items-center justify-between"></div>
+        <div className="mt-3 flex items-center gap-3">
+          <a
+            href="tel:01087821285"
+            className="flex items-center gap-1.5 text-xs text-blue-200 bg-white/10 px-3 py-1.5 rounded-lg"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.6 19.79 19.79 0 0 1 1.62 5.1 2 2 0 0 1 3.6 2.87h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 10.5a16 16 0 0 0 6 6l.97-.97a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+            </svg>
+            010.8782.1285
+          </a>
+          <a
+            href="https://open.kakao.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-xs text-blue-200 bg-white/10 px-3 py-1.5 rounded-lg"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M12 3C6.477 3 2 6.477 2 10.5c0 2.533 1.523 4.77 3.85 6.106l-.977 3.546a.375.375 0 0 0 .548.415L9.5 18.35c.817.128 1.659.15 2.5.15 5.523 0 10-3.477 10-7.5S17.523 3 12 3z" />
+            </svg>
+            카카오톡
+          </a>
+          <a
+            href="https://announcego.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-xs text-blue-200 bg-white/10 px-3 py-1.5 rounded-lg"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            </svg>
+            홈페이지
+          </a>
         </div>
       </header>
 
-      <div className="px-4 py-6 flex flex-col gap-5 bg-[#F0F4FA]">
-        <div>
+      <div className="px-4 py-6 flex flex-col gap-5 bg-[#F0F4FA] relative top-[-5.9vw]">
+        <div className="mb-6">
           <CardTitle
             title={` ${total.toLocaleString()}원`}
             description={`${dayjs(month).format("YYYY.MM")}월 총 광고비`}
