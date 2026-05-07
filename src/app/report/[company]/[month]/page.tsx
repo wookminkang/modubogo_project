@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getReport, getReportsByCompany, getTotalAmount } from "@/lib/mockData";
 import MonthCompareChart from "@/components/MonthCompareChart";
+import CategoryDonutChart from "@/components/CategoryDonutChart";
 
 interface ReportPageProps {
   params: Promise<{ company: string; month: string }>;
@@ -132,30 +133,7 @@ export default async function ReportPage({ params }: ReportPageProps) {
         </div>
 
         {/* 카테고리별 분포 */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm">
-          <p className="text-base font-semibold text-[#0e299c] mb-5">카테고리별 분포</p>
-          <div className="flex flex-col gap-5">
-            {categories.map((item, index) => {
-              const pct = Math.round((Number(item.amount) / total) * 100);
-              const barWidth = Math.round((Number(item.amount) / maxAmount) * 100);
-              return (
-                <div key={index}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium">{item.category}</span>
-                    <span className="text-sm font-bold text-[#0e299c]">{pct}%</span>
-                  </div>
-                  <p className="text-sm text-gray-400 mb-2">₩{Number(item.amount).toLocaleString()}</p>
-                  <div className="h-1.5 bg-gray-100 w-full rounded-full">
-                    <div
-                      className={`h-full rounded-full ${index === 0 ? "bg-red-500" : "bg-[#0e299c]"}`}
-                      style={{ width: `${barWidth}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <CategoryDonutChart categories={categories} total={total} />
 
         {/* 카테고리별 집행 내역 */}
         <div className="bg-white rounded-2xl p-5 shadow-sm">
