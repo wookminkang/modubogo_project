@@ -8,6 +8,7 @@ import MonthlyTrendChart from "@/components/MonthlyTrendChart";
 import CategoryTable from "@/components/CategoryTable";
 import { CardTitle } from "@/components/CardTitle";
 import ValidityTable from "@/components/ValidityTable";
+import Image from "next/image";
 
 interface ReportPageProps {
   params: Promise<{ company: string; month: string }>;
@@ -85,6 +86,15 @@ export default async function ReportPage({ params }: ReportPageProps) {
         </div>
       </header>
 
+      <div className="relative">
+        <Image
+          src="/images/test_ct_01.png"
+          width={500}
+          height={500}
+          alt="모두보고 캐릭터 아이콘"
+        />
+      </div>
+
       <div className="px-4 py-6 flex flex-col gap-5">
         <div>
           <CardTitle
@@ -104,12 +114,6 @@ export default async function ReportPage({ params }: ReportPageProps) {
         {/* 월별 광고 집행 현황 */}
         <MonthlyTrendChart data={chartData} currentMonth={currentMonthNum} />
 
-        {/* 카테고리별 분포 */}
-        <CategoryDonutChart categories={categories} total={total} />
-
-        {/* 매체별 운영 현황 */}
-        <CategoryTable categories={categories} total={total} />
-
         {/* 전월 대비 광고 비교 */}
         <MonthCompareChart
           currentMonth={month}
@@ -119,6 +123,12 @@ export default async function ReportPage({ params }: ReportPageProps) {
           currentTotal={total}
           prevTotal={prevTotal}
         />
+
+        {/* 카테고리별 분포 */}
+        <CategoryDonutChart categories={categories} total={total} />
+
+        {/* 매체별 운영 현황 */}
+        <CategoryTable categories={categories} total={total} />
 
         {/* 광고 심의 및 운영 현황 */}
         <ValidityTable validity={report.validity} />
