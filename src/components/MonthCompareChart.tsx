@@ -69,53 +69,94 @@ export default function MonthCompareChart({
       />
 
       {/* 요약 수치 */}
-      <div className="grid grid-cols-3 gap-3 mb-5">
-        <div className="bg-[#F0F4FA] rounded-xl p-4">
-          <p className="text-xs text-gray-400 mb-1">{prevMonth.slice(5)}월</p>
-          <p className="text-lg font-bold text-gray-700">
-            {prevTotal > 0 ? formatAmount(prevTotal) : "-"}
-            {prevTotal > 0 && (
-              <span className="text-xs font-normal text-gray-400 ml-1">원</span>
-            )}
-          </p>
-        </div>
-        <div className="bg-[#F0F4FA] rounded-xl p-4">
-          <p className="text-xs text-gray-400 mb-1">
-            {currentMonth.slice(5)}월
-          </p>
-          <p className="text-lg font-bold text-[#0e299c]">
-            {formatAmount(currentTotal)}
-            <span className="text-xs font-normal text-gray-400 ml-1">원</span>
-          </p>
-        </div>
-        <div
-          className={`rounded-xl p-4 ${
-            isFlat ? "bg-gray-50" : isUp ? "bg-red-50" : "bg-blue-50"
-          }`}
-        >
-          <p className="text-xs text-gray-400 mb-1">증감</p>
-          <p
-            className={`text-lg font-bold ${
-              isFlat ? "text-gray-400" : isUp ? "text-red-500" : "text-blue-500"
-            }`}
-          >
-            {isFlat
-              ? "±0"
-              : isUp
-                ? `+${formatAmount(diff)}`
-                : formatAmount(diff)}
-            <span className="text-xs font-normal ml-1">원</span>
-          </p>
-          {diffPct !== null && !isFlat && (
-            <p
-              className={`text-xs font-semibold mt-0.5 ${
-                isUp ? "text-red-400" : "text-blue-400"
-              }`}
-            >
-              {isUp ? `▲ ${diffPct}%` : `▼ ${Math.abs(diffPct)}%`}
+      <div className="mb-5">
+        {/* 전월 → 이번달 */}
+        <div className="flex items-center justify-between px-1 mb-3">
+          <div className="flex flex-col">
+            <p className="text-sm font-semibold text-gray-700 mb-1 text-left">
+              {Number(prevMonth.slice(5))}월
             </p>
-          )}
+            <p className="text-xl font-bold text-gray-500">
+              {prevTotal > 0 ? formatAmount(prevTotal) : "-"}
+              {prevTotal > 0 && (
+                <span className="text-sm font-normal text-gray-400 ml-1">
+                  원
+                </span>
+              )}
+            </p>
+          </div>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="36"
+            height="16"
+            viewBox="0 0 36 16"
+            fill="none"
+          >
+            <line
+              x1="0"
+              y1="8"
+              x2="28"
+              y2="8"
+              stroke="#d1d5db"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+            <path
+              d="M24 3L31 8L24 13"
+              stroke="#d1d5db"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <div className="flex flex-col items-end">
+            <p className="text-sm font-semibold text-gray-700 mb-1 text-center">
+              {Number(currentMonth.slice(5))}월
+            </p>
+            <p className="text-xl font-bold text-[#0e299c]">
+              {formatAmount(currentTotal)}
+              <span className="text-sm font-normal text-gray-400 ml-1">원</span>
+            </p>
+          </div>
         </div>
+
+        {/* 증감 pill */}
+        {!isFlat && (
+          <div
+            className={`flex items-center justify-center gap-3 rounded-2xl py-3 px-5 ${isUp ? "bg-red-50" : "bg-blue-50"}`}
+          >
+            <div className="flex items-center gap-2">
+              <span
+                className={`flex items-center justify-center w-6 h-6 rounded-full ${isUp ? "bg-red-100 text-red-500" : "bg-blue-100 text-blue-500"}`}
+              >
+                {isUp ? "↑" : "↓"}
+              </span>
+              <span
+                className={`text-lg font-bold ${isUp ? "text-red-500" : "text-blue-500"}`}
+              >
+                {isUp ? `+${formatAmount(diff)}` : formatAmount(diff)}
+                <span className="text-sm font-normal ml-1">원</span>
+              </span>
+            </div>
+            {diffPct !== null && (
+              <>
+                <div
+                  className={`w-px h-5 ${isUp ? "bg-red-200" : "bg-blue-200"}`}
+                />
+                <span
+                  className={`text-sm font-semibold ${isUp ? "text-red-500" : "text-blue-500"}`}
+                >
+                  {isUp ? `▲ ${diffPct}%` : `▼ ${Math.abs(diffPct)}%`}
+                </span>
+              </>
+            )}
+          </div>
+        )}
+        {isFlat && (
+          <div className="flex items-center justify-center rounded-2xl py-3 px-5 bg-gray-50">
+            <span className="text-lg font-bold text-gray-400">±0원</span>
+          </div>
+        )}
       </div>
 
       {/* 카테고리별 비교 바 차트 */}
