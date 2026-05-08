@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { MonthPicker } from "@/components/ui/month-picker";
 import { DatePicker } from "@/components/ui/date-picker";
+import { OrderStepper } from "@/components/ui/order-stepper";
 import Link from "next/link";
 
 interface CategoryField { category: string; channel: string; agency: string; period: string; amount: string; sort_order: string; }
@@ -130,10 +131,9 @@ export default function EditForm({ reportId, defaultValues, company, month }: Pr
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium text-gray-700">항목 {index + 1}</span>
-                      <div className="flex items-center gap-1 bg-[#0e299c]/10 px-2 py-0.5 rounded-lg">
-                        <span className="text-xs text-[#0e299c] font-medium">순서</span>
-                        <input {...register(`categories.${index}.sort_order`)} type="number" min={0} className="w-8 text-xs text-center text-[#0e299c] font-bold bg-transparent outline-none" />
-                      </div>
+                      <Controller control={control} name={`categories.${index}.sort_order`}
+                        render={({ field }) => <OrderStepper value={field.value} onChange={field.onChange} />}
+                      />
                     </div>
                     {fields.length > 1 && (
                       <Button type="button" variant="ghost" size="xs" onClick={() => remove(index)} className="text-red-400 hover:text-red-500 hover:bg-red-50">삭제</Button>
@@ -164,10 +164,9 @@ export default function EditForm({ reportId, defaultValues, company, month }: Pr
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium text-gray-700">항목 {index + 1}</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-gray-400">순서</span>
-                        <Input {...register(`validity.${index}.sort_order`)} type="number" min={0} className="w-14 h-8 text-xs text-center rounded-lg border-gray-200" />
-                      </div>
+                      <Controller control={control} name={`validity.${index}.sort_order`}
+                        render={({ field }) => <OrderStepper value={field.value} onChange={field.onChange} />}
+                      />
                     </div>
                     {vFields.length > 1 && (
                       <Button type="button" variant="ghost" size="xs" onClick={() => vRemove(index)} className="text-red-400 hover:text-red-500 hover:bg-red-50">삭제</Button>
@@ -199,10 +198,9 @@ export default function EditForm({ reportId, defaultValues, company, month }: Pr
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium text-gray-700">항목 {index + 1}</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-gray-400">순서</span>
-                        <Input {...register(`contracts.${index}.sort_order`)} type="number" min={0} className="w-14 h-8 text-xs text-center rounded-lg border-gray-200" />
-                      </div>
+                      <Controller control={control} name={`contracts.${index}.sort_order`}
+                        render={({ field }) => <OrderStepper value={field.value} onChange={field.onChange} />}
+                      />
                     </div>
                     {cFields.length > 1 && (
                       <Button type="button" variant="ghost" size="xs" onClick={() => cRemove(index)} className="text-red-400 hover:text-red-500 hover:bg-red-50">삭제</Button>
