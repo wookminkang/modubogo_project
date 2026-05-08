@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { getReportsByCompanyFromDB } from "@/lib/db";
 import { getTotalAmount } from "@/lib/mockData";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { isAdmin } from "@/lib/admin";
 
 interface CompanyReportListPageProps {
   params: Promise<{ company: string }>;
@@ -11,6 +12,10 @@ export default async function CompanyReportListPage({
   params,
 }: CompanyReportListPageProps) {
   const { company } = await params;
+
+  const admin = await isAdmin();
+  if (!admin) redirect("/admin/login");
+
   const decoded = decodeURIComponent(company);
   const reports = await getReportsByCompanyFromDB(decoded);
 
@@ -51,18 +56,7 @@ export default async function CompanyReportListPage({
                     ₩{total.toLocaleString()} · {report.categories.length}건
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-                      report.status === "완료"
-                        ? "bg-blue-50 text-[#0e299c]"
-                        : "bg-orange-50 text-orange-500"
-                    }`}
-                  >
-                    {report.status}
-                  </span>
-                  <span className="text-gray-300">›</span>
-                </div>
+                <span className="text-gray-300">›</span>
               </Link>
             );
           })}
