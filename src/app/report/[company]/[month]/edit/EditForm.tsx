@@ -21,6 +21,7 @@ interface FormValues {
   month: string;
   reporter: string;
   email: string;
+  password: string;
   categories: CategoryField[];
   validity: ValidityField[];
   contracts: ContractField[];
@@ -104,6 +105,10 @@ export default function EditForm({ reportId, defaultValues, company, month }: Pr
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="email" className="text-gray-500 font-normal">이메일</Label>
                 <Input id="email" {...register("email")} type="email" className={inputClass} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="password" className="text-gray-500 font-normal">열람 비밀번호 <span className="text-gray-300">(선택)</span></Label>
+                <Input id="password" {...register("password")} type="password" placeholder="설정 시 보고서 열람에 비밀번호가 필요합니다" className={inputClass} />
               </div>
             </CardContent>
           </Card>

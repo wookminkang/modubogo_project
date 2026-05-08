@@ -1,7 +1,9 @@
 import dayjs from "@/lib/dayjs";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { getReportFromDB, getReportsByCompanyFromDB } from "@/lib/db";
+import PasswordGate from "@/components/PasswordGate";
 import { getTotalAmount } from "@/lib/mockData";
 import MonthCompareChart from "@/components/MonthCompareChart";
 import CategoryDonutChart from "@/components/CategoryDonutChart";
@@ -14,10 +16,12 @@ import Image from "next/image";
 
 interface ReportPageProps {
   params: Promise<{ company: string; month: string }>;
+  searchParams: Promise<{ auth_error?: string }>;
 }
 
-export default async function ReportPage({ params }: ReportPageProps) {
+export default async function ReportPage({ params, searchParams }: ReportPageProps) {
   const { company, month } = await params;
+  const { auth_error } = await searchParams;
   const decoded = decodeURIComponent(company);
 
   const [report, allReports] = await Promise.all([
@@ -25,6 +29,14 @@ export default async function ReportPage({ params }: ReportPageProps) {
     getReportsByCompanyFromDB(decoded),
   ]);
   if (!report) notFound();
+
+  if (report.password) {
+    const cookieStore = await cookies();
+    const authCookie = cookieStore.get(`report_auth_${report.id}`);
+    if (authCookie?.value !== report.password) {
+      return <PasswordGate reportId={report.id} company={company} month={month} error={!!auth_error} />;
+    }
+  }
 
   const categories = report.categories;
   const total = getTotalAmount(categories);

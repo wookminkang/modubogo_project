@@ -23,6 +23,7 @@ export default async function ReportEditPage({ params }: Props) {
         month: report.month,
         reporter: report.reporter,
         email: report.email,
+        password: report.password ?? '',
         categories: report.categories,
         validity: report.validity,
         contracts: report.contracts,

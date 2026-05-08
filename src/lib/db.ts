@@ -106,6 +106,7 @@ export async function upsertReport(data: {
   status: string;
   reporter: string;
   email: string;
+  password?: string;
   categories: { category: string; channel: string; agency: string; period: string; amount: string }[];
   validity: { category: string; subject: string; expiryDate: string }[];
   contracts: { category: string; name: string; keyword: string; link: string }[];
@@ -121,6 +122,7 @@ export async function upsertReport(data: {
         status: data.status,
         reporter: data.reporter,
         email: data.email,
+        password: data.password || null,
       },
       { onConflict: "id" }
     )
