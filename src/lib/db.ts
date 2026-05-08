@@ -1,14 +1,26 @@
 import { supabase } from "./supabase";
 
+type RawCategory = { category: string; channel: string; agency: string; period: string; amount: string; sort_order: number };
+type RawValidity = { category: string; subject: string; expiry_date: string; sort_order: number };
+type RawContract = { category: string; name: string; keyword: string; link: string; sort_order: number };
+
+function mapCategory(c: RawCategory) {
+  return { category: c.category, channel: c.channel, agency: c.agency, period: c.period, amount: c.amount, sort_order: c.sort_order ?? 0 };
+}
+function mapValidity(v: RawValidity) {
+  return { category: v.category, subject: v.subject, expiryDate: v.expiry_date, sort_order: v.sort_order ?? 0 };
+}
+function mapContract(ct: RawContract) {
+  return { category: ct.category, name: ct.name, keyword: ct.keyword, link: ct.link, sort_order: ct.sort_order ?? 0 };
+}
+function byOrder<T extends { sort_order: number }>(a: T, b: T) {
+  return a.sort_order - b.sort_order;
+}
+
 export async function getReportFromDB(company: string, month: string) {
   const { data: report } = await supabase
     .from("reports")
-    .select(`
-      *,
-      report_categories(*),
-      validity_items(*),
-      contract_items(*)
-    `)
+    .select(`*, report_categories(*), validity_items(*), contract_items(*)`)
     .eq("company", company)
     .eq("month", month)
     .single();
@@ -17,36 +29,16 @@ export async function getReportFromDB(company: string, month: string) {
 
   return {
     ...report,
-    categories: (report.report_categories ?? []).map((c: { category: string; channel: string; agency: string; period: string; amount: string }) => ({
-      category: c.category,
-      channel: c.channel,
-      agency: c.agency,
-      period: c.period,
-      amount: c.amount,
-    })),
-    validity: (report.validity_items ?? []).map((v: { category: string; subject: string; expiry_date: string }) => ({
-      category: v.category,
-      subject: v.subject,
-      expiryDate: v.expiry_date,
-    })),
-    contracts: (report.contract_items ?? []).map((ct: { category: string; name: string; keyword: string; link: string }) => ({
-      category: ct.category,
-      name: ct.name,
-      keyword: ct.keyword,
-      link: ct.link,
-    })),
+    categories: (report.report_categories ?? []).map(mapCategory).sort(byOrder),
+    validity: (report.validity_items ?? []).map(mapValidity).sort(byOrder),
+    contracts: (report.contract_items ?? []).map(mapContract).sort(byOrder),
   };
 }
 
 export async function getReportsByCompanyFromDB(company: string) {
   const { data: reports } = await supabase
     .from("reports")
-    .select(`
-      *,
-      report_categories(*),
-      validity_items(*),
-      contract_items(*)
-    `)
+    .select(`*, report_categories(*), validity_items(*), contract_items(*)`)
     .eq("company", company)
     .order("month", { ascending: false });
 
@@ -54,24 +46,9 @@ export async function getReportsByCompanyFromDB(company: string) {
 
   return reports.map((report) => ({
     ...report,
-    categories: (report.report_categories ?? []).map((c: { category: string; channel: string; agency: string; period: string; amount: string }) => ({
-      category: c.category,
-      channel: c.channel,
-      agency: c.agency,
-      period: c.period,
-      amount: c.amount,
-    })),
-    validity: (report.validity_items ?? []).map((v: { category: string; subject: string; expiry_date: string }) => ({
-      category: v.category,
-      subject: v.subject,
-      expiryDate: v.expiry_date,
-    })),
-    contracts: (report.contract_items ?? []).map((ct: { category: string; name: string; keyword: string; link: string }) => ({
-      category: ct.category,
-      name: ct.name,
-      keyword: ct.keyword,
-      link: ct.link,
-    })),
+    categories: (report.report_categories ?? []).map(mapCategory).sort(byOrder),
+    validity: (report.validity_items ?? []).map(mapValidity).sort(byOrder),
+    contracts: (report.contract_items ?? []).map(mapContract).sort(byOrder),
   }));
 }
 
@@ -107,11 +84,10 @@ export async function upsertReport(data: {
   reporter: string;
   email: string;
   password?: string;
-  categories: { category: string; channel: string; agency: string; period: string; amount: string }[];
-  validity: { category: string; subject: string; expiryDate: string }[];
-  contracts: { category: string; name: string; keyword: string; link: string }[];
+  categories: { category: string; channel: string; agency: string; period: string; amount: string; sort_order: string }[];
+  validity: { category: string; subject: string; expiryDate: string; sort_order: string }[];
+  contracts: { category: string; name: string; keyword: string; link: string; sort_order: string }[];
 }) {
-  // 보고서 upsert
   const { data: report, error } = await supabase
     .from("reports")
     .upsert(
@@ -133,7 +109,6 @@ export async function upsertReport(data: {
 
   const reportId = report.id;
 
-  // 기존 하위 데이터 삭제 후 재삽입
   await Promise.all([
     supabase.from("report_categories").delete().eq("report_id", reportId),
     supabase.from("validity_items").delete().eq("report_id", reportId),
@@ -142,7 +117,15 @@ export async function upsertReport(data: {
 
   await Promise.all([
     supabase.from("report_categories").insert(
-      data.categories.map((c) => ({ report_id: reportId, ...c }))
+      data.categories.map((c) => ({
+        report_id: reportId,
+        category: c.category,
+        channel: c.channel,
+        agency: c.agency,
+        period: c.period,
+        amount: c.amount,
+        sort_order: Number(c.sort_order) || 0,
+      }))
     ),
     supabase.from("validity_items").insert(
       data.validity.map((v) => ({
@@ -150,10 +133,18 @@ export async function upsertReport(data: {
         category: v.category,
         subject: v.subject,
         expiry_date: v.expiryDate,
+        sort_order: Number(v.sort_order) || 0,
       }))
     ),
     supabase.from("contract_items").insert(
-      data.contracts.map((ct) => ({ report_id: reportId, ...ct }))
+      data.contracts.map((ct) => ({
+        report_id: reportId,
+        category: ct.category,
+        name: ct.name,
+        keyword: ct.keyword,
+        link: ct.link,
+        sort_order: Number(ct.sort_order) || 0,
+      }))
     ),
   ]);
 

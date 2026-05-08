@@ -13,9 +13,9 @@ import { MonthPicker } from "@/components/ui/month-picker";
 import { DatePicker } from "@/components/ui/date-picker";
 import Link from "next/link";
 
-interface CategoryField { category: string; channel: string; agency: string; period: string; amount: string; }
-interface ValidityField { category: string; subject: string; expiryDate: string; }
-interface ContractField { category: string; name: string; keyword: string; link: string; }
+interface CategoryField { category: string; channel: string; agency: string; period: string; amount: string; sort_order: string; }
+interface ValidityField { category: string; subject: string; expiryDate: string; sort_order: string; }
+interface ContractField { category: string; name: string; keyword: string; link: string; sort_order: string; }
 
 interface FormValues {
   company: string;
@@ -128,7 +128,13 @@ export default function EditForm({ reportId, defaultValues, company, month }: Pr
               {fields.map((field, index) => (
                 <div key={field.id} className="border border-gray-100 rounded-xl p-4 flex flex-col gap-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">항목 {index + 1}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-700">항목 {index + 1}</span>
+                      <div className="flex items-center gap-1 bg-[#0e299c]/10 px-2 py-0.5 rounded-lg">
+                        <span className="text-xs text-[#0e299c] font-medium">순서</span>
+                        <input {...register(`categories.${index}.sort_order`)} type="number" min={0} className="w-8 text-xs text-center text-[#0e299c] font-bold bg-transparent outline-none" />
+                      </div>
+                    </div>
                     {fields.length > 1 && (
                       <Button type="button" variant="ghost" size="xs" onClick={() => remove(index)} className="text-red-400 hover:text-red-500 hover:bg-red-50">삭제</Button>
                     )}
@@ -142,7 +148,7 @@ export default function EditForm({ reportId, defaultValues, company, month }: Pr
                   </div>
                 </div>
               ))}
-              <button type="button" onClick={() => append({ category: "", channel: "", agency: "", period: "1", amount: "" })}
+              <button type="button" onClick={() => append({ category: "", channel: "", agency: "", period: "1", amount: "", sort_order: String(fields.length) })}
                 className="w-full border border-dashed border-gray-300 rounded-xl py-3 text-sm text-gray-400 hover:border-[#0e299c] hover:text-[#0e299c] transition-colors">
                 + 항목 추가
               </button>
@@ -156,7 +162,13 @@ export default function EditForm({ reportId, defaultValues, company, month }: Pr
               {vFields.map((field, index) => (
                 <div key={field.id} className="border border-gray-100 rounded-xl p-4 flex flex-col gap-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">항목 {index + 1}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-700">항목 {index + 1}</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-400">순서</span>
+                        <Input {...register(`validity.${index}.sort_order`)} type="number" min={0} className="w-14 h-8 text-xs text-center rounded-lg border-gray-200" />
+                      </div>
+                    </div>
                     {vFields.length > 1 && (
                       <Button type="button" variant="ghost" size="xs" onClick={() => vRemove(index)} className="text-red-400 hover:text-red-500 hover:bg-red-50">삭제</Button>
                     )}
@@ -171,7 +183,7 @@ export default function EditForm({ reportId, defaultValues, company, month }: Pr
                   </div>
                 </div>
               ))}
-              <button type="button" onClick={() => vAppend({ category: "", subject: "", expiryDate: "" })}
+              <button type="button" onClick={() => vAppend({ category: "", subject: "", expiryDate: "", sort_order: String(vFields.length) })}
                 className="w-full border border-dashed border-gray-300 rounded-xl py-3 text-sm text-gray-400 hover:border-[#0e299c] hover:text-[#0e299c] transition-colors">
                 + 유효기간 추가
               </button>
@@ -185,7 +197,13 @@ export default function EditForm({ reportId, defaultValues, company, month }: Pr
               {cFields.map((field, index) => (
                 <div key={field.id} className="border border-gray-100 rounded-xl p-4 flex flex-col gap-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">항목 {index + 1}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-700">항목 {index + 1}</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-400">순서</span>
+                        <Input {...register(`contracts.${index}.sort_order`)} type="number" min={0} className="w-14 h-8 text-xs text-center rounded-lg border-gray-200" />
+                      </div>
+                    </div>
                     {cFields.length > 1 && (
                       <Button type="button" variant="ghost" size="xs" onClick={() => cRemove(index)} className="text-red-400 hover:text-red-500 hover:bg-red-50">삭제</Button>
                     )}
@@ -196,7 +214,7 @@ export default function EditForm({ reportId, defaultValues, company, month }: Pr
                   <Input {...register(`contracts.${index}.link`)} placeholder="보고서 링크 URL" className={inputClass} />
                 </div>
               ))}
-              <button type="button" onClick={() => cAppend({ category: "", name: "", keyword: "", link: "" })}
+              <button type="button" onClick={() => cAppend({ category: "", name: "", keyword: "", link: "", sort_order: String(cFields.length) })}
                 className="w-full border border-dashed border-gray-300 rounded-xl py-3 text-sm text-gray-400 hover:border-[#0e299c] hover:text-[#0e299c] transition-colors">
                 + 항목 추가
               </button>

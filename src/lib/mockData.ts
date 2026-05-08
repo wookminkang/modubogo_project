@@ -6,12 +6,14 @@ export interface ReportCategory {
   agency: string;
   period: string;
   amount: string;
+  sort_order?: number;
 }
 
 export interface ValidityItem {
   category: string;
   subject: string;
   expiryDate: string; // "YYYY-MM-DD"
+  sort_order?: number;
 }
 
 export interface ContractItem {
@@ -19,6 +21,7 @@ export interface ContractItem {
   name: string;
   keyword: string;
   link: string;
+  sort_order?: number;
 }
 
 export interface Report {
