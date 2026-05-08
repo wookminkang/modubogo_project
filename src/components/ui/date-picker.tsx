@@ -46,6 +46,8 @@ export function DatePicker({ value, onChange, className }: DatePickerProps) {
           onSelect={handleSelect}
           locale={ko}
           captionLayout="dropdown"
+          fromYear={2000}
+          toYear={new Date().getFullYear() + 50}
           classNames={{
             day: "group/day relative aspect-square h-full w-full rounded-md p-0 text-center select-none",
           }}
