@@ -137,9 +137,9 @@ export default function EditForm({ reportId, defaultValues, company, month }: Pr
             </CardContent>
           </Card>
 
-          {/* 유효기간 */}
+          {/* 광고 심의 및 운영 현황 */}
           <Card>
-            <CardHeader><CardTitle className="text-[#0e299c]">유효기간</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-[#0e299c]">광고 심의 및 운영 현황</CardTitle></CardHeader>
             <CardContent className="flex flex-col gap-4">
               {vFields.map((field, index) => (
                 <div key={field.id} className="border border-gray-100 rounded-xl p-4 flex flex-col gap-3">
