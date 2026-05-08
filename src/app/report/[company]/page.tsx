@@ -3,6 +3,7 @@ import { getReportsByCompanyFromDB } from "@/lib/db";
 import { getTotalAmount } from "@/lib/mockData";
 import { notFound, redirect } from "next/navigation";
 import { isAdmin } from "@/lib/admin";
+import DeleteReportButton from "@/components/DeleteReportButton";
 
 interface CompanyReportListPageProps {
   params: Promise<{ company: string }>;
@@ -43,21 +44,23 @@ export default async function CompanyReportListPage({
           {reports.map((report) => {
             const total = getTotalAmount(report.categories);
             return (
-              <Link
-                key={report.id}
-                href={`/report/${encodeURIComponent(decoded)}/${report.month}`}
-                className="bg-white rounded-2xl p-5 shadow-sm flex items-center justify-between"
-              >
-                <div>
-                  <p className="font-bold text-base text-gray-900">
-                    {report.month}
-                  </p>
-                  <p className="text-sm text-gray-400 mt-1">
-                    ₩{total.toLocaleString()} · {report.categories.length}건
-                  </p>
-                </div>
-                <span className="text-gray-300">›</span>
-              </Link>
+              <div key={report.id} className="bg-white rounded-2xl shadow-sm flex items-center">
+                <Link
+                  href={`/report/${encodeURIComponent(decoded)}/${report.month}`}
+                  className="flex-1 flex items-center justify-between px-5 py-5"
+                >
+                  <div>
+                    <p className="font-bold text-base text-gray-900">
+                      {report.month}
+                    </p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      ₩{total.toLocaleString()} · {report.categories.length}건
+                    </p>
+                  </div>
+                  <span className="text-gray-300">›</span>
+                </Link>
+                <DeleteReportButton reportId={report.id} />
+              </div>
             );
           })}
         </div>
