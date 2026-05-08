@@ -1,25 +1,32 @@
 'use server';
 
 import dayjs from './dayjs';
-import { getReportsByCompanyFromDB, getReportFromDB, upsertReport } from './db';
+import { getReportsByCompanyFromDB } from './db';
 
-export async function copyLatestReport(company: string): Promise<{ company: string; month: string }> {
+interface FormValues {
+  company: string;
+  month: string;
+  reporter: string;
+  email: string;
+  password: string;
+  categories: { category: string; channel: string; agency: string; period: string; amount: string; sort_order: string }[];
+  validity: { category: string; subject: string; expiryDate: string; sort_order: string }[];
+  contracts: { category: string; name: string; keyword: string; link: string; sort_order: string }[];
+}
+
+export async function loadLatestReportData(company: string): Promise<FormValues | null> {
   const reports = await getReportsByCompanyFromDB(company);
-  if (reports.length === 0) throw new Error('복사할 보고서가 없습니다.');
+  if (reports.length === 0) return null;
 
   const latest = reports[0];
   const nextMonth = dayjs(latest.month).add(1, 'month').format('YYYY-MM');
 
-  const existing = await getReportFromDB(company, nextMonth);
-  if (existing) throw new Error(`${nextMonth} 보고서가 이미 존재합니다.`);
-
-  await upsertReport({
+  return {
     company: latest.company,
     month: nextMonth,
-    status: '작성중',
     reporter: latest.reporter,
     email: latest.email,
-    password: latest.password ?? '',
+    password: '',
     categories: latest.categories.map((c: { category: string; channel: string; agency: string; period: string; amount: string; sort_order: number }) => ({
       category: c.category,
       channel: c.channel,
@@ -41,7 +48,5 @@ export async function copyLatestReport(company: string): Promise<{ company: stri
       link: ct.link,
       sort_order: String(ct.sort_order),
     })),
-  });
-
-  return { company: latest.company, month: nextMonth };
+  };
 }

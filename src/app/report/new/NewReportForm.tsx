@@ -13,7 +13,8 @@ import { MonthPicker } from "@/components/ui/month-picker";
 import { DatePicker } from "@/components/ui/date-picker";
 import { OrderStepper } from "@/components/ui/order-stepper";
 import { AmountInput } from "@/components/ui/amount-input";
-import { Trash2 } from "lucide-react";
+import { Trash2, ClipboardCopy } from "lucide-react";
+import { loadLatestReportData } from "@/lib/copy-actions";
 
 interface CategoryField { category: string; channel: string; agency: string; period: string; amount: string; sort_order: string; }
 interface ValidityField { category: string; subject: string; expiryDate: string; sort_order: string; }
@@ -34,8 +35,9 @@ export default function ReportNewPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [redirectTo, setRedirectTo] = useState('');
+  const [loadingPrev, setLoadingPrev] = useState(false);
 
-  const { register, control, handleSubmit } = useForm<FormValues>({
+  const { register, control, handleSubmit, reset, getValues } = useForm<FormValues>({
     defaultValues: {
       categories: [{ category: "", channel: "", agency: "", period: "1", amount: "", sort_order: "0" }],
       validity: [{ category: "", subject: "", expiryDate: "", sort_order: "0" }],
@@ -46,6 +48,27 @@ export default function ReportNewPage() {
   const { fields, append, remove } = useFieldArray({ control, name: "categories" });
   const { fields: vFields, append: vAppend, remove: vRemove } = useFieldArray({ control, name: "validity" });
   const { fields: cFields, append: cAppend, remove: cRemove } = useFieldArray({ control, name: "contracts" });
+
+  const handleLoadPrevious = async () => {
+    const company = getValues('company');
+    if (!company.trim()) {
+      alert('먼저 상호명을 입력해주세요.');
+      return;
+    }
+    setLoadingPrev(true);
+    try {
+      const data = await loadLatestReportData(company.trim());
+      if (!data) {
+        alert('이전 보고서가 없습니다.');
+        return;
+      }
+      reset(data);
+    } catch {
+      alert('불러오기 중 오류가 발생했습니다.');
+    } finally {
+      setLoadingPrev(false);
+    }
+  };
 
   const onSubmit = async (data: FormValues) => {
     setSaving(true);
@@ -77,6 +100,17 @@ export default function ReportNewPage() {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          {/* 이전 달 불러오기 */}
+          <button
+            type="button"
+            onClick={handleLoadPrevious}
+            disabled={loadingPrev}
+            className="w-full flex items-center justify-center gap-2 bg-white border border-[#0e299c]/30 text-[#0e299c] rounded-2xl py-3.5 text-sm font-medium shadow-sm hover:bg-[#0e299c]/5 transition-colors disabled:opacity-50"
+          >
+            <ClipboardCopy className="w-4 h-4" />
+            {loadingPrev ? '불러오는 중...' : '이전 달 보고서 불러오기'}
+          </button>
+
           {/* 기본 정보 */}
           <Card>
             <CardHeader><CardTitle className="text-[#0e299c]">기본 정보</CardTitle></CardHeader>
