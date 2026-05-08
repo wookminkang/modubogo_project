@@ -63,11 +63,11 @@ function CustomTooltip({ active, payload, label }: any) {
 export default function MonthlyTrendChart({ data, currentMonth }: Props) {
   return (
     <div className="bg-white rounded-2xl p-5 shadow-sm relative">
-      <div className="absolute z-10 right-2 top-[-15vw]">
+      <div className="absolute z-10 right-2 top-[-40px]">
         <Image
           src="/images/teest_ct_06.png"
-          width={120}
-          height={10}
+          width={110}
+          height={110}
           alt="모두보고 캐릭터 아이콘"
         />
       </div>
