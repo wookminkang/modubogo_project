@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { getReportFromDB, getReportsByCompanyFromDB } from "@/lib/db";
+import { isAdmin } from "@/lib/admin";
+import { logoutAdmin } from "@/lib/admin-actions";
 import PasswordGate from "@/components/PasswordGate";
 import ScrollToTop from "@/components/ScrollToTop";
 import { getTotalAmount } from "@/lib/mockData";
@@ -25,9 +27,10 @@ export default async function ReportPage({ params, searchParams }: ReportPagePro
   const { auth_error } = await searchParams;
   const decoded = decodeURIComponent(company);
 
-  const [report, allReports] = await Promise.all([
+  const [report, allReports, admin] = await Promise.all([
     getReportFromDB(decoded, month),
     getReportsByCompanyFromDB(decoded),
+    isAdmin(),
   ]);
   if (!report) notFound();
 
@@ -90,20 +93,34 @@ export default async function ReportPage({ params, searchParams }: ReportPagePro
           <br />
           매체 운영 현황을 정리한 보고서예요.
         </p>
-        <div className="mt-4 flex gap-2">
-          <Link
-            href={`/report/${company}`}
-            className="text-xs text-blue-300 bg-white/10 px-3 py-1.5 rounded-lg"
-          >
-            ← 목록
-          </Link>
-          <Link
-            href={`/report/${company}/${month}/edit`}
-            className="text-xs text-white bg-white/20 px-3 py-1.5 rounded-lg"
-          >
-            수정
-          </Link>
-        </div>
+        {admin && (
+          <div className="mt-4 flex gap-2">
+            <Link
+              href={`/report/${company}`}
+              className="text-xs text-blue-300 bg-white/10 px-3 py-1.5 rounded-lg"
+            >
+              ← 목록
+            </Link>
+            <Link
+              href={`/report/${company}/${month}/edit`}
+              className="text-xs text-white bg-white/20 px-3 py-1.5 rounded-lg"
+            >
+              수정
+            </Link>
+            <form action={logoutAdmin}>
+              <button type="submit" className="text-xs text-blue-300 bg-white/10 px-3 py-1.5 rounded-lg">
+                로그아웃
+              </button>
+            </form>
+          </div>
+        )}
+        {!admin && (
+          <div className="mt-4">
+            <Link href="/admin/login" className="text-xs text-blue-300/50 hover:text-blue-300 transition-colors">
+              관리자 로그인
+            </Link>
+          </div>
+        )}
         <div className="mt-6 pt-5 border-t border-white/10 flex items-center justify-between"></div>
         <div className="mt-3 flex items-center gap-3">
           <a

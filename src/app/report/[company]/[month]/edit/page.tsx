@@ -1,5 +1,6 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getReportFromDB } from "@/lib/db";
+import { isAdmin } from "@/lib/admin";
 import EditForm from "./EditForm";
 
 interface Props {
@@ -8,6 +9,10 @@ interface Props {
 
 export default async function ReportEditPage({ params }: Props) {
   const { company, month } = await params;
+
+  const admin = await isAdmin();
+  if (!admin) redirect('/admin/login');
+
   const decoded = decodeURIComponent(company);
   const report = await getReportFromDB(decoded, month);
 
