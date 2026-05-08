@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { getReportFromDB, getReportsByCompanyFromDB } from "@/lib/db";
 import PasswordGate from "@/components/PasswordGate";
+import ScrollToTop from "@/components/ScrollToTop";
 import { getTotalAmount } from "@/lib/mockData";
 import MonthCompareChart from "@/components/MonthCompareChart";
 import CategoryDonutChart from "@/components/CategoryDonutChart";
@@ -65,6 +66,7 @@ export default async function ReportPage({ params, searchParams }: ReportPagePro
 
   return (
     <div className="min-h-screen">
+      <ScrollToTop />
       <div className="relative z-10 flex justify-center">
         <Image
           src="/images/test_ct_05.png"
