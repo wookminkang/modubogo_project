@@ -71,18 +71,19 @@ export default async function ReportPage({ params, searchParams }: ReportPagePro
   return (
     <div className="min-h-screen">
       <ScrollToTop />
-      <div className="relative z-10 flex justify-center">
+      <div className="flex justify-center overflow-hidden">
         <Image
           src="/images/test_ct_05.png"
           width={500}
           height={500}
           alt="모두보고 캐릭터 아이콘"
           priority
+          className="w-full max-w-[500px] h-auto"
         />
       </div>
 
       {/* 헤더 */}
-      <header className="relative top-[-30px] bg-[#0e299c] text-white px-6 pt-10 pb-8">
+      <header className="-mt-[30px] bg-[#0e299c] text-white px-6 pt-10 pb-8">
         <p className="text-sm text-blue-300 mb-3">
           {dayjs().format("YYYY.MM.DD (ddd)")} · 광고 운영보고
         </p>
@@ -180,7 +181,7 @@ export default async function ReportPage({ params, searchParams }: ReportPagePro
         </div>
       </header>
 
-      <div className="px-4 py-6 flex flex-col gap-5 bg-[#F0F4FA] relative top-[-20px]">
+      <div className="px-4 py-6 flex flex-col gap-5 bg-[#F0F4FA] -mt-5">
         <div className="bg-white rounded-2xl p-5 shadow-sm mb-1">
           {/* 날짜 */}
           <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-3">

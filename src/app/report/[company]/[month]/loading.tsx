@@ -2,7 +2,7 @@ export default function ReportLoading() {
   return (
     <div className="min-h-screen animate-pulse">
       {/* 캐릭터 이미지 영역 */}
-      <div className="flex justify-center bg-[#F0F4FA] h-[200px]" />
+      <div className="flex justify-center bg-[#F0F4FA] h-[min(500px,100vw)]" />
 
       {/* 헤더 */}
       <div className="relative top-[-30px] bg-[#0e299c] px-6 pt-10 pb-8">
