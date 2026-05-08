@@ -114,13 +114,6 @@ export default async function ReportPage({ params, searchParams }: ReportPagePro
             </form>
           </div>
         )}
-        {!admin && (
-          <div className="mt-4">
-            <Link href="/admin/login" className="text-xs text-blue-300/50 hover:text-blue-300 transition-colors">
-              관리자 로그인
-            </Link>
-          </div>
-        )}
         <div className="mt-6 pt-5 border-t border-white/10 flex items-center justify-between"></div>
         <div className="mt-3 flex items-center gap-3">
           <a
