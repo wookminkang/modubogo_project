@@ -3,35 +3,33 @@ import { supabase } from "./supabase";
 export async function getReportFromDB(company: string, month: string) {
   const { data: report } = await supabase
     .from("reports")
-    .select("*")
+    .select(`
+      *,
+      report_categories(*),
+      validity_items(*),
+      contract_items(*)
+    `)
     .eq("company", company)
     .eq("month", month)
     .single();
 
   if (!report) return null;
 
-  const [{ data: categories }, { data: validity }, { data: contracts }] =
-    await Promise.all([
-      supabase.from("report_categories").select("*").eq("report_id", report.id),
-      supabase.from("validity_items").select("*").eq("report_id", report.id),
-      supabase.from("contract_items").select("*").eq("report_id", report.id),
-    ]);
-
   return {
     ...report,
-    categories: (categories ?? []).map((c) => ({
+    categories: (report.report_categories ?? []).map((c: { category: string; channel: string; agency: string; period: string; amount: string }) => ({
       category: c.category,
       channel: c.channel,
       agency: c.agency,
       period: c.period,
       amount: c.amount,
     })),
-    validity: (validity ?? []).map((v) => ({
+    validity: (report.validity_items ?? []).map((v: { category: string; subject: string; expiry_date: string }) => ({
       category: v.category,
       subject: v.subject,
       expiryDate: v.expiry_date,
     })),
-    contracts: (contracts ?? []).map((ct) => ({
+    contracts: (report.contract_items ?? []).map((ct: { category: string; name: string; keyword: string; link: string }) => ({
       category: ct.category,
       name: ct.name,
       keyword: ct.keyword,
@@ -43,46 +41,38 @@ export async function getReportFromDB(company: string, month: string) {
 export async function getReportsByCompanyFromDB(company: string) {
   const { data: reports } = await supabase
     .from("reports")
-    .select("*")
+    .select(`
+      *,
+      report_categories(*),
+      validity_items(*),
+      contract_items(*)
+    `)
     .eq("company", company)
     .order("month", { ascending: false });
 
   if (!reports) return [];
 
-  const results = await Promise.all(
-    reports.map(async (report) => {
-      const [{ data: categories }, { data: validity }, { data: contracts }] =
-        await Promise.all([
-          supabase.from("report_categories").select("*").eq("report_id", report.id),
-          supabase.from("validity_items").select("*").eq("report_id", report.id),
-          supabase.from("contract_items").select("*").eq("report_id", report.id),
-        ]);
-
-      return {
-        ...report,
-        categories: (categories ?? []).map((c) => ({
-          category: c.category,
-          channel: c.channel,
-          agency: c.agency,
-          period: c.period,
-          amount: c.amount,
-        })),
-        validity: (validity ?? []).map((v) => ({
-          category: v.category,
-          subject: v.subject,
-          expiryDate: v.expiry_date,
-        })),
-        contracts: (contracts ?? []).map((ct) => ({
-          category: ct.category,
-          name: ct.name,
-          keyword: ct.keyword,
-          link: ct.link,
-        })),
-      };
-    })
-  );
-
-  return results;
+  return reports.map((report) => ({
+    ...report,
+    categories: (report.report_categories ?? []).map((c: { category: string; channel: string; agency: string; period: string; amount: string }) => ({
+      category: c.category,
+      channel: c.channel,
+      agency: c.agency,
+      period: c.period,
+      amount: c.amount,
+    })),
+    validity: (report.validity_items ?? []).map((v: { category: string; subject: string; expiry_date: string }) => ({
+      category: v.category,
+      subject: v.subject,
+      expiryDate: v.expiry_date,
+    })),
+    contracts: (report.contract_items ?? []).map((ct: { category: string; name: string; keyword: string; link: string }) => ({
+      category: ct.category,
+      name: ct.name,
+      keyword: ct.keyword,
+      link: ct.link,
+    })),
+  }));
 }
 
 export async function getCompaniesSummaryFromDB() {
