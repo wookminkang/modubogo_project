@@ -16,6 +16,7 @@ import { CardTitle } from "@/components/CardTitle";
 import ValidityTable from "@/components/ValidityTable";
 import ContractTable from "@/components/ContractTable";
 import Image from "next/image";
+import CopyLinkButton from "@/components/CopyLinkButton";
 
 interface ReportPageProps {
   params: Promise<{ company: string; month: string }>;
@@ -115,7 +116,8 @@ export default async function ReportPage({ params, searchParams }: ReportPagePro
           </div>
         )}
         <div className="mt-6 pt-5 border-t border-white/10 flex items-center justify-between"></div>
-        <div className="mt-3 flex items-center gap-3">
+        <div className="mt-3 flex items-center gap-3 flex-wrap">
+          {admin && <CopyLinkButton />}
           <a
             href="tel:01087821285"
             className="flex items-center gap-1.5 text-xs text-blue-200 bg-white/10 px-3 py-1.5 rounded-lg"
