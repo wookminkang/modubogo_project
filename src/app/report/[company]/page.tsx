@@ -4,6 +4,7 @@ import { getTotalAmount } from "@/lib/mockData";
 import { notFound, redirect } from "next/navigation";
 import { isAdmin } from "@/lib/admin";
 import DeleteReportButton from "@/components/DeleteReportButton";
+import CopyReportButton from "@/components/CopyReportButton";
 
 interface CompanyReportListPageProps {
   params: Promise<{ company: string }>;
@@ -32,12 +33,15 @@ export default async function CompanyReportListPage({
             </Link>
             <h1 className="text-2xl font-bold text-[#0e299c]">{decoded}</h1>
           </div>
-          <Link
-            href="/report/new"
-            className="bg-[#0e299c] text-white text-sm font-medium px-4 py-2 rounded-xl"
-          >
-            + 새 보고서
-          </Link>
+          <div className="flex items-center gap-2">
+            <CopyReportButton company={decoded} />
+            <Link
+              href="/report/new"
+              className="bg-[#0e299c] text-white text-sm font-medium px-4 py-2 rounded-xl"
+            >
+              + 새 보고서
+            </Link>
+          </div>
         </div>
 
         <div className="flex flex-col gap-3">
