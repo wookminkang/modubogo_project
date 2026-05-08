@@ -14,6 +14,12 @@ export interface ValidityItem {
   expiryDate: string; // "YYYY-MM-DD"
 }
 
+export interface ContractItem {
+  category: string;
+  name: string;
+  link: string;
+}
+
 export interface Report {
   id: number;
   company: string;
@@ -23,6 +29,7 @@ export interface Report {
   email: string;
   categories: ReportCategory[];
   validity: ValidityItem[];
+  contracts: ContractItem[];
 }
 
 export const MOCK_REPORTS: Report[] = [
@@ -42,6 +49,10 @@ export const MOCK_REPORTS: Report[] = [
       { category: "검색광고", subject: "네이버 파워링크 계약", expiryDate: "2026-06-30" },
       { category: "바이럴", subject: "브랜드블로그 운영", expiryDate: "2026-05-31" },
     ],
+    contracts: [
+      { category: "검색광고", name: "5월 네이버 파워링크 리포트", link: "https://example.com/report1" },
+      { category: "디스플레이", name: "5월 GFA 운영 리포트", link: "https://example.com/report2" },
+    ],
   },
   {
     id: 2,
@@ -55,6 +66,7 @@ export const MOCK_REPORTS: Report[] = [
       { category: "디스플레이", channel: "네이버 GFA", agency: "스탠다드", period: "1", amount: "2930010" },
     ],
     validity: [],
+    contracts: [],
   },
   {
     id: 3,
@@ -67,6 +79,7 @@ export const MOCK_REPORTS: Report[] = [
       { category: "검색광고", channel: "네이버 파워링크", agency: "엠포넷", period: "1", amount: "823912" },
     ],
     validity: [],
+    contracts: [],
   },
   {
     id: 4,
@@ -79,6 +92,7 @@ export const MOCK_REPORTS: Report[] = [
       { category: "바이럴", channel: "인스타그램", agency: "에이전시A", period: "1", amount: "5000000" },
     ],
     validity: [],
+    contracts: [],
   },
   {
     id: 5,
@@ -92,6 +106,7 @@ export const MOCK_REPORTS: Report[] = [
       { category: "바이럴", channel: "인스타그램", agency: "에이전시B", period: "1", amount: "2000000" },
     ],
     validity: [],
+    contracts: [],
   },
 ];
 

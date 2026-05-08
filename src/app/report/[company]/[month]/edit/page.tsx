@@ -25,6 +25,12 @@ interface ValidityField {
   expiryDate: string;
 }
 
+interface ContractField {
+  category: string;
+  name: string;
+  link: string;
+}
+
 interface FormValues {
   company: string;
   month: string;
@@ -32,6 +38,7 @@ interface FormValues {
   email: string;
   categories: CategoryField[];
   validity: ValidityField[];
+  contracts: ContractField[];
 }
 
 export default function ReportEditPage({
@@ -52,12 +59,18 @@ export default function ReportEditPage({
           email: report.email,
           categories: report.categories,
           validity: report.validity,
+          contracts: report.contracts,
         }
-      : { categories: [{ category: "", channel: "", agency: "", period: "1", amount: "" }], validity: [{ category: "", subject: "", expiryDate: "" }] },
+      : {
+          categories: [{ category: "", channel: "", agency: "", period: "1", amount: "" }],
+          validity: [{ category: "", subject: "", expiryDate: "" }],
+          contracts: [{ category: "", name: "", link: "" }],
+        },
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: "categories" });
   const { fields: vFields, append: vAppend, remove: vRemove } = useFieldArray({ control, name: "validity" });
+  const { fields: cFields, append: cAppend, remove: cRemove } = useFieldArray({ control, name: "contracts" });
 
   const onSubmit = (data: FormValues) => {
     console.log(data);
@@ -235,6 +248,55 @@ export default function ReportEditPage({
                 className="w-full border border-dashed border-gray-300 rounded-xl py-3 text-sm text-gray-400 hover:border-[#0e299c] hover:text-[#0e299c] transition-colors"
               >
                 + 유효기간 추가
+              </button>
+            </CardContent>
+          </Card>
+
+          {/* 광고 계약·리포트 */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-[#0e299c]">광고 계약·리포트</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              {cFields.map((field, index) => (
+                <div key={field.id} className="border border-gray-100 rounded-xl p-4 flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">항목 {index + 1}</span>
+                    {cFields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="xs"
+                        onClick={() => cRemove(index)}
+                        className="text-red-400 hover:text-red-500 hover:bg-red-50"
+                      >
+                        삭제
+                      </Button>
+                    )}
+                  </div>
+                  <Input
+                    {...register(`contracts.${index}.category`)}
+                    placeholder="구분값"
+                    className="h-11 rounded-xl border-gray-200 text-gray-900 focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/20"
+                  />
+                  <Input
+                    {...register(`contracts.${index}.name`)}
+                    placeholder="계약명"
+                    className="h-11 rounded-xl border-gray-200 text-gray-900 focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/20"
+                  />
+                  <Input
+                    {...register(`contracts.${index}.link`)}
+                    placeholder="링크 URL"
+                    className="h-11 rounded-xl border-gray-200 text-gray-900 focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/20"
+                  />
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => cAppend({ category: "", name: "", link: "" })}
+                className="w-full border border-dashed border-gray-300 rounded-xl py-3 text-sm text-gray-400 hover:border-[#0e299c] hover:text-[#0e299c] transition-colors"
+              >
+                + 항목 추가
               </button>
             </CardContent>
           </Card>
