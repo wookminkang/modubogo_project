@@ -25,7 +25,7 @@ export default async function ReportListPage() {
               등록된 보고서가 없습니다.
             </p>
           )}
-          {companies.map(({ company, latestMonth, reportCount, status }) => (
+          {companies.map(({ company, latestMonth, reportCount }) => (
             <Link
               key={company}
               href={`/report/${encodeURIComponent(company)}`}
@@ -37,18 +37,7 @@ export default async function ReportListPage() {
                   최근 {latestMonth} · 총 {reportCount}건
                 </p>
               </div>
-              <div className="flex items-center gap-3">
-                <span
-                  className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-                    status === "완료"
-                      ? "bg-blue-50 text-[#0e299c]"
-                      : "bg-orange-50 text-orange-500"
-                  }`}
-                >
-                  {status}
-                </span>
-                <span className="text-gray-300">›</span>
-              </div>
+              <span className="text-gray-300">›</span>
             </Link>
           ))}
         </div>
