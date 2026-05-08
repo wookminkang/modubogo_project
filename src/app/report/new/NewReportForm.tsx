@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { MonthPicker } from "@/components/ui/month-picker";
 import { DatePicker } from "@/components/ui/date-picker";
 import { OrderStepper } from "@/components/ui/order-stepper";
+import { AmountInput } from "@/components/ui/amount-input";
 import { Trash2 } from "lucide-react";
 
 interface CategoryField { category: string; channel: string; agency: string; period: string; amount: string; sort_order: string; }
@@ -147,7 +148,9 @@ export default function ReportNewPage() {
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
                       <span className="w-20 text-sm text-gray-500 shrink-0">집행금액 (원)</span>
-                      <Input {...register(`categories.${index}.amount`)} type="number" placeholder="집행금액" className={rowInputClass} />
+                      <Controller control={control} name={`categories.${index}.amount`}
+                        render={({ field }) => <AmountInput value={field.value} onChange={field.onChange} placeholder="집행금액" className={rowInputClass} />}
+                      />
                     </div>
                   </div>
                 </div>
@@ -155,57 +158,6 @@ export default function ReportNewPage() {
               <button type="button" onClick={() => append({ category: "", channel: "", agency: "", period: "1", amount: "", sort_order: String(fields.length) })}
                 className="w-full border border-dashed border-gray-300 rounded-xl py-3 text-sm text-gray-400 hover:border-[#0e299c] hover:text-[#0e299c] transition-colors">
                 + 항목 추가
-              </button>
-            </CardContent>
-          </Card>
-
-          {/* 광고 심의 및 운영 현황 */}
-          <Card>
-            <CardHeader><CardTitle className="text-[#0e299c]">광고 심의 및 운영 현황</CardTitle></CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              {vFields.map((field, index) => (
-                <div key={field.id} className="border border-gray-100 rounded-xl overflow-hidden">
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                    <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 flex items-center justify-center bg-[#0e299c] text-white text-xs font-bold rounded-full">{index + 1}</span>
-                      <span className="text-sm font-semibold text-gray-700">항목 {index + 1}</span>
-                    </div>
-                    {vFields.length > 1 && (
-                      <Button type="button" variant="ghost" size="xs" onClick={() => vRemove(index)} className="text-red-400 hover:text-red-500 hover:bg-red-50 gap-1">
-                        <Trash2 className="w-3.5 h-3.5" />삭제
-                      </Button>
-                    )}
-                  </div>
-                  <div className="divide-y divide-gray-50">
-                    <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">구분</span>
-                      <Input {...register(`validity.${index}.category`)} placeholder="ex. 검색광고" className={rowInputClass} />
-                    </div>
-                    <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">주제</span>
-                      <Input {...register(`validity.${index}.subject`)} placeholder="ex. 네이버 파워링크 계약" className={rowInputClass} />
-                    </div>
-                    <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">순서</span>
-                      <div className="flex items-center gap-2 flex-1 flex-wrap">
-                        <Controller control={control} name={`validity.${index}.sort_order`}
-                          render={({ field }) => <OrderStepper value={field.value} onChange={field.onChange} />}
-                        />
-                        <span className="text-xs text-[#0e299c]">숫자가 낮을수록 먼저 집행됩니다.</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">유효기간</span>
-                      <Controller control={control} name={`validity.${index}.expiryDate`}
-                        render={({ field }) => <DatePicker value={field.value} onChange={field.onChange} />}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-              <button type="button" onClick={() => vAppend({ category: "", subject: "", expiryDate: "", sort_order: String(vFields.length) })}
-                className="w-full border border-dashed border-gray-300 rounded-xl py-3 text-sm text-gray-400 hover:border-[#0e299c] hover:text-[#0e299c] transition-colors">
-                + 유효기간 추가
               </button>
             </CardContent>
           </Card>
@@ -259,6 +211,57 @@ export default function ReportNewPage() {
               <button type="button" onClick={() => cAppend({ category: "", name: "", keyword: "", link: "", sort_order: String(cFields.length) })}
                 className="w-full border border-dashed border-gray-300 rounded-xl py-3 text-sm text-gray-400 hover:border-[#0e299c] hover:text-[#0e299c] transition-colors">
                 + 항목 추가
+              </button>
+            </CardContent>
+          </Card>
+
+          {/* 광고 심의 및 운영 현황 */}
+          <Card>
+            <CardHeader><CardTitle className="text-[#0e299c]">광고 심의 및 운영 현황</CardTitle></CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              {vFields.map((field, index) => (
+                <div key={field.id} className="border border-gray-100 rounded-xl overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 flex items-center justify-center bg-[#0e299c] text-white text-xs font-bold rounded-full">{index + 1}</span>
+                      <span className="text-sm font-semibold text-gray-700">항목 {index + 1}</span>
+                    </div>
+                    {vFields.length > 1 && (
+                      <Button type="button" variant="ghost" size="xs" onClick={() => vRemove(index)} className="text-red-400 hover:text-red-500 hover:bg-red-50 gap-1">
+                        <Trash2 className="w-3.5 h-3.5" />삭제
+                      </Button>
+                    )}
+                  </div>
+                  <div className="divide-y divide-gray-50">
+                    <div className="flex items-center px-4 py-2.5 gap-3">
+                      <span className="w-20 text-sm text-gray-500 shrink-0">구분</span>
+                      <Input {...register(`validity.${index}.category`)} placeholder="ex. 검색광고" className={rowInputClass} />
+                    </div>
+                    <div className="flex items-center px-4 py-2.5 gap-3">
+                      <span className="w-20 text-sm text-gray-500 shrink-0">주제</span>
+                      <Input {...register(`validity.${index}.subject`)} placeholder="ex. 네이버 파워링크 계약" className={rowInputClass} />
+                    </div>
+                    <div className="flex items-center px-4 py-2.5 gap-3">
+                      <span className="w-20 text-sm text-gray-500 shrink-0">순서</span>
+                      <div className="flex items-center gap-2 flex-1 flex-wrap">
+                        <Controller control={control} name={`validity.${index}.sort_order`}
+                          render={({ field }) => <OrderStepper value={field.value} onChange={field.onChange} />}
+                        />
+                        <span className="text-xs text-[#0e299c]">숫자가 낮을수록 먼저 집행됩니다.</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center px-4 py-2.5 gap-3">
+                      <span className="w-20 text-sm text-gray-500 shrink-0">유효기간</span>
+                      <Controller control={control} name={`validity.${index}.expiryDate`}
+                        render={({ field }) => <DatePicker value={field.value} onChange={field.onChange} />}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <button type="button" onClick={() => vAppend({ category: "", subject: "", expiryDate: "", sort_order: String(vFields.length) })}
+                className="w-full border border-dashed border-gray-300 rounded-xl py-3 text-sm text-gray-400 hover:border-[#0e299c] hover:text-[#0e299c] transition-colors">
+                + 유효기간 추가
               </button>
             </CardContent>
           </Card>
