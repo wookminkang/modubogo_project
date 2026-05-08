@@ -17,6 +17,7 @@ export interface ValidityItem {
 export interface ContractItem {
   category: string;
   name: string;
+  keyword: string;
   link: string;
 }
 
@@ -50,8 +51,8 @@ export const MOCK_REPORTS: Report[] = [
       { category: "바이럴", subject: "브랜드블로그 운영", expiryDate: "2026-05-31" },
     ],
     contracts: [
-      { category: "검색광고", name: "5월 네이버 파워링크 리포트", link: "https://example.com/report1" },
-      { category: "디스플레이", name: "5월 GFA 운영 리포트", link: "https://example.com/report2" },
+      { category: "검색광고", name: "5월 네이버 파워링크 리포트", keyword: "네이버 파워링크, 브랜드검색", link: "https://example.com/report1" },
+      { category: "디스플레이", name: "5월 GFA 운영 리포트", keyword: "GFA, 디스플레이", link: "https://example.com/report2" },
     ],
   },
   {

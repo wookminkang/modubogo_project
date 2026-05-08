@@ -31,25 +31,26 @@ export default function ContractTable({ contracts }: Props) {
               <div className="text-[#333d4b] text-[14px] font-medium truncate">
                 {item.name}
               </div>
-              {item.link && (
-                <a
-                  href={item.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[12px] text-[#0e299c] truncate underline underline-offset-2"
-                >
-                  {item.link}
-                </a>
+              {item.keyword && (
+                <div className="text-[12px] text-gray-400 truncate">
+                  {item.keyword}
+                </div>
               )}
             </div>
-            <a
-              href={item.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-xl bg-[#F0F4FA]"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0e299c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            </a>
+            {item.link && (
+              <a
+                href={item.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 flex items-center justify-center w-8 h-8 rounded-xl bg-[#F0F4FA]"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0e299c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                  <polyline points="15 3 21 3 21 9"/>
+                  <line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+              </a>
+            )}
           </div>
         </div>
       ))}

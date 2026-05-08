@@ -28,6 +28,7 @@ interface ValidityField {
 interface ContractField {
   category: string;
   name: string;
+  keyword: string;
   link: string;
 }
 
@@ -64,7 +65,7 @@ export default function ReportEditPage({
       : {
           categories: [{ category: "", channel: "", agency: "", period: "1", amount: "" }],
           validity: [{ category: "", subject: "", expiryDate: "" }],
-          contracts: [{ category: "", name: "", link: "" }],
+          contracts: [{ category: "", name: "", keyword: "", link: "" }],
         },
   });
 
@@ -285,15 +286,20 @@ export default function ReportEditPage({
                     className="h-11 rounded-xl border-gray-200 text-gray-900 focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/20"
                   />
                   <Input
+                    {...register(`contracts.${index}.keyword`)}
+                    placeholder="키워드"
+                    className="h-11 rounded-xl border-gray-200 text-gray-900 focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/20"
+                  />
+                  <Input
                     {...register(`contracts.${index}.link`)}
-                    placeholder="링크 URL"
+                    placeholder="보고서 링크 URL"
                     className="h-11 rounded-xl border-gray-200 text-gray-900 focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/20"
                   />
                 </div>
               ))}
               <button
                 type="button"
-                onClick={() => cAppend({ category: "", name: "", link: "" })}
+                onClick={() => cAppend({ category: "", name: "", keyword: "", link: "" })}
                 className="w-full border border-dashed border-gray-300 rounded-xl py-3 text-sm text-gray-400 hover:border-[#0e299c] hover:text-[#0e299c] transition-colors"
               >
                 + 항목 추가
