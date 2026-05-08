@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getReportsByCompany, getTotalAmount } from "@/lib/mockData";
+import { getReportsByCompanyFromDB } from "@/lib/db";
+import { getTotalAmount } from "@/lib/mockData";
 import { notFound } from "next/navigation";
 
 interface CompanyReportListPageProps {
@@ -11,7 +12,7 @@ export default async function CompanyReportListPage({
 }: CompanyReportListPageProps) {
   const { company } = await params;
   const decoded = decodeURIComponent(company);
-  const reports = getReportsByCompany(decoded);
+  const reports = await getReportsByCompanyFromDB(decoded);
 
   if (reports.length === 0) notFound();
 

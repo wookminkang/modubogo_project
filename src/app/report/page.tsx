@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { getCompaniesSummary } from "@/lib/mockData";
+import { getCompaniesSummaryFromDB } from "@/lib/db";
 
-export default function ReportListPage() {
-  const companies = getCompaniesSummary();
+export default async function ReportListPage() {
+  const companies = await getCompaniesSummaryFromDB();
 
   return (
     <div className="min-h-screen bg-[#F0F4FA]">
@@ -18,6 +18,11 @@ export default function ReportListPage() {
         </div>
 
         <div className="flex flex-col gap-3">
+          {companies.length === 0 && (
+            <p className="text-center text-gray-400 text-sm py-10">
+              등록된 보고서가 없습니다.
+            </p>
+          )}
           {companies.map(({ company, latestMonth, reportCount, status }) => (
             <Link
               key={company}

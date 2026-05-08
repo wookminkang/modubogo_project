@@ -1,7 +1,8 @@
 import dayjs from "@/lib/dayjs";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getReport, getReportsByCompany, getTotalAmount } from "@/lib/mockData";
+import { getReportFromDB, getReportsByCompanyFromDB } from "@/lib/db";
+import { getTotalAmount } from "@/lib/mockData";
 import MonthCompareChart from "@/components/MonthCompareChart";
 import CategoryDonutChart from "@/components/CategoryDonutChart";
 import MonthlyTrendChart from "@/components/MonthlyTrendChart";
@@ -19,28 +20,29 @@ export default async function ReportPage({ params }: ReportPageProps) {
   const { company, month } = await params;
   const decoded = decodeURIComponent(company);
 
-  const report = getReport(decoded, month);
+  const [report, allReports] = await Promise.all([
+    getReportFromDB(decoded, month),
+    getReportsByCompanyFromDB(decoded),
+  ]);
   if (!report) notFound();
 
   const categories = report.categories;
   const total = getTotalAmount(categories);
-  const uniqueAgencies = new Set(categories.map((c) => c.agency)).size;
+  const uniqueAgencies = new Set(categories.map((c: { agency: string }) => c.agency)).size;
 
   const year = month.slice(0, 4);
-  const allReports = getReportsByCompany(decoded).filter((r) =>
-    r.month.startsWith(year),
-  );
+  const yearReports = allReports.filter((r) => r.month.startsWith(year));
 
   // 전월 비교
   const prevMonthStr = dayjs(month, "YYYY-MM")
     .subtract(1, "month")
     .format("YYYY-MM");
-  const prevReport = getReport(decoded, prevMonthStr);
+  const prevReport = allReports.find((r) => r.month === prevMonthStr) ?? null;
   const prevTotal = prevReport ? getTotalAmount(prevReport.categories) : 0;
   const prevCategories = prevReport?.categories ?? [];
 
   // 월별 추이 차트
-  const chartData = allReports
+  const chartData = yearReports
     .map((r) => ({
       month: r.month.slice(5),
       payment: getTotalAmount(r.categories),
@@ -214,19 +216,6 @@ export default async function ReportPage({ params }: ReportPageProps) {
                   </span>
                 </p>
               </div>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#d1d5db"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M9 18l6-6-6-6" />
-              </svg>
             </div>
           </div>
 

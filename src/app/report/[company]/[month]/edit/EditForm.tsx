@@ -1,37 +1,20 @@
 "use client";
 
 import { useFieldArray, useForm, Controller } from "react-hook-form";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { upsertReport } from "@/lib/db";
+import { upsertReport, deleteReport } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { MonthPicker } from "@/components/ui/month-picker";
 import { DatePicker } from "@/components/ui/date-picker";
+import Link from "next/link";
 
-interface CategoryField {
-  category: string;
-  channel: string;
-  agency: string;
-  period: string;
-  amount: string;
-}
-
-interface ValidityField {
-  category: string;
-  subject: string;
-  expiryDate: string;
-}
-
-interface ContractField {
-  category: string;
-  name: string;
-  keyword: string;
-  link: string;
-}
+interface CategoryField { category: string; channel: string; agency: string; period: string; amount: string; }
+interface ValidityField { category: string; subject: string; expiryDate: string; }
+interface ContractField { category: string; name: string; keyword: string; link: string; }
 
 interface FormValues {
   company: string;
@@ -43,17 +26,19 @@ interface FormValues {
   contracts: ContractField[];
 }
 
-export default function ReportNewPage() {
+interface Props {
+  reportId: number;
+  defaultValues: FormValues;
+  company: string;
+  month: string;
+}
+
+export default function EditForm({ reportId, defaultValues, company, month }: Props) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
-  const { register, control, handleSubmit } = useForm<FormValues>({
-    defaultValues: {
-      categories: [{ category: "", channel: "", agency: "", period: "1", amount: "" }],
-      validity: [{ category: "", subject: "", expiryDate: "" }],
-      contracts: [{ category: "", name: "", keyword: "", link: "" }],
-    },
-  });
+  const { register, control, handleSubmit } = useForm<FormValues>({ defaultValues });
 
   const { fields, append, remove } = useFieldArray({ control, name: "categories" });
   const { fields: vFields, append: vAppend, remove: vRemove } = useFieldArray({ control, name: "validity" });
@@ -62,13 +47,29 @@ export default function ReportNewPage() {
   const onSubmit = async (data: FormValues) => {
     setSaving(true);
     try {
-      await upsertReport({ ...data, status: "작성중" });
+      await upsertReport({ id: reportId, ...data, status: "완료" });
       router.push(`/report/${encodeURIComponent(data.company)}/${data.month}`);
+      router.refresh();
     } catch (e) {
       console.error(e);
       alert("저장 중 오류가 발생했습니다.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm("보고서를 삭제하시겠습니까?")) return;
+    setDeleting(true);
+    try {
+      await deleteReport(reportId);
+      router.push("/report");
+      router.refresh();
+    } catch (e) {
+      console.error(e);
+      alert("삭제 중 오류가 발생했습니다.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -78,8 +79,8 @@ export default function ReportNewPage() {
     <div className="min-h-screen bg-[#F0F4FA]">
       <div className="px-4 py-6 flex flex-col gap-4">
         <div>
-          <Link href="/report" className="text-sm text-gray-400 mb-1 block">← 전체 목록</Link>
-          <h1 className="text-2xl font-bold text-[#0e299c]">새 보고서 작성</h1>
+          <Link href={`/report/${encodeURIComponent(company)}/${month}`} className="text-sm text-gray-400 mb-1 block">← 보고서 상세</Link>
+          <h1 className="text-2xl font-bold text-[#0e299c]">{company} · {month} 수정</h1>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
@@ -89,7 +90,7 @@ export default function ReportNewPage() {
             <CardContent className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="company" className="text-gray-500 font-normal">상호명</Label>
-                <Input id="company" {...register("company", { required: true })} placeholder="ex) 모두보고" className={inputClass} />
+                <Input id="company" {...register("company", { required: true })} className={inputClass} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label className="text-gray-500 font-normal">보고 월</Label>
@@ -99,11 +100,11 @@ export default function ReportNewPage() {
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="reporter" className="text-gray-500 font-normal">보고자</Label>
-                <Input id="reporter" {...register("reporter", { required: true })} placeholder="ex) 홍길동" className={inputClass} />
+                <Input id="reporter" {...register("reporter", { required: true })} className={inputClass} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="email" className="text-gray-500 font-normal">이메일</Label>
-                <Input id="email" {...register("email")} type="email" placeholder="ex) hong@company.com" className={inputClass} />
+                <Input id="email" {...register("email")} type="email" className={inputClass} />
               </div>
             </CardContent>
           </Card>
@@ -120,12 +121,12 @@ export default function ReportNewPage() {
                       <Button type="button" variant="ghost" size="xs" onClick={() => remove(index)} className="text-red-400 hover:text-red-500 hover:bg-red-50">삭제</Button>
                     )}
                   </div>
-                  <Input {...register(`categories.${index}.category`)} placeholder="구분 (ex. 검색광고)" className={inputClass} />
-                  <Input {...register(`categories.${index}.channel`)} placeholder="채널 (ex. 네이버 파워링크)" className={inputClass} />
-                  <Input {...register(`categories.${index}.agency`)} placeholder="집행사 (ex. 엠포넷)" className={inputClass} />
+                  <Input {...register(`categories.${index}.category`)} placeholder="구분" className={inputClass} />
+                  <Input {...register(`categories.${index}.channel`)} placeholder="채널" className={inputClass} />
+                  <Input {...register(`categories.${index}.agency`)} placeholder="집행사" className={inputClass} />
                   <div className="flex gap-2">
-                    <Input {...register(`categories.${index}.period`)} placeholder="기간(개월)" className={`w-28 ${inputClass}`} />
-                    <Input {...register(`categories.${index}.amount`)} placeholder="집행금액" type="number" className={`flex-1 ${inputClass}`} />
+                    <Input {...register(`categories.${index}.period`)} placeholder="기간" className={`w-28 ${inputClass}`} />
+                    <Input {...register(`categories.${index}.amount`)} type="number" placeholder="금액" className={`flex-1 ${inputClass}`} />
                   </div>
                 </div>
               ))}
@@ -148,8 +149,8 @@ export default function ReportNewPage() {
                       <Button type="button" variant="ghost" size="xs" onClick={() => vRemove(index)} className="text-red-400 hover:text-red-500 hover:bg-red-50">삭제</Button>
                     )}
                   </div>
-                  <Input {...register(`validity.${index}.category`)} placeholder="구분 (ex. 검색광고)" className={inputClass} />
-                  <Input {...register(`validity.${index}.subject`)} placeholder="주제 (ex. 네이버 파워링크 계약)" className={inputClass} />
+                  <Input {...register(`validity.${index}.category`)} placeholder="구분" className={inputClass} />
+                  <Input {...register(`validity.${index}.subject`)} placeholder="주제" className={inputClass} />
                   <div className="flex flex-col gap-1.5">
                     <Label className="text-gray-500 font-normal text-xs">유효기간</Label>
                     <Controller control={control} name={`validity.${index}.expiryDate`}
@@ -190,12 +191,14 @@ export default function ReportNewPage() {
             </CardContent>
           </Card>
 
-          <Button
-            type="submit"
-            disabled={saving}
-            className="w-full bg-[#0e299c] hover:bg-[#0b2180] text-white font-semibold h-14 rounded-2xl text-sm"
-          >
-            {saving ? "저장 중..." : "보고서 저장"}
+          <Button type="submit" disabled={saving}
+            className="w-full bg-[#0e299c] hover:bg-[#0b2180] text-white font-semibold h-14 rounded-2xl text-sm">
+            {saving ? "저장 중..." : "수정 완료"}
+          </Button>
+
+          <Button type="button" variant="ghost" disabled={deleting} onClick={handleDelete}
+            className="w-full text-red-400 hover:text-red-500 hover:bg-red-50 h-12 rounded-2xl text-sm">
+            {deleting ? "삭제 중..." : "보고서 삭제"}
           </Button>
         </form>
       </div>
