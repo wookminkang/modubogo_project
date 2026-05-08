@@ -8,7 +8,8 @@ interface Props {
 }
 
 export default function ValidityTable({ validity }: Props) {
-  if (validity.length === 0) return null;
+  const items = validity.filter((v) => v.subject || v.category);
+  if (items.length === 0) return null;
 
   return (
     <div>
@@ -18,7 +19,7 @@ export default function ValidityTable({ validity }: Props) {
       />
 
       <div className="flex flex-col gap-3">
-        {validity.map((item, index) => {
+        {items.map((item, index) => {
           const diff = dayjs(item.expiryDate).diff(dayjs(), "day");
           const dday =
             diff === 0

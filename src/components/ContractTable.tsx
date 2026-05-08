@@ -7,7 +7,8 @@ interface Props {
 }
 
 export default function ContractTable({ contracts }: Props) {
-  if (contracts.length === 0) return null;
+  const items = contracts.filter((c) => c.name || c.category);
+  if (items.length === 0) return null;
 
   return (
     <div>
@@ -16,7 +17,7 @@ export default function ContractTable({ contracts }: Props) {
         description="외주업체 계약기간과 광고 보고서를 한눈에 확인할 수 있어요"
       />
 
-      {contracts.map((item, index) => (
+      {items.map((item, index) => (
         <div
           className="bg-white rounded-2xl px-4 py-4 shadow-sm mb-2"
           key={index}
