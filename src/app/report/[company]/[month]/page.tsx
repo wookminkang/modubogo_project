@@ -77,6 +77,7 @@ export default async function ReportPage({ params, searchParams }: ReportPagePro
           width={500}
           height={500}
           alt="모두보고 캐릭터 아이콘"
+          priority
         />
       </div>
 
