@@ -7,9 +7,10 @@ import { Copy } from 'lucide-react';
 
 interface Props {
   company: string;
+  className?: string;
 }
 
-export default function CopyReportButton({ company }: Props) {
+export default function CopyReportButton({ company, className }: Props) {
   const router = useRouter();
   const [copying, setCopying] = useState(false);
 
@@ -29,7 +30,7 @@ export default function CopyReportButton({ company }: Props) {
     <button
       onClick={handleCopy}
       disabled={copying}
-      className="flex items-center gap-1.5 border border-[#0e299c] text-[#0e299c] text-sm font-medium px-4 py-2 rounded-xl disabled:opacity-50"
+      className={`flex items-center justify-center gap-1.5 border border-[#0e299c] text-[#0e299c] text-sm font-medium h-11 rounded-xl disabled:opacity-50 ${className ?? ''}`}
     >
       <Copy className="w-3.5 h-3.5" />
       {copying ? '복사 중...' : '이전 달 복사'}

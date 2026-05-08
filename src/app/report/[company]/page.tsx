@@ -26,18 +26,18 @@ export default async function CompanyReportListPage({
   return (
     <div className="min-h-screen bg-[#F0F4FA]">
       <div className="px-4 py-6 flex flex-col gap-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3">
           <div>
             <Link href="/report" className="text-sm text-gray-400 mb-1 block">
               ← 전체 목록
             </Link>
             <h1 className="text-2xl font-bold text-[#0e299c]">{decoded}</h1>
           </div>
-          <div className="flex items-center gap-2">
-            <CopyReportButton company={decoded} />
+          <div className="flex gap-2">
+            <CopyReportButton company={decoded} className="flex-1" />
             <Link
               href="/report/new"
-              className="bg-[#0e299c] text-white text-sm font-medium px-4 py-2 rounded-xl"
+              className="flex-1 flex items-center justify-center bg-[#0e299c] text-white text-sm font-semibold h-11 rounded-xl"
             >
               + 새 보고서
             </Link>
