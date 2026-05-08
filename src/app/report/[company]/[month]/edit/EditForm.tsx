@@ -4,6 +4,7 @@ import { useFieldArray, useForm, Controller } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { upsertReport, deleteReport } from "@/lib/db";
+import Toast from "@/components/Toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,6 +39,8 @@ export default function EditForm({ reportId, defaultValues, company, month }: Pr
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [redirectTo, setRedirectTo] = useState('');
 
   const { register, control, handleSubmit } = useForm<FormValues>({ defaultValues });
 
@@ -49,7 +52,8 @@ export default function EditForm({ reportId, defaultValues, company, month }: Pr
     setSaving(true);
     try {
       await upsertReport({ id: reportId, ...data, status: "완료" });
-      router.push(`/report/${encodeURIComponent(data.company)}/${data.month}`);
+      setRedirectTo(`/report/${encodeURIComponent(data.company)}/${data.month}`);
+      setSaved(true);
     } catch (e) {
       console.error(e);
       alert("저장 중 오류가 발생했습니다.");
@@ -77,6 +81,7 @@ export default function EditForm({ reportId, defaultValues, company, month }: Pr
 
   return (
     <div className="min-h-screen bg-[#F0F4FA]">
+      {saved && <Toast message="수정되었어요." onDone={() => router.push(redirectTo)} />}
       <div className="px-4 py-6 flex flex-col gap-4">
         <div>
           <Link href={`/report/${encodeURIComponent(company)}/${month}`} className="text-sm text-gray-400 mb-1 block">← 보고서 상세</Link>

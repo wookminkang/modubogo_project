@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { upsertReport } from "@/lib/db";
+import Toast from "@/components/Toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,6 +48,8 @@ interface FormValues {
 export default function ReportNewPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [redirectTo, setRedirectTo] = useState('');
 
   const { register, control, handleSubmit } = useForm<FormValues>({
     defaultValues: {
@@ -64,7 +67,8 @@ export default function ReportNewPage() {
     setSaving(true);
     try {
       await upsertReport({ ...data, status: "작성중" });
-      router.push(`/report/${encodeURIComponent(data.company)}/${data.month}`);
+      setRedirectTo(`/report/${encodeURIComponent(data.company)}/${data.month}`);
+      setSaved(true);
     } catch (e) {
       console.error(e);
       alert("저장 중 오류가 발생했습니다.");
@@ -77,6 +81,7 @@ export default function ReportNewPage() {
 
   return (
     <div className="min-h-screen bg-[#F0F4FA]">
+      {saved && <Toast message="저장되었어요." onDone={() => router.push(redirectTo)} />}
       <div className="px-4 py-6 flex flex-col gap-4">
         <div>
           <Link href="/report" className="text-sm text-gray-400 mb-1 block">← 전체 목록</Link>
