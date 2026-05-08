@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { upsertReport } from "@/lib/db";
-import Toast from "@/components/Toast";
+import ResultSuccess from "@/components/ResultSuccess";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -79,9 +79,12 @@ export default function ReportNewPage() {
 
   const inputClass = "h-11 rounded-xl border-gray-200 text-gray-900 focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/20";
 
+  if (saved) {
+    return <ResultSuccess message="저장되었어요." redirectTo={redirectTo} />;
+  }
+
   return (
     <div className="min-h-screen bg-[#F0F4FA]">
-      {saved && <Toast message="저장되었어요." onDone={() => router.push(redirectTo)} />}
       <div className="px-4 py-6 flex flex-col gap-4">
         <div>
           <Link href="/report" className="text-sm text-gray-400 mb-1 block">← 전체 목록</Link>
