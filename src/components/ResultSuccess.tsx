@@ -12,7 +12,7 @@ export default function ResultSuccess({ message, redirectTo }: Props) {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-[#F0F4FA] flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4">
       <Image
         src="/images/test_ct_10.png"
         width={200}
