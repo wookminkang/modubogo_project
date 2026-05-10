@@ -9,11 +9,12 @@ import Toast from './Toast';
 
 interface Props {
   reportId: number;
+  month: string;
 }
 
 type Step = 'idle' | 'confirm' | 'result';
 
-export default function DeleteReportButton({ reportId }: Props) {
+export default function DeleteReportButton({ reportId, month }: Props) {
   const router = useRouter();
   const [step, setStep] = useState<Step>('idle');
   const [resultMsg, setResultMsg] = useState('');
@@ -54,6 +55,7 @@ export default function DeleteReportButton({ reportId }: Props) {
       {step === 'confirm' && (
         <ConfirmToast
           title="보고서 삭제"
+          subtitle={month}
           message="보고서를 삭제하시겠어요?"
           onYes={handleYes}
           onNo={handleNo}

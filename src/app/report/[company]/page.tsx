@@ -64,7 +64,7 @@ export default async function CompanyReportListPage({
                 </Link>
                 <div className="flex items-center gap-2 pr-3">
                   <KakaoNotifyButton company={decoded} month={report.month} />
-                  <DeleteReportButton reportId={report.id} />
+                  <DeleteReportButton reportId={report.id} month={report.month} />
                 </div>
               </div>
             );
