@@ -50,7 +50,7 @@ function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   const total = payload.reduce((s: number, p: { value: number }) => s + (p.value ?? 0), 0);
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-md p-3 text-xs min-w-[160px]">
+    <div className="border border-gray-200 rounded-xl shadow-md p-3 text-xs min-w-[160px]" style={{ backgroundColor: "#ffffff" }}>
       <p className="font-semibold text-gray-700 mb-2">{label}월 집행 내역</p>
       {payload.map((p: { name: string; value: number; fill: string }, i: number) => (
         <div key={i} className="flex justify-between gap-4 py-0.5">
