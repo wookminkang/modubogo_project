@@ -124,7 +124,11 @@ export default function MonthlyTrendChart({ data }: Props) {
             tickLine={false}
             width={40}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
+          <Tooltip
+            content={<CustomTooltip />}
+            cursor={{ fill: "rgba(0,0,0,0.04)" }}
+            wrapperStyle={{ zIndex: 50, backgroundColor: "#ffffff", borderRadius: 12, boxShadow: "0 4px 16px rgba(0,0,0,0.12)" }}
+          />
           <Legend
             iconType="circle"
             iconSize={8}
