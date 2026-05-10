@@ -7,7 +7,21 @@ interface Props {
   total: number;
 }
 
-export default function CategoryTable({ categories, total }: Props) {
+export default function CategoryTable({ categories }: Props) {
+  // category 기준으로 그룹핑 (순서 유지)
+  const grouped = categories.reduce<{ category: string; items: ReportCategory[] }[]>(
+    (acc, item) => {
+      const existing = acc.find((g) => g.category === item.category);
+      if (existing) {
+        existing.items.push(item);
+      } else {
+        acc.push({ category: item.category, items: [item] });
+      }
+      return acc;
+    },
+    []
+  );
+
   return (
     <div>
       <CardTitle
@@ -15,32 +29,39 @@ export default function CategoryTable({ categories, total }: Props) {
         description="각 광고 매체의 운영 업체 및 계약 내용을 확인할 수 있어요"
       />
 
-      {categories.map((item, index) => (
-        <div
-          className="bg-white rounded-2xl px-4 py-4 shadow-sm mb-2"
-          key={index}
-        >
-          <div className="flex items-center gap-1 justify-between">
-            {/* 아이콘 */}
-            <div className="flex items-start gap-2">
-              <div className="flex flex-col gap-0.5">
-                <span
-                  className={`text-[10px] px-[8px] py-[2px] inline-block w-fit rounded-lg ${getCategoryColor(item.category).bg} ${getCategoryColor(item.category).text}`}
-                >
-                  {item.category}
+      <div className="flex flex-col gap-3">
+        {grouped.map(({ category, items }) => {
+          const { bg, text } = getCategoryColor(category);
+          const groupTotal = items.reduce((s, i) => s + Number(i.amount || 0), 0);
+          return (
+            <div key={category} className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              {/* 카테고리 헤더 */}
+              <div className={`flex items-center justify-between px-4 py-2.5 ${bg}`}>
+                <span className={`text-xs font-bold ${text}`}>{category}</span>
+                <span className={`text-xs font-semibold ${text}`}>
+                  ₩{groupTotal.toLocaleString()}원
                 </span>
-                <div className="text-[#333d4b] text-[14px] font-medium">
-                  {item.channel}
-                </div>
-                <div className="text-[#6b7684] text-[13px]">{item.agency}</div>
               </div>
+
+              {/* 항목 목록 */}
+              {items.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between px-4 py-3 border-t border-gray-50"
+                >
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[14px] font-medium text-[#333d4b]">{item.channel}</span>
+                    <span className="text-[13px] text-[#6b7684]">{item.agency}</span>
+                  </div>
+                  <span className="text-[14px] text-gray-800">
+                    ₩{Number(item.amount).toLocaleString()}원
+                  </span>
+                </div>
+              ))}
             </div>
-            <div className="text-right text-[14px]">
-              ₩{Number(item.amount).toLocaleString()}원
-            </div>
-          </div>
-        </div>
-      ))}
+          );
+        })}
+      </div>
     </div>
   );
 }
