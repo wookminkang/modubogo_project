@@ -2,23 +2,14 @@
 
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell, Legend,
+  ResponsiveContainer,
 } from "recharts";
 
 export interface MonthlyTrendItem {
-  month: string;   // "2026-05"
-  label: string;   // "5월"
+  month: string;
+  label: string;
   total: number;
 }
-
-export interface CategoryItem {
-  name: string;
-  value: number;
-}
-
-const CATEGORY_COLORS = [
-  "#0e299c", "#3b82f6", "#34d399", "#f59e0b", "#f87171", "#a78bfa",
-];
 
 const fmt = (v: number) => {
   if (v >= 100000000) return `${(v / 100000000).toFixed(1)}억`;
@@ -34,17 +25,6 @@ function BarTooltip({ active, payload, label }: any) {
   return (
     <div className="bg-white border border-gray-100 rounded-xl shadow-md p-3 text-xs">
       <p className="font-semibold text-gray-700 mb-1">{label}</p>
-      <p className="text-[#0e299c] font-bold">₩{Number(payload[0].value).toLocaleString()}</p>
-    </div>
-  );
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function PieTooltip({ active, payload }: any) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-white border border-gray-100 rounded-xl shadow-md p-3 text-xs">
-      <p className="font-semibold text-gray-700">{payload[0].name}</p>
       <p className="text-[#0e299c] font-bold">₩{Number(payload[0].value).toLocaleString()}</p>
     </div>
   );
@@ -71,41 +51,6 @@ export function MonthlyBarChart({ data }: { data: MonthlyTrendItem[] }) {
         <Tooltip content={<BarTooltip />} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
         <Bar dataKey="total" radius={[6, 6, 0, 0]} fill="#0e299c" />
       </BarChart>
-    </ResponsiveContainer>
-  );
-}
-
-export function CategoryDonutChart({ data }: { data: CategoryItem[] }) {
-  if (data.length === 0) {
-    return (
-      <p className="text-center text-gray-400 text-sm py-8">이번 달 데이터가 없습니다.</p>
-    );
-  }
-  return (
-    <ResponsiveContainer width="100%" height={220}>
-      <PieChart>
-        <Pie
-          data={data}
-          cx="50%"
-          cy="45%"
-          innerRadius={55}
-          outerRadius={80}
-          paddingAngle={3}
-          dataKey="value"
-        >
-          {data.map((_, i) => (
-            <Cell key={i} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} />
-          ))}
-        </Pie>
-        <Tooltip content={<PieTooltip />} />
-        <Legend
-          iconType="circle"
-          iconSize={8}
-          formatter={(value) => (
-            <span className="text-xs text-gray-600">{value}</span>
-          )}
-        />
-      </PieChart>
     </ResponsiveContainer>
   );
 }
