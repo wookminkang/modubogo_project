@@ -39,7 +39,7 @@ export default function KakaoNotifyButton({ company, month }: Props) {
       </button>
 
       {step === "confirm" && (
-        <ConfirmToast company={company} month={month} onYes={handleYes} onNo={handleNo} />
+        <ConfirmToast title={company} subtitle={month} message="알림톡을 보내시겠어요?" onYes={handleYes} onNo={handleNo} />
       )}
 
       {step === "result" && (
