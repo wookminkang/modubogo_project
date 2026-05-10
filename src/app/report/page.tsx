@@ -16,12 +16,20 @@ export default async function ReportListPage() {
       <div className="px-4 py-6 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-[#0e299c]">보고서 목록</h1>
-          <Link
-            href="/report/new"
-            className="bg-[#0e299c] text-white text-sm font-medium px-4 py-2 rounded-xl shadow-sm"
-          >
-            + 새 보고서
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/admin/dashboard"
+              className="bg-white text-[#0e299c] text-sm font-medium px-3 py-2 rounded-xl shadow-sm border border-[#0e299c]/20"
+            >
+              대시보드
+            </Link>
+            <Link
+              href="/report/new"
+              className="bg-[#0e299c] text-white text-sm font-medium px-4 py-2 rounded-xl shadow-sm"
+            >
+              + 새 보고서
+            </Link>
+          </div>
         </div>
 
         <CompanyList companies={companies} />

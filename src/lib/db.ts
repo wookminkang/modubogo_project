@@ -155,3 +155,11 @@ export async function deleteReport(id: number) {
   const { error } = await supabase.from("reports").delete().eq("id", id);
   if (error) throw error;
 }
+
+export async function getDashboardRawDataFromDB() {
+  const { data } = await supabase
+    .from("reports")
+    .select(`id, company, month, status, reporter, report_categories(category, amount), validity_items(category, subject, expiry_date)`)
+    .order("month", { ascending: false });
+  return data ?? [];
+}
