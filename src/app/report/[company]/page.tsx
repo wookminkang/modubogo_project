@@ -45,7 +45,10 @@ export default async function CompanyReportListPage({
           {reports.map((report) => {
             const total = getTotalAmount(report.categories);
             return (
-              <div key={report.id} className="bg-white rounded-2xl shadow-sm flex items-center">
+              <div
+                key={report.id}
+                className="bg-white rounded-2xl shadow-sm flex items-center"
+              >
                 <Link
                   href={`/report/${encodeURIComponent(decoded)}/${report.month}`}
                   className="flex-1 flex items-center justify-between px-5 py-5"
@@ -58,10 +61,9 @@ export default async function CompanyReportListPage({
                       ₩{total.toLocaleString()} · {report.categories.length}건
                     </p>
                   </div>
-                  <span className="text-gray-300">›</span>
                 </Link>
                 <div className="flex items-center gap-2 pr-3">
-                  <KakaoNotifyButton company={decoded} />
+                  <KakaoNotifyButton company={decoded} month={report.month} />
                   <DeleteReportButton reportId={report.id} />
                 </div>
               </div>
