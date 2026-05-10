@@ -4,6 +4,7 @@ import { getTotalAmount } from "@/lib/mockData";
 import { notFound, redirect } from "next/navigation";
 import { isAdmin } from "@/lib/admin";
 import DeleteReportButton from "@/components/DeleteReportButton";
+import KakaoNotifyButton from "@/components/KakaoNotifyButton";
 
 interface CompanyReportListPageProps {
   params: Promise<{ company: string }>;
@@ -59,7 +60,10 @@ export default async function CompanyReportListPage({
                   </div>
                   <span className="text-gray-300">›</span>
                 </Link>
-                <DeleteReportButton reportId={report.id} />
+                <div className="flex items-center gap-2 pr-3">
+                  <KakaoNotifyButton />
+                  <DeleteReportButton reportId={report.id} />
+                </div>
               </div>
             );
           })}
