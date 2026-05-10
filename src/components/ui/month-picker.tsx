@@ -46,7 +46,7 @@ export function MonthPicker({ value, onChange, className }: MonthPickerProps) {
         <span>{formatted}</span>
         <CalendarDays className="size-4 text-gray-400" />
       </PopoverTrigger>
-      <PopoverContent className="w-72 p-3" align="start">
+      <PopoverContent className="w-72 p-3 bg-white" align="start">
         {/* 연도 네비게이션 */}
         <div className="flex items-center justify-between mb-3">
           <button
