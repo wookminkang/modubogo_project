@@ -40,10 +40,15 @@ function DonutTooltip({ active, payload }: any) {
 }
 
 export default function CategoryDonutChart({ categories, total }: Props) {
-  const data = categories.map((c) => ({
-    name: c.category,
-    value: Number(c.amount),
-    pct: Math.round((Number(c.amount) / total) * 100),
+  const grouped = categories.reduce<Record<string, number>>((acc, c) => {
+    acc[c.category] = (acc[c.category] ?? 0) + Number(c.amount || 0);
+    return acc;
+  }, {});
+
+  const data = Object.entries(grouped).map(([name, value]) => ({
+    name,
+    value,
+    pct: Math.round((value / total) * 100),
   }));
 
   return (
