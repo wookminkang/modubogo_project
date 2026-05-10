@@ -15,6 +15,7 @@ interface MonthPickerProps {
 
 export function MonthPicker({ value, onChange, className }: MonthPickerProps) {
   const today = new Date();
+  const [open, setOpen] = useState(false);
   const [year, setYear] = useState(() => {
     if (value) return parseInt(value.slice(0, 4));
     return today.getFullYear();
@@ -30,10 +31,11 @@ export function MonthPicker({ value, onChange, className }: MonthPickerProps) {
   const handleSelect = (monthIndex: number) => {
     const mm = String(monthIndex + 1).padStart(2, "0");
     onChange?.(`${year}-${mm}`);
+    setOpen(false);
   };
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         className={cn(
           "flex h-11 w-full items-center justify-between rounded-xl border border-gray-200 bg-transparent px-3 text-sm text-gray-900 transition-colors hover:border-[#0e299c] focus-visible:outline-none focus-visible:border-[#0e299c] focus-visible:ring-3 focus-visible:ring-[#0e299c]/20",
