@@ -3,21 +3,32 @@
 import { useState } from "react";
 import Toast from "./Toast";
 import ConfirmToast from "./ConfirmToast";
+import { sendAlimtalk } from "@/lib/bizgo";
 
 interface Props {
   company: string;
   month: string;
 }
 
-type Step = "idle" | "confirm" | "result";
+type Step = "idle" | "confirm" | "sending" | "result";
 
 export default function KakaoNotifyButton({ company, month }: Props) {
   const [step, setStep] = useState<Step>("idle");
   const [resultMsg, setResultMsg] = useState("");
 
-  const handleYes = () => {
+  const handleYes = async () => {
+    setStep("sending");
+    try {
+      await sendAlimtalk({
+        templateCode: "BG_report_sent_notice",
+        replaceWords: { 이름: "강민욱" },
+      });
+      setResultMsg("알림톡을 발송했어요 ✅");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "알 수 없는 오류";
+      setResultMsg(`발송 실패: ${msg}`);
+    }
     setStep("result");
-    setResultMsg("아직 개발중이에요");
   };
 
   const handleNo = () => {
@@ -29,12 +40,19 @@ export default function KakaoNotifyButton({ company, month }: Props) {
     <>
       <button
         onClick={() => setStep("confirm")}
+        disabled={step === "sending"}
         title="알림톡 보내기"
-        className="flex items-center gap-1.5 bg-[#FEE500] text-[#3C1E1E] text-xs font-bold px-3 py-2 rounded-xl hover:brightness-95 active:scale-95 transition-all shrink-0"
+        className="flex items-center gap-1.5 bg-[#FEE500] text-[#3C1E1E] text-xs font-bold px-3 py-2 rounded-xl hover:brightness-95 active:scale-95 transition-all shrink-0 disabled:opacity-50"
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.477 2 2 6.029 2 11c0 3.084 1.677 5.782 4.2 7.4L5 22l4.2-2.1C10.1 20.27 11.03 20.4 12 20.4c5.523 0 10-4.029 10-9s-4.477-9-10-9z" />
-        </svg>
+        {step === "sending" ? (
+          <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+          </svg>
+        ) : (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.477 2 2 6.029 2 11c0 3.084 1.677 5.782 4.2 7.4L5 22l4.2-2.1C10.1 20.27 11.03 20.4 12 20.4c5.523 0 10-4.029 10-9s-4.477-9-10-9z" />
+          </svg>
+        )}
         알림톡
       </button>
 
