@@ -33,11 +33,11 @@ export async function sendAlimtalk({ templateCode, replaceWords }: SendAlimtalkP
     ],
   };
 
-  const res = await fetch('https://api.bizgo.io/api/comm/v1/send/omni', {
+  const res = await fetch('https://mars.ibapi.kr/api/comm/v1/send/omni', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `ApiKey ${apiKey}`,
+      Authorization: apiKey,
     },
     body: JSON.stringify(body),
   });
