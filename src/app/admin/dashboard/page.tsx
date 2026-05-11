@@ -23,7 +23,10 @@ function getLast6Months(currentMonth: string): string[] {
   for (let i = 5; i >= 0; i--) {
     let m = month - i;
     let y = year;
-    while (m <= 0) { m += 12; y -= 1; }
+    while (m <= 0) {
+      m += 12;
+      y -= 1;
+    }
     result.push(`${y}-${String(m).padStart(2, "0")}`);
   }
   return result;
@@ -42,7 +45,8 @@ export default async function DashboardPage({
   const now = new Date();
   const defaultMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const { month: qMonth } = await searchParams;
-  const currentMonth = qMonth && /^\d{4}-\d{2}$/.test(qMonth) ? qMonth : defaultMonth;
+  const currentMonth =
+    qMonth && /^\d{4}-\d{2}$/.test(qMonth) ? qMonth : defaultMonth;
   const today = now.getTime();
 
   // KPI 계산
@@ -65,12 +69,16 @@ export default async function DashboardPage({
   // 만료 임박 계약 (30일 이내)
   const expiringItems = reports
     .flatMap((r) =>
-      (r.validity_items as { subject: string; expiry_date: string }[]).map((v) => ({
-        company: r.company,
-        subject: v.subject,
-        expiryDate: v.expiry_date,
-        daysLeft: Math.ceil((new Date(v.expiry_date).getTime() - today) / 86400000),
-      }))
+      (r.validity_items as { subject: string; expiry_date: string }[]).map(
+        (v) => ({
+          company: r.company,
+          subject: v.subject,
+          expiryDate: v.expiry_date,
+          daysLeft: Math.ceil(
+            (new Date(v.expiry_date).getTime() - today) / 86400000,
+          ),
+        }),
+      ),
     )
     .filter((v) => v.daysLeft >= 0 && v.daysLeft <= 30)
     .sort((a, b) => a.daysLeft - b.daysLeft);
@@ -81,11 +89,12 @@ export default async function DashboardPage({
   return (
     <div className="min-h-screen bg-[#F0F4FA]">
       <div className="px-4 py-6 flex flex-col gap-5 pb-12">
-
         {/* 헤더 */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-[#0e299c]">관리자 대시보드</h1>
+            <h1 className="text-2xl font-bold text-[#0e299c]">
+              관리자 대시보드
+            </h1>
             <p className="text-sm text-gray-400 mt-0.5">{currentLabel} 기준</p>
           </div>
           <Link
@@ -98,7 +107,6 @@ export default async function DashboardPage({
 
         {/* 월 선택 */}
         <MonthSelector value={currentMonth} />
-
         {/* KPI 카드 */}
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-white rounded-2xl p-4 shadow-sm">
@@ -118,7 +126,11 @@ export default async function DashboardPage({
             </div>
             <p className="text-2xl font-bold text-gray-900">
               {thisMonthTotal > 0 ? fmtAmount(thisMonthTotal) : "-"}
-              {thisMonthTotal > 0 && <span className="text-sm font-normal text-gray-400 ml-1">원</span>}
+              {thisMonthTotal > 0 && (
+                <span className="text-sm font-normal text-gray-400 ml-1">
+                  원
+                </span>
+              )}
             </p>
           </div>
         </div>
@@ -128,22 +140,41 @@ export default async function DashboardPage({
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
             <div className="flex items-center gap-2 mb-3">
               <AlertTriangle size={16} className="text-amber-500" />
-              <span className="text-sm font-bold text-amber-700">만료 임박 계약 ({expiringItems.length}건)</span>
+              <span className="text-sm font-bold text-amber-700">
+                만료 임박 계약 ({expiringItems.length}건)
+              </span>
             </div>
             <div className="flex flex-col gap-2">
-              {expiringItems.slice(0, 5).map((item: { company: string; subject: string; daysLeft: number }, i: number) => (
-                <div key={i} className="flex items-center justify-between">
-                  <div>
-                    <span className="text-xs font-medium text-gray-700">{item.company}</span>
-                    <span className="text-xs text-gray-400 ml-1.5">{item.subject}</span>
+              {expiringItems.slice(0, 5).map(
+                (
+                  item: {
+                    company: string;
+                    subject: string;
+                    daysLeft: number;
+                  },
+                  i: number,
+                ) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-medium text-gray-700">
+                        {item.company}
+                      </span>
+                      <span className="text-xs text-gray-400 ml-1.5">
+                        {item.subject}
+                      </span>
+                    </div>
+                    <span
+                      className={`text-xs font-bold px-2 py-0.5 rounded-full ${item.daysLeft <= 7 ? "bg-red-100 text-red-600" : "bg-amber-100 text-amber-600"}`}
+                    >
+                      D-{item.daysLeft}
+                    </span>
                   </div>
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${item.daysLeft <= 7 ? "bg-red-100 text-red-600" : "bg-amber-100 text-amber-600"}`}>
-                    D-{item.daysLeft}
-                  </span>
-                </div>
-              ))}
+                ),
+              )}
               {expiringItems.length > 5 && (
-                <p className="text-xs text-amber-600 text-center mt-1">+{expiringItems.length - 5}건 더 있음</p>
+                <p className="text-xs text-amber-600 text-center mt-1">
+                  +{expiringItems.length - 5}건 더 있음
+                </p>
               )}
             </div>
           </div>
@@ -151,11 +182,12 @@ export default async function DashboardPage({
 
         {/* 월별 광고비 트렌드 */}
         <div className="bg-white rounded-2xl p-4 shadow-sm">
-          <h2 className="text-sm font-bold text-gray-800 mb-1">월별 광고비 트렌드</h2>
-          <p className="text-xs text-gray-400 mb-4">최근 6개월 전체 상호 합산</p>
+          <h2 className="text-sm font-bold text-gray-800 mb-1">월별 광고비</h2>
+          <p className="text-xs text-gray-400 mb-4">
+            월별 광고비를 확인할 수 있어요
+          </p>
           <MonthlyBarChart data={monthlyTrend} />
         </div>
-
       </div>
     </div>
   );

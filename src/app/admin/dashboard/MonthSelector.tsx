@@ -9,7 +9,7 @@ export default function MonthSelector({ value }: { value: string }) {
     <MonthPicker
       value={value}
       onChange={(m) => router.push(`/admin/dashboard?month=${m}`)}
-      className="w-40 h-9 text-sm"
+      className="w-40 h-9 text-sm bg-white"
     />
   );
 }

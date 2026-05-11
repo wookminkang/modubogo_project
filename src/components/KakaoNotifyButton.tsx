@@ -19,9 +19,16 @@ export default function KakaoNotifyButton({ company, month }: Props) {
   const handleYes = async () => {
     setStep("sending");
     try {
+      const reportUrl = `http://modubogo.com/report/${encodeURIComponent(company)}/${month}`;
       await sendAlimtalk({
         templateCode: "BG_report_sent_notice",
-        replaceWords: { 이름: "강민욱" },
+        replaceWords: {
+          상호명: company,
+          날짜: month,
+          이름: company,
+          url1: reportUrl,
+          url2: reportUrl,
+        },
       });
       setResultMsg("알림톡을 발송했어요 ✅");
     } catch (e) {
@@ -45,7 +52,15 @@ export default function KakaoNotifyButton({ company, month }: Props) {
         className="flex items-center gap-1.5 bg-[#FEE500] text-[#3C1E1E] text-xs font-bold px-3 py-2 rounded-xl hover:brightness-95 active:scale-95 transition-all shrink-0 disabled:opacity-50"
       >
         {step === "sending" ? (
-          <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            className="animate-spin"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <path d="M21 12a9 9 0 1 1-6.219-8.56" />
           </svg>
         ) : (
@@ -57,7 +72,13 @@ export default function KakaoNotifyButton({ company, month }: Props) {
       </button>
 
       {step === "confirm" && (
-        <ConfirmToast title={company} subtitle={month} message="알림톡을 보내시겠어요?" onYes={handleYes} onNo={handleNo} />
+        <ConfirmToast
+          title={company}
+          subtitle={month}
+          message="알림톡을 보내시겠어요?"
+          onYes={handleYes}
+          onNo={handleNo}
+        />
       )}
 
       {step === "result" && (

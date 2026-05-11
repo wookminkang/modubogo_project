@@ -23,7 +23,10 @@ interface ReportPageProps {
   searchParams: Promise<{ auth_error?: string }>;
 }
 
-export default async function ReportPage({ params, searchParams }: ReportPageProps) {
+export default async function ReportPage({
+  params,
+  searchParams,
+}: ReportPageProps) {
   const { company, month } = await params;
   const { auth_error } = await searchParams;
   const decoded = decodeURIComponent(company);
@@ -39,13 +42,22 @@ export default async function ReportPage({ params, searchParams }: ReportPagePro
     const cookieStore = await cookies();
     const authCookie = cookieStore.get(`report_auth_${report.id}`);
     if (authCookie?.value !== report.password) {
-      return <PasswordGate reportId={report.id} company={company} month={month} error={!!auth_error} />;
+      return (
+        <PasswordGate
+          reportId={report.id}
+          company={company}
+          month={month}
+          error={!!auth_error}
+        />
+      );
     }
   }
 
   const categories = report.categories;
   const total = getTotalAmount(categories);
-  const uniqueAgencies = new Set(categories.map((c: { agency: string }) => c.agency)).size;
+  const uniqueAgencies = new Set(
+    categories.map((c: { agency: string }) => c.agency),
+  ).size;
 
   const year = month.slice(0, 4);
   const yearReports = allReports.filter((r) => r.month.startsWith(year));
@@ -111,7 +123,10 @@ export default async function ReportPage({ params, searchParams }: ReportPagePro
               수정
             </Link>
             <form action={logoutAdmin}>
-              <button type="submit" className="text-xs text-blue-300 bg-white/10 px-3 py-1.5 rounded-lg">
+              <button
+                type="submit"
+                className="text-xs text-blue-300 bg-white/10 px-3 py-1.5 rounded-lg"
+              >
                 로그아웃
               </button>
             </form>
