@@ -1,10 +1,12 @@
 import Link from "next/link";
-import { getReportsByCompanyFromDB } from "@/lib/db";
+import { getReportsByCompanyFromDB, getCompanySettings } from "@/lib/db";
 import { getTotalAmount } from "@/lib/mockData";
 import { notFound, redirect } from "next/navigation";
 import { isAdmin } from "@/lib/admin";
 import DeleteReportButton from "@/components/DeleteReportButton";
 import KakaoNotifyButton from "@/components/KakaoNotifyButton";
+import NaverAdSettingsButton from "@/components/NaverAdSettingsButton";
+import { getNaverAdCosts } from "@/lib/naverAd";
 
 interface CompanyReportListPageProps {
   params: Promise<{ company: string }>;
@@ -19,31 +21,54 @@ export default async function CompanyReportListPage({
   if (!admin) redirect("/admin/login");
 
   const decoded = decodeURIComponent(company);
-  const reports = await getReportsByCompanyFromDB(decoded);
+  const [reports, settings] = await Promise.all([
+    getReportsByCompanyFromDB(decoded),
+    getCompanySettings(decoded),
+  ]);
 
   if (reports.length === 0) notFound();
+
+  // 네이버 API 설정이 있으면 각 월의 비용을 병렬로 가져옴
+  const naverCostMap: Record<string, number> = {};
+  if (settings?.naver_ad_api_key) {
+    const results = await Promise.all(
+      reports.map((r) =>
+        getNaverAdCosts(r.month, settings).catch(() => null)
+      )
+    );
+    for (let i = 0; i < reports.length; i++) {
+      const costs = results[i];
+      if (costs) {
+        naverCostMap[reports[i].month] =
+          costs.powerlink + costs.place + costs.powerContents;
+      }
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#F0F4FA]">
       <div className="px-4 py-6 flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <Link href="/report" className="text-sm text-gray-400 mb-1 block">
-              ← 전체 목록
-            </Link>
-            <h1 className="text-2xl font-bold text-[#0e299c]">{decoded}</h1>
-          </div>
-          <Link
-            href="/report/new"
-            className="bg-[#0e299c] text-white text-sm font-medium px-4 py-2 rounded-xl"
-          >
-            + 새 보고서
+        <div>
+          <Link href="/report" className="text-sm text-gray-400 mb-1 block">
+            ← 전체 목록
           </Link>
+          <h1 className="text-2xl font-bold text-[#0e299c] mb-3">{decoded}</h1>
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <NaverAdSettingsButton company={decoded} defaultValues={settings ?? {}} />
+            </div>
+            <Link
+              href="/report/new"
+              className="flex-1 text-center bg-[#0e299c] text-white text-sm font-medium px-4 py-2 rounded-xl"
+            >
+              + 새 보고서
+            </Link>
+          </div>
         </div>
 
         <div className="flex flex-col gap-3">
           {reports.map((report) => {
-            const total = getTotalAmount(report.categories);
+            const total = getTotalAmount(report.categories) + (naverCostMap[report.month] ?? 0);
             return (
               <div
                 key={report.id}
@@ -64,7 +89,10 @@ export default async function CompanyReportListPage({
                 </Link>
                 <div className="flex items-center gap-2 pr-3">
                   <KakaoNotifyButton company={decoded} month={report.month} />
-                  <DeleteReportButton reportId={report.id} month={report.month} />
+                  <DeleteReportButton
+                    reportId={report.id}
+                    month={report.month}
+                  />
                 </div>
               </div>
             );

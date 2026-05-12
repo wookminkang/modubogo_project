@@ -2,7 +2,7 @@ import dayjs from "@/lib/dayjs";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
-import { getReportFromDB, getReportsByCompanyFromDB } from "@/lib/db";
+import { getReportFromDB, getReportsByCompanyFromDB, getCompanySettings } from "@/lib/db";
 import { isAdmin } from "@/lib/admin";
 import { logoutAdmin } from "@/lib/admin-actions";
 import PasswordGate from "@/components/PasswordGate";
@@ -17,6 +17,7 @@ import ValidityTable from "@/components/ValidityTable";
 import ContractTable from "@/components/ContractTable";
 import Image from "next/image";
 import CopyLinkButton from "@/components/CopyLinkButton";
+import { getBizmoney, getNaverAdCosts } from "@/lib/naverAd";
 
 interface ReportPageProps {
   params: Promise<{ company: string; month: string }>;
@@ -31,10 +32,22 @@ export default async function ReportPage({
   const { auth_error } = await searchParams;
   const decoded = decodeURIComponent(company);
 
-  const [report, allReports, admin] = await Promise.all([
+  const [report, allReports, admin, settings] = await Promise.all([
     getReportFromDB(decoded, month),
     getReportsByCompanyFromDB(decoded),
     isAdmin(),
+    getCompanySettings(decoded),
+  ]);
+
+  const hasNaverSettings = !!settings?.naver_ad_api_key;
+  const naverCreds = hasNaverSettings ? {
+    apiKey: settings!.naver_ad_api_key,
+    secretKey: settings!.naver_ad_secret_key,
+    customerId: settings!.naver_ad_customer_id,
+  } : null;
+  const [bizmoney, naverAdCosts] = await Promise.all([
+    naverCreds ? getBizmoney(naverCreds).catch(() => null) : Promise.resolve(null),
+    naverCreds ? getNaverAdCosts(month, settings!).catch(() => null) : Promise.resolve(null),
   ]);
   if (!report) notFound();
 
@@ -70,13 +83,24 @@ export default async function ReportPage({
   const prevTotal = prevReport ? getTotalAmount(prevReport.categories) : 0;
   const prevCategories = prevReport?.categories ?? [];
 
-  // 월별 추이 차트
+  // 네이버 API 실적 가상 카테고리 항목
+  const naverExtra = naverAdCosts ? [
+    { category: "검색광고", channel: "네이버 파워링크", agency: "NAVER", amount: naverAdCosts.powerlink },
+    { category: "검색광고", channel: "네이버 플레이스", agency: "NAVER", amount: naverAdCosts.place },
+    { category: "검색광고", channel: "네이버 파워컨텐츠", agency: "NAVER", amount: naverAdCosts.powerContents },
+  ] : [];
+  const categoriesWithNaver = [...categories, ...naverExtra];
+  const totalWithNaver = getTotalAmount(categoriesWithNaver);
   const chartData = yearReports
-    .map((r) => ({
-      month: r.month.slice(5),
-      payment: getTotalAmount(r.categories),
-      categories: r.categories,
-    }))
+    .map((r) => {
+      const isCurrentMonth = r.month === month;
+      const cats = isCurrentMonth ? [...r.categories, ...naverExtra] : r.categories;
+      return {
+        month: r.month.slice(5),
+        payment: getTotalAmount(cats),
+        categories: cats,
+      };
+    })
     .sort((a, b) => a.month.localeCompare(b.month));
   const currentMonthNum = month.slice(5);
 
@@ -219,12 +243,28 @@ export default async function ReportPage({
             {dayjs(month).format("YYYY.MM")}월
           </div>
 
+          {/* 비즈머니 잔액 */}
+          {bizmoney !== null && (
+            <div className="flex items-center justify-between bg-[#03C75A]/10 rounded-xl px-3 py-2.5 mb-4">
+              <div className="flex items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="24" height="24" rx="4" fill="#03C75A"/>
+                  <text x="12" y="17" textAnchor="middle" fontSize="13" fontWeight="bold" fill="white" fontFamily="sans-serif">N</text>
+                </svg>
+                <span className="text-xs font-medium text-[#03C75A]">비즈머니 잔액</span>
+              </div>
+              <span className="text-sm font-bold text-[#03C75A]">
+                {Math.floor(Number(bizmoney)).toLocaleString()}원
+              </span>
+            </div>
+          )}
+
           {/* 총 광고비 + 외주업체 */}
           <div className="flex items-stretch">
             <div className="flex-1 flex flex-col gap-1">
               <p className="text-xs text-gray-400">총 광고비</p>
               <p className="text-2xl font-bold text-gray-900">
-                {total.toLocaleString()}
+                {totalWithNaver.toLocaleString()}
                 <span className="text-base font-normal text-gray-500 ml-1">
                   원
                 </span>
@@ -262,8 +302,9 @@ export default async function ReportPage({
             </div>
           </div>
 
+
           {/* 안내 문구 */}
-          <div className="mt-4 flex items-start gap-1.5 bg-gray-50 rounded-xl px-3 py-2.5">
+          <div className="mt-3 flex items-start gap-1.5 bg-gray-50 rounded-xl px-3 py-2.5">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="13"
@@ -295,15 +336,15 @@ export default async function ReportPage({
           prevMonth={prevMonthStr}
           currentCategories={categories}
           prevCategories={prevCategories}
-          currentTotal={total}
+          currentTotal={totalWithNaver}
           prevTotal={prevTotal}
         />
 
         {/* 카테고리별 분포 */}
-        <CategoryDonutChart categories={categories} total={total} />
+        <CategoryDonutChart categories={categoriesWithNaver} total={totalWithNaver} />
 
         {/* 매체별 운영 현황 */}
-        <CategoryTable categories={categories} total={total} />
+        <CategoryTable categories={categories} total={total} naverAdCosts={naverAdCosts} />
 
         {/* 광고 계약·리포트 현황 */}
         <ContractTable contracts={report.contracts} />

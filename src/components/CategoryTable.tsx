@@ -2,12 +2,19 @@ import type { ReportCategory } from "@/lib/mockData";
 import { getCategoryColor } from "@/lib/categoryColors";
 import { CardTitle } from "./CardTitle";
 
+interface NaverAdCosts {
+  powerlink: number;
+  place: number;
+  powerContents: number;
+}
+
 interface Props {
   categories: ReportCategory[];
   total: number;
+  naverAdCosts?: NaverAdCosts | null;
 }
 
-export default function CategoryTable({ categories }: Props) {
+export default function CategoryTable({ categories, naverAdCosts }: Props) {
   // category 기준으로 그룹핑 (순서 유지)
   const grouped = categories.reduce<{ category: string; items: ReportCategory[] }[]>(
     (acc, item) => {
@@ -32,7 +39,10 @@ export default function CategoryTable({ categories }: Props) {
       <div className="flex flex-col gap-3">
         {grouped.map(({ category, items }) => {
           const { bg, text } = getCategoryColor(category);
-          const groupTotal = items.reduce((s, i) => s + Number(i.amount || 0), 0);
+          const naverExtra = (naverAdCosts && category === "검색광고")
+            ? naverAdCosts.powerlink + naverAdCosts.place + naverAdCosts.powerContents
+            : 0;
+          const groupTotal = items.reduce((s, i) => s + Number(i.amount || 0), 0) + naverExtra;
           return (
             <div key={category} className="bg-white rounded-2xl shadow-sm overflow-hidden">
               {/* 카테고리 헤더 */}
@@ -58,10 +68,26 @@ export default function CategoryTable({ categories }: Props) {
                   </span>
                 </div>
               ))}
+
+              {/* 검색광고 카테고리에 네이버 API 실적 추가 */}
+              {naverAdCosts && category === "검색광고" && [
+                { channel: "네이버 파워링크", value: naverAdCosts.powerlink },
+                { channel: "네이버 플레이스", value: naverAdCosts.place },
+                { channel: "네이버 파워컨텐츠", value: naverAdCosts.powerContents },
+              ].map(({ channel, value }) => (
+                <div key={channel} className="flex items-center justify-between px-4 py-3 border-t border-gray-50">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[14px] font-medium text-[#333d4b]">{channel}</span>
+                    <span className="text-[13px] text-[#6b7684]">NAVER</span>
+                  </div>
+                  <span className="text-[14px] text-gray-800">₩{value.toLocaleString()}원</span>
+                </div>
+              ))}
             </div>
           );
         })}
       </div>
+
     </div>
   );
 }

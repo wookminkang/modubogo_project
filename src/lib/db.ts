@@ -151,6 +151,27 @@ export async function upsertReport(data: {
   return report;
 }
 
+export async function getCompanySettings(company: string) {
+  const { data } = await supabase
+    .from("company_settings")
+    .select("*")
+    .eq("company", company)
+    .single();
+  return data ?? null;
+}
+
+export async function upsertCompanySettings(data: {
+  company: string;
+  naver_ad_api_key: string;
+  naver_ad_secret_key: string;
+  naver_ad_customer_id: string;
+}) {
+  const { error } = await supabase
+    .from("company_settings")
+    .upsert(data, { onConflict: "company" });
+  if (error) throw error;
+}
+
 export async function deleteReport(id: number) {
   const { error } = await supabase.from("reports").delete().eq("id", id);
   if (error) throw error;
