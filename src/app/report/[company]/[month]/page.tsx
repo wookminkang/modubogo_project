@@ -12,7 +12,6 @@ import MonthCompareChart from "@/components/MonthCompareChart";
 import CategoryDonutChart from "@/components/CategoryDonutChart";
 import MonthlyTrendChart from "@/components/MonthlyTrendChart";
 import CategoryTable from "@/components/CategoryTable";
-import { CardTitle } from "@/components/CardTitle";
 import ValidityTable from "@/components/ValidityTable";
 import ContractTable from "@/components/ContractTable";
 import Image from "next/image";
@@ -49,6 +48,14 @@ export default async function ReportPage({
     naverCreds ? getBizmoney(naverCreds).catch(() => null) : Promise.resolve(null),
     naverCreds ? getNaverAdCosts(month, settings!).catch(() => null) : Promise.resolve(null),
   ]);
+
+  console.log(`[NaverAd] ${decoded} / ${month}`, {
+    powerlink: naverAdCosts?.powerlink ?? null,
+    place: naverAdCosts?.place ?? null,
+    powerContents: naverAdCosts?.powerContents ?? null,
+    bizmoney: bizmoney ?? null,
+  });
+
   if (!report) notFound();
 
   if (report.password) {
@@ -334,7 +341,7 @@ export default async function ReportPage({
         <MonthCompareChart
           currentMonth={month}
           prevMonth={prevMonthStr}
-          currentCategories={categories}
+          currentCategories={categoriesWithNaver}
           prevCategories={prevCategories}
           currentTotal={totalWithNaver}
           prevTotal={prevTotal}

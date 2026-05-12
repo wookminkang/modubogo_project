@@ -29,6 +29,18 @@ export default function CategoryTable({ categories, naverAdCosts }: Props) {
     []
   );
 
+  // 네이버 API 실적이 있는데 검색광고 그룹이 없으면 빈 그룹 추가
+  if (naverAdCosts && !grouped.some((g) => g.category === "검색광고")) {
+    grouped.push({ category: "검색광고", items: [] });
+  }
+
+  // 검색광고 묶음을 항상 맨 위로
+  grouped.sort((a, b) => {
+    if (a.category === "검색광고") return -1;
+    if (b.category === "검색광고") return 1;
+    return 0;
+  });
+
   return (
     <div>
       <CardTitle

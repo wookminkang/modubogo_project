@@ -44,15 +44,14 @@ export default function MonthCompareChart({
     ]),
   );
 
-  const chartData = allCategories.map((cat) => {
-    const cur = currentCategories.find((c) => c.category === cat);
-    const prev = prevCategories.find((c) => c.category === cat);
-    return {
-      name: cat,
-      이번달: cur ? Number(cur.amount) : 0,
-      전월: prev ? Number(prev.amount) : 0,
-    };
-  });
+  const sumByCategory = (cats: ReportCategory[], cat: string) =>
+    cats.filter((c) => c.category === cat).reduce((s, c) => s + Number(c.amount || 0), 0);
+
+  const chartData = allCategories.map((cat) => ({
+    name: cat,
+    이번달: sumByCategory(currentCategories, cat),
+    전월: sumByCategory(prevCategories, cat),
+  }));
 
   const formatAmount = (v: number) => {
     if (v >= 10000000) return `${(v / 10000000).toFixed(0)}천만`;
