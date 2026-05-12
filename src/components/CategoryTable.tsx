@@ -53,6 +53,21 @@ export default function CategoryTable({ categories, naverAdCosts }: Props) {
                 </span>
               </div>
 
+              {/* 검색광고 카테고리 - 네이버 API 실적 먼저 */}
+              {naverAdCosts && category === "검색광고" && [
+                { channel: "네이버 파워링크", value: naverAdCosts.powerlink },
+                { channel: "네이버 플레이스", value: naverAdCosts.place },
+                { channel: "네이버 파워컨텐츠", value: naverAdCosts.powerContents },
+              ].map(({ channel, value }) => (
+                <div key={channel} className="flex items-center justify-between px-4 py-3 border-t border-gray-50">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[14px] font-medium text-[#333d4b]">{channel}</span>
+                    <span className="text-[13px] text-[#6b7684]">NAVER</span>
+                  </div>
+                  <span className="text-[14px] text-gray-800">₩{value.toLocaleString()}원</span>
+                </div>
+              ))}
+
               {/* 항목 목록 */}
               {items.map((item, idx) => (
                 <div
@@ -66,21 +81,6 @@ export default function CategoryTable({ categories, naverAdCosts }: Props) {
                   <span className="text-[14px] text-gray-800">
                     ₩{Number(item.amount).toLocaleString()}원
                   </span>
-                </div>
-              ))}
-
-              {/* 검색광고 카테고리에 네이버 API 실적 추가 */}
-              {naverAdCosts && category === "검색광고" && [
-                { channel: "네이버 파워링크", value: naverAdCosts.powerlink },
-                { channel: "네이버 플레이스", value: naverAdCosts.place },
-                { channel: "네이버 파워컨텐츠", value: naverAdCosts.powerContents },
-              ].map(({ channel, value }) => (
-                <div key={channel} className="flex items-center justify-between px-4 py-3 border-t border-gray-50">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-[14px] font-medium text-[#333d4b]">{channel}</span>
-                    <span className="text-[13px] text-[#6b7684]">NAVER</span>
-                  </div>
-                  <span className="text-[14px] text-gray-800">₩{value.toLocaleString()}원</span>
                 </div>
               ))}
             </div>
