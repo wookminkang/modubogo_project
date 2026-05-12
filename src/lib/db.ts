@@ -162,9 +162,12 @@ export async function getCompanySettings(company: string) {
 
 export async function upsertCompanySettings(data: {
   company: string;
-  naver_ad_api_key: string;
-  naver_ad_secret_key: string;
-  naver_ad_customer_id: string;
+  naver_ad_api_key?: string;
+  naver_ad_secret_key?: string;
+  naver_ad_customer_id?: string;
+  recipient1?: string;
+  recipient2?: string;
+  recipient3?: string;
 }) {
   const { error } = await supabase
     .from("company_settings")

@@ -42,7 +42,7 @@ export default function NaverAdSettingsButton({ company, defaultValues }: Props)
       <button
         onClick={() => setOpen(true)}
         title="네이버 광고 API 설정"
-        className="flex w-full items-center justify-center gap-1.5 text-xs text-gray-600 bg-white border border-gray-200 px-3 py-2 rounded-xl hover:bg-gray-50 transition-all"
+        className="flex w-full items-center justify-center gap-1.5 text-sm text-gray-600 bg-white border border-gray-200 px-3 py-2 rounded-xl hover:bg-gray-50 transition-all"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <rect width="24" height="24" rx="4" fill="#03C75A"/>

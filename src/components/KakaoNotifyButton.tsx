@@ -8,24 +8,25 @@ import { sendAlimtalk } from "@/lib/bizgo";
 interface Props {
   company: string;
   month: string;
+  recipients?: string[];
 }
 
 type Step = "idle" | "confirm" | "sending" | "result";
 
-export default function KakaoNotifyButton({ company, month }: Props) {
+export default function KakaoNotifyButton({ company, month, recipients }: Props) {
   const [step, setStep] = useState<Step>("idle");
   const [resultMsg, setResultMsg] = useState("");
 
   const handleYes = async () => {
     setStep("sending");
     try {
-      const reportUrl = `http://modubogo.com/report/${encodeURIComponent(company)}/${month}`;
+      const reportUrl = `https://modubogo.com/report/${encodeURIComponent(company)}/${month}`;
       await sendAlimtalk({
-        templateCode: "BG_report_sent_notice",
+        templateCode: "modubogo_02",
+        recipients,
         replaceWords: {
-          상호명: company,
-          날짜: month,
-          이름: company,
+          "병원 상호명": company,
+          리포트월: month,
           url1: reportUrl,
           url2: reportUrl,
         },

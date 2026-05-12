@@ -6,6 +6,7 @@ import { isAdmin } from "@/lib/admin";
 import DeleteReportButton from "@/components/DeleteReportButton";
 import KakaoNotifyButton from "@/components/KakaoNotifyButton";
 import NaverAdSettingsButton from "@/components/NaverAdSettingsButton";
+import AlimtalkSettingsButton from "@/components/AlimtalkSettingsButton";
 import { getNaverAdCosts } from "@/lib/naverAd";
 
 interface CompanyReportListPageProps {
@@ -53,13 +54,18 @@ export default async function CompanyReportListPage({
             ← 전체 목록
           </Link>
           <h1 className="text-2xl font-bold text-[#0e299c] mb-3">{decoded}</h1>
-          <div className="flex items-center gap-2">
-            <div className="flex-1">
-              <NaverAdSettingsButton company={decoded} defaultValues={settings ?? {}} />
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <AlimtalkSettingsButton company={decoded} defaultValues={settings ?? {}} />
+              </div>
+              <div className="flex-1">
+                <NaverAdSettingsButton company={decoded} defaultValues={settings ?? {}} />
+              </div>
             </div>
             <Link
               href="/report/new"
-              className="flex-1 text-center bg-[#0e299c] text-white text-sm font-medium px-4 py-2 rounded-xl"
+              className="w-full text-center bg-[#0e299c] text-white text-sm font-medium px-4 py-2.5 rounded-xl"
             >
               + 새 보고서
             </Link>
@@ -88,7 +94,11 @@ export default async function CompanyReportListPage({
                   </div>
                 </Link>
                 <div className="flex items-center gap-2 pr-3">
-                  <KakaoNotifyButton company={decoded} month={report.month} />
+                  <KakaoNotifyButton
+                    company={decoded}
+                    month={report.month}
+                    recipients={[settings?.recipient1, settings?.recipient2, settings?.recipient3].filter(Boolean) as string[]}
+                  />
                   <DeleteReportButton
                     reportId={report.id}
                     month={report.month}
