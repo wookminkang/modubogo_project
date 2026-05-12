@@ -34,44 +34,48 @@ export async function sendAlimtalk({
     templateText,
   );
 
-  const body = {
-    messageFlow: [
-      {
-        alimtalk: {
-          msgType: "AI",
-          senderKey,
-          templateCode,
-          text,
-          attachment: {
-            button: [
-              {
-                type: "WL",
-                name: "보고서 확인하기",
-                urlPc: replaceWords.url2 ?? "",
-                urlMobile: replaceWords.url1 ?? "",
+  const results = await Promise.all(
+    recipientList.map(async (to) => {
+      const body = {
+        messageFlow: [
+          {
+            alimtalk: {
+              msgType: "AI",
+              senderKey,
+              templateCode,
+              text,
+              attachment: {
+                button: [
+                  {
+                    type: "WL",
+                    name: "보고서 확인하기",
+                    urlPc: replaceWords.url2 ?? "",
+                    urlMobile: replaceWords.url1 ?? "",
+                  },
+                ],
               },
-            ],
+            },
           },
+        ],
+        destinations: [{ to, replaceWords }],
+      };
+
+      const res = await fetch("https://mars.ibapi.kr/api/comm/v1/send/omni", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: apiKey,
         },
-      },
-    ],
-    destinations: recipientList.map((to) => ({ to, replaceWords })),
-  };
+        body: JSON.stringify(body),
+      });
 
-  const res = await fetch("https://mars.ibapi.kr/api/comm/v1/send/omni", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: apiKey,
-    },
-    body: JSON.stringify(body),
-  });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json?.message ?? `BizGo API 오류 (${res.status})`);
+      }
+      return json;
+    })
+  );
 
-  const json = await res.json();
-
-  if (!res.ok) {
-    throw new Error(json?.message ?? `BizGo API 오류 (${res.status})`);
-  }
-
-  return json;
+  return results;
 }
