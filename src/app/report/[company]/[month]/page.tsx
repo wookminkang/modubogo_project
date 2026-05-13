@@ -44,10 +44,28 @@ export default async function ReportPage({
     secretKey: settings!.naver_ad_secret_key,
     customerId: settings!.naver_ad_customer_id,
   } : null;
-  const [bizmoney, naverAdCosts] = await Promise.all([
+  const year = month.slice(0, 4);
+  const yearReports = allReports.filter((r) => r.month.startsWith(year));
+
+  // 현재 달 + 연도 내 모든 달의 네이버 비용을 병렬로 가져옴
+  const [bizmoney, naverAdCosts, ...yearNaverCostResults] = await Promise.all([
     naverCreds ? getBizmoney(naverCreds).catch(() => null) : Promise.resolve(null),
     naverCreds ? getNaverAdCosts(month, settings!).catch(() => null) : Promise.resolve(null),
+    ...yearReports.map((r) =>
+      naverCreds && r.month !== month
+        ? getNaverAdCosts(r.month, settings!).catch(() => null)
+        : Promise.resolve(null)
+    ),
   ]);
+
+  // 연도 내 달별 네이버 비용 맵 (현재 달 포함)
+  const naverCostByMonth: Record<string, { powerlink: number; place: number; powerContents: number }> = {};
+  if (naverAdCosts) naverCostByMonth[month] = naverAdCosts;
+  yearReports.forEach((r, i) => {
+    if (r.month !== month && yearNaverCostResults[i]) {
+      naverCostByMonth[r.month] = yearNaverCostResults[i]!;
+    }
+  });
 
   console.log(`[NaverAd] ${decoded} / ${month}`, {
     powerlink: naverAdCosts?.powerlink ?? null,
@@ -79,18 +97,21 @@ export default async function ReportPage({
     categories.map((c: { agency: string }) => c.agency),
   ).size;
 
-  const year = month.slice(0, 4);
-  const yearReports = allReports.filter((r) => r.month.startsWith(year));
-
   // 전월 비교
   const prevMonthStr = dayjs(month, "YYYY-MM")
     .subtract(1, "month")
     .format("YYYY-MM");
   const prevReport = allReports.find((r) => r.month === prevMonthStr) ?? null;
-  const prevTotal = prevReport ? getTotalAmount(prevReport.categories) : 0;
-  const prevCategories = prevReport?.categories ?? [];
+  const prevNaverCosts = naverCostByMonth[prevMonthStr] ?? null;
+  const prevNaverExtra = prevNaverCosts ? [
+    { category: "검색광고", channel: "네이버 파워링크", agency: "NAVER", amount: prevNaverCosts.powerlink },
+    { category: "검색광고", channel: "네이버 플레이스", agency: "NAVER", amount: prevNaverCosts.place },
+    { category: "검색광고", channel: "네이버 파워컨텐츠", agency: "NAVER", amount: prevNaverCosts.powerContents },
+  ] : [];
+  const prevCategories = [...(prevReport?.categories ?? []), ...prevNaverExtra];
+  const prevTotal = prevCategories.length > 0 ? getTotalAmount(prevCategories) : 0;
 
-  // 네이버 API 실적 가상 카테고리 항목
+  // 네이버 API 실적 가상 카테고리 항목 (현재 달)
   const naverExtra = naverAdCosts ? [
     { category: "검색광고", channel: "네이버 파워링크", agency: "NAVER", amount: naverAdCosts.powerlink },
     { category: "검색광고", channel: "네이버 플레이스", agency: "NAVER", amount: naverAdCosts.place },
@@ -100,8 +121,13 @@ export default async function ReportPage({
   const totalWithNaver = getTotalAmount(categoriesWithNaver);
   const chartData = yearReports
     .map((r) => {
-      const isCurrentMonth = r.month === month;
-      const cats = isCurrentMonth ? [...r.categories, ...naverExtra] : r.categories;
+      const costs = naverCostByMonth[r.month];
+      const extra = costs ? [
+        { category: "검색광고", channel: "네이버 파워링크", agency: "NAVER", amount: costs.powerlink },
+        { category: "검색광고", channel: "네이버 플레이스", agency: "NAVER", amount: costs.place },
+        { category: "검색광고", channel: "네이버 파워컨텐츠", agency: "NAVER", amount: costs.powerContents },
+      ] : [];
+      const cats = [...r.categories, ...extra];
       return {
         month: r.month.slice(5),
         payment: getTotalAmount(cats),
