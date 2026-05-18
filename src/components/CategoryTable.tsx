@@ -1,4 +1,5 @@
 import type { ReportCategory } from "@/lib/mockData";
+import { getPeriodCount } from "@/lib/mockData";
 import { getCategoryColor } from "@/lib/categoryColors";
 import { CardTitle } from "./CardTitle";
 
@@ -12,6 +13,7 @@ interface Props {
   categories: ReportCategory[];
   total: number;
   naverAdCosts?: NaverAdCosts | null;
+  reportMonth?: string;
 }
 
 export default function CategoryTable({ categories, naverAdCosts }: Props) {
@@ -54,7 +56,10 @@ export default function CategoryTable({ categories, naverAdCosts }: Props) {
           const naverExtra = (naverAdCosts && category === "검색광고")
             ? naverAdCosts.powerlink + naverAdCosts.place + naverAdCosts.powerContents
             : 0;
-          const groupTotal = items.reduce((s, i) => s + Number(i.amount || 0), 0) + naverExtra;
+          const groupTotal = items.reduce((s, i) => {
+            const period = getPeriodCount(i.period);
+            return s + Math.round(Number(i.amount || 0) / period);
+          }, 0) + naverExtra;
           return (
             <div key={category} className="bg-white rounded-2xl shadow-sm overflow-hidden">
               {/* 카테고리 헤더 */}
@@ -81,20 +86,32 @@ export default function CategoryTable({ categories, naverAdCosts }: Props) {
               ))}
 
               {/* 항목 목록 */}
-              {items.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between px-4 py-3 border-t border-gray-50"
-                >
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-[14px] font-medium text-[#333d4b]">{item.channel}</span>
-                    <span className="text-[13px] text-[#6b7684]">{item.agency}</span>
+              {items.map((item, idx) => {
+                const period = getPeriodCount(item.period);
+                const totalAmt = Number(item.amount);
+                const monthlyAmt = Math.round(totalAmt / period);
+                return (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between px-4 py-3 border-t border-gray-50"
+                  >
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[14px] font-medium text-[#333d4b]">{item.channel}</span>
+                      <span className="text-[13px] text-[#6b7684]">{item.agency}</span>
+                    </div>
+                    <div className="flex flex-col items-end gap-0.5">
+                      <span className="text-[14px] text-gray-800">
+                        ₩{totalAmt.toLocaleString()}원
+                      </span>
+                      {period > 1 && (
+                        <span className="text-[12px] text-gray-400">
+                          (월 ₩{monthlyAmt.toLocaleString()}원)
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <span className="text-[14px] text-gray-800">
-                    ₩{Number(item.amount).toLocaleString()}원
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           );
         })}

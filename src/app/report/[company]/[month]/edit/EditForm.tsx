@@ -45,7 +45,9 @@ export default function EditForm({ reportId, defaultValues, company, month }: Pr
   const [saved, setSaved] = useState(false);
   const [redirectTo, setRedirectTo] = useState('');
 
-  const { register, control, handleSubmit } = useForm<FormValues>({ defaultValues });
+  const { register, control, handleSubmit } = useForm<FormValues>({
+    defaultValues: { ...defaultValues, reporter: "전형진", email: "oper2068@kakao.com" },
+  });
 
   const { fields, append, remove } = useFieldArray({ control, name: "categories" });
   const { fields: vFields, append: vAppend, remove: vRemove } = useFieldArray({ control, name: "validity" });
@@ -112,11 +114,11 @@ export default function EditForm({ reportId, defaultValues, company, month }: Pr
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="reporter" className="text-gray-500 font-normal">보고자</Label>
-                <Input id="reporter" {...register("reporter", { required: true })} className={inputClass} />
+                <Input id="reporter" {...register("reporter", { required: true })} className={`${inputClass} bg-gray-50 text-gray-400`} readOnly />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="email" className="text-gray-500 font-normal">이메일</Label>
-                <Input id="email" {...register("email")} type="email" className={inputClass} />
+                <Input id="email" {...register("email")} type="email" className={`${inputClass} bg-gray-50 text-gray-400`} readOnly />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="password" className="text-gray-500 font-normal">열람 비밀번호 <span className="text-gray-300">(선택)</span></Label>
@@ -142,7 +144,6 @@ export default function EditForm({ reportId, defaultValues, company, month }: Pr
                       </Button>
                     )}
                   </div>
-                  <input type="hidden" {...register(`categories.${index}.period`)} />
                   <div className="divide-y divide-gray-50">
                     <div className="flex items-center px-4 py-2.5 gap-3">
                       <span className="w-20 text-sm text-gray-500 shrink-0">구분</span>
@@ -166,9 +167,28 @@ export default function EditForm({ reportId, defaultValues, company, month }: Pr
                       </div>
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
+                      <span className="w-20 text-sm text-gray-500 shrink-0">계약기간(월)</span>
+                      <Controller control={control} name={`categories.${index}.period`}
+                        render={({ field }) => {
+                          const raw = /^\d{4}-\d{2}$/.test(field.value) ? 1 : (parseInt(field.value) || 1);
+                          const num = Math.max(1, raw);
+                          return (
+                            <div className="flex items-center gap-1 bg-[#0e299c]/10 px-2 py-1 rounded-lg">
+                              <button type="button" onClick={() => field.onChange(String(Math.max(1, num - 1)))}
+                                className="w-6 h-6 flex items-center justify-center text-[#0e299c] hover:bg-[#0e299c]/20 rounded font-bold text-base">−</button>
+                              <span className="w-8 text-center text-sm text-[#0e299c] font-bold">{num}</span>
+                              <button type="button" onClick={() => field.onChange(String(num + 1))}
+                                className="w-6 h-6 flex items-center justify-center text-[#0e299c] hover:bg-[#0e299c]/20 rounded font-bold text-base">+</button>
+                              <span className="text-xs text-[#0e299c] font-medium pr-1">개월</span>
+                            </div>
+                          );
+                        }}
+                      />
+                    </div>
+                    <div className="flex items-center px-4 py-2.5 gap-3">
                       <span className="w-20 text-sm text-gray-500 shrink-0">집행금액 (원)</span>
                       <Controller control={control} name={`categories.${index}.amount`}
-                        render={({ field }) => <AmountInput value={field.value} onChange={field.onChange} placeholder="금액" className={rowInputClass} />}
+                        render={({ field }) => <AmountInput value={field.value} onChange={field.onChange} placeholder="총 계약금액" className={rowInputClass} />}
                       />
                     </div>
                   </div>

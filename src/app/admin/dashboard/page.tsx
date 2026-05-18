@@ -97,12 +97,20 @@ export default async function DashboardPage({
             </h1>
             <p className="text-sm text-gray-400 mt-0.5">{currentLabel} 기준</p>
           </div>
-          <Link
-            href="/report"
-            className="text-sm text-gray-500 bg-white px-3 py-2 rounded-xl shadow-sm"
-          >
-            보고서 목록
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/admin/alimtalk-logs"
+              className="text-sm text-[#3C1E1E] bg-[#FEE500] px-3 py-2 rounded-xl shadow-sm font-medium"
+            >
+              알림톡 조회
+            </Link>
+            <Link
+              href="/report"
+              className="text-sm text-gray-500 bg-white px-3 py-2 rounded-xl shadow-sm"
+            >
+              보고서 목록
+            </Link>
+          </div>
         </div>
 
         {/* 월 선택 */}

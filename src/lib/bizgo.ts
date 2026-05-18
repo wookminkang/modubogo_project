@@ -1,5 +1,7 @@
 "use server";
 
+import { logAlimtalk } from "./db";
+
 interface SendAlimtalkParams {
   templateCode: string;
   replaceWords: Record<string, string>;
@@ -34,48 +36,73 @@ export async function sendAlimtalk({
     templateText,
   );
 
-  const results = await Promise.all(
-    recipientList.map(async (to) => {
-      const body = {
-        messageFlow: [
-          {
-            alimtalk: {
-              msgType: "AI",
-              senderKey,
-              templateCode,
-              text,
-              attachment: {
-                button: [
-                  {
-                    type: "WL",
-                    name: "보고서 확인하기",
-                    urlPc: replaceWords.url2 ?? "",
-                    urlMobile: replaceWords.url1 ?? "",
-                  },
-                ],
+  const company = replaceWords["병원 상호명"] ?? "";
+  const month = replaceWords["리포트월"] ?? "";
+  const reportUrl = replaceWords["url1"] ?? "";
+
+  let results;
+  try {
+    results = await Promise.all(
+      recipientList.map(async (to) => {
+        const body = {
+          messageFlow: [
+            {
+              alimtalk: {
+                msgType: "AI",
+                senderKey,
+                templateCode,
+                text,
+                attachment: {
+                  button: [
+                    {
+                      type: "WL",
+                      name: "보고서 확인하기",
+                      urlPc: replaceWords.url2 ?? "",
+                      urlMobile: replaceWords.url1 ?? "",
+                    },
+                  ],
+                },
               },
             },
+          ],
+          destinations: [{ to, replaceWords }],
+        };
+
+        const res = await fetch("https://mars.ibapi.kr/api/comm/v1/send/omni", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: apiKey,
           },
-        ],
-        destinations: [{ to, replaceWords }],
-      };
+          body: JSON.stringify(body),
+        });
 
-      const res = await fetch("https://mars.ibapi.kr/api/comm/v1/send/omni", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: apiKey,
-        },
-        body: JSON.stringify(body),
-      });
+        const json = await res.json();
+        if (!res.ok) {
+          throw new Error(json?.message ?? `BizGo API 오류 (${res.status})`);
+        }
+        return json;
+      })
+    );
+  } catch (e) {
+    await logAlimtalk({
+      company,
+      month,
+      recipients: recipientList,
+      status: "failed",
+      error_message: e instanceof Error ? e.message : String(e),
+      report_url: reportUrl,
+    });
+    throw e;
+  }
 
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json?.message ?? `BizGo API 오류 (${res.status})`);
-      }
-      return json;
-    })
-  );
+  await logAlimtalk({
+    company,
+    month,
+    recipients: recipientList,
+    status: "success",
+    report_url: reportUrl,
+  });
 
   return results;
 }

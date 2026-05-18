@@ -6,7 +6,7 @@ import { getReportFromDB, getReportsByCompanyFromDB, getCompanySettings } from "
 import { isAdmin } from "@/lib/admin";
 import { logoutAdmin } from "@/lib/admin-actions";
 import PasswordGate from "@/components/PasswordGate";
-import ScrollToTop from "@/components/ScrollToTop";
+import ScrollNav from "@/components/ScrollNav";
 import { getTotalAmount } from "@/lib/mockData";
 import MonthCompareChart from "@/components/MonthCompareChart";
 import CategoryDonutChart from "@/components/CategoryDonutChart";
@@ -92,7 +92,7 @@ export default async function ReportPage({
   }
 
   const categories = report.categories;
-  const total = getTotalAmount(categories);
+  const total = getTotalAmount(categories, month);
   const uniqueAgencies = new Set(
     categories.map((c: { agency: string }) => c.agency),
   ).size;
@@ -109,7 +109,7 @@ export default async function ReportPage({
     { category: "검색광고", channel: "네이버 파워컨텐츠", agency: "NAVER", amount: prevNaverCosts.powerContents },
   ] : [];
   const prevCategories = [...(prevReport?.categories ?? []), ...prevNaverExtra];
-  const prevTotal = prevCategories.length > 0 ? getTotalAmount(prevCategories) : 0;
+  const prevTotal = prevCategories.length > 0 ? getTotalAmount(prevCategories, prevMonthStr) : 0;
 
   // 네이버 API 실적 가상 카테고리 항목 (현재 달)
   const naverExtra = naverAdCosts ? [
@@ -118,7 +118,7 @@ export default async function ReportPage({
     { category: "검색광고", channel: "네이버 파워컨텐츠", agency: "NAVER", amount: naverAdCosts.powerContents },
   ] : [];
   const categoriesWithNaver = [...categories, ...naverExtra];
-  const totalWithNaver = getTotalAmount(categoriesWithNaver);
+  const totalWithNaver = getTotalAmount(categoriesWithNaver, month);
   const chartData = yearReports
     .map((r) => {
       const costs = naverCostByMonth[r.month];
@@ -130,7 +130,7 @@ export default async function ReportPage({
       const cats = [...r.categories, ...extra];
       return {
         month: r.month.slice(5),
-        payment: getTotalAmount(cats),
+        payment: getTotalAmount(cats, r.month),
         categories: cats,
       };
     })
@@ -139,7 +139,7 @@ export default async function ReportPage({
 
   return (
     <div className="min-h-screen">
-      <ScrollToTop />
+      <ScrollNav />
       <div className="flex justify-center overflow-hidden">
         <Image
           src="/images/test_ct_05.png"
@@ -377,7 +377,7 @@ export default async function ReportPage({
         <CategoryDonutChart categories={categoriesWithNaver} total={totalWithNaver} />
 
         {/* 매체별 운영 현황 */}
-        <CategoryTable categories={categories} total={total} naverAdCosts={naverAdCosts} />
+        <CategoryTable categories={categories} total={total} naverAdCosts={naverAdCosts} reportMonth={month} />
 
         {/* 광고 계약·리포트 현황 */}
         <ContractTable contracts={report.contracts} />

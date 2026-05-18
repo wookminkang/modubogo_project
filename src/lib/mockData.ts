@@ -141,6 +141,14 @@ export function getReport(company: string, month: string) {
   return MOCK_REPORTS.find((r) => r.company === company && r.month === month) ?? null;
 }
 
-export function getTotalAmount(categories: ReportCategory[]) {
-  return categories.reduce((sum, c) => sum + Number(c.amount), 0);
+export function getPeriodCount(period: string): number {
+  if (/^\d{4}-\d{2}$/.test(period)) return 1;
+  return Math.max(1, Number(period) || 1);
+}
+
+export function getTotalAmount(categories: ReportCategory[], _reportMonth?: string) {
+  return categories.reduce((sum, c) => {
+    const period = getPeriodCount(c.period);
+    return sum + Math.round(Number(c.amount) / period);
+  }, 0);
 }

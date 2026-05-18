@@ -180,6 +180,25 @@ export async function deleteReport(id: number) {
   if (error) throw error;
 }
 
+export async function logAlimtalk(data: {
+  company: string;
+  month: string;
+  recipients: string[];
+  status: "success" | "failed";
+  error_message?: string;
+  report_url?: string;
+}) {
+  await supabase.from("alimtalk_logs").insert(data);
+}
+
+export async function getAlimtalkLogs() {
+  const { data } = await supabase
+    .from("alimtalk_logs")
+    .select("*")
+    .order("sent_at", { ascending: false });
+  return data ?? [];
+}
+
 export async function getDashboardRawDataFromDB() {
   const { data } = await supabase
     .from("reports")
