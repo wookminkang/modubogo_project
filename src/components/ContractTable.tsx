@@ -4,9 +4,10 @@ import { CardTitle } from "./CardTitle";
 
 interface Props {
   contracts: ContractItem[];
+  colorMap?: Record<string, { bgHex: string; textHex: string }>;
 }
 
-export default function ContractTable({ contracts }: Props) {
+export default function ContractTable({ contracts, colorMap }: Props) {
   const items = contracts.filter((c) => c.name || c.category);
   if (items.length === 0) return null;
 
@@ -25,7 +26,8 @@ export default function ContractTable({ contracts }: Props) {
           <div className="flex items-center justify-between gap-2">
             <div className="flex flex-col gap-0.5 min-w-0">
               <span
-                className={`text-[10px] px-[8px] py-[2px] inline-block w-fit rounded-lg ${getCategoryColor(item.category).bg} ${getCategoryColor(item.category).text}`}
+                className="text-[10px] px-[8px] py-[2px] inline-block w-fit rounded-lg"
+                style={{ backgroundColor: getCategoryColor(item.category, colorMap).bgHex, color: getCategoryColor(item.category, colorMap).textHex }}
               >
                 {item.category}
               </span>

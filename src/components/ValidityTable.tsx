@@ -5,9 +5,10 @@ import { CardTitle } from "./CardTitle";
 
 interface Props {
   validity: ValidityItem[];
+  colorMap?: Record<string, { bgHex: string; textHex: string }>;
 }
 
-export default function ValidityTable({ validity }: Props) {
+export default function ValidityTable({ validity, colorMap }: Props) {
   const items = validity.filter((v) => v.subject || v.category);
   if (items.length === 0) return null;
 
@@ -45,7 +46,7 @@ export default function ValidityTable({ validity }: Props) {
             >
               {/* 상단: 구분 태그 */}
               <div className="flex items-center justify-between mb-1">
-                <span className={`text-[10px] px-[8px] py-[2px] rounded-lg w-fit ${getCategoryColor(item.category).bg} ${getCategoryColor(item.category).text}`}>
+                <span className="text-[10px] px-[8px] py-[2px] rounded-lg w-fit" style={{ backgroundColor: getCategoryColor(item.category, colorMap).bgHex, color: getCategoryColor(item.category, colorMap).textHex }}>
                   {item.category}
                 </span>
               </div>

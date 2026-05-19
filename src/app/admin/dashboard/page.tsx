@@ -105,6 +105,12 @@ export default async function DashboardPage({
               알림톡 조회
             </Link>
             <Link
+              href="/admin/category-colors"
+              className="text-sm text-gray-500 bg-white px-3 py-2 rounded-xl shadow-sm"
+            >
+              색상 설정
+            </Link>
+            <Link
               href="/report"
               className="text-sm text-gray-500 bg-white px-3 py-2 rounded-xl shadow-sm"
             >

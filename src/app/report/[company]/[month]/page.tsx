@@ -2,12 +2,13 @@ import dayjs from "@/lib/dayjs";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
-import { getReportFromDB, getReportsByCompanyFromDB, getCompanySettings } from "@/lib/db";
+import { getReportFromDB, getReportsByCompanyFromDB, getCompanySettings, getCategoryColorsFromDB } from "@/lib/db";
 import { isAdmin } from "@/lib/admin";
 import { logoutAdmin } from "@/lib/admin-actions";
 import PasswordGate from "@/components/PasswordGate";
 import ScrollNav from "@/components/ScrollNav";
 import { getTotalAmount } from "@/lib/mockData";
+import { DEFAULT_COLORS } from "@/lib/categoryColors";
 import MonthCompareChart from "@/components/MonthCompareChart";
 import CategoryDonutChart from "@/components/CategoryDonutChart";
 import MonthlyTrendChart from "@/components/MonthlyTrendChart";
@@ -31,12 +32,14 @@ export default async function ReportPage({
   const { auth_error } = await searchParams;
   const decoded = decodeURIComponent(company);
 
-  const [report, allReports, admin, settings] = await Promise.all([
+  const [report, allReports, admin, settings, dbColors] = await Promise.all([
     getReportFromDB(decoded, month),
     getReportsByCompanyFromDB(decoded),
     isAdmin(),
     getCompanySettings(decoded),
+    getCategoryColorsFromDB(),
   ]);
+  const colorMap = { ...DEFAULT_COLORS, ...dbColors };
 
   const hasNaverSettings = !!settings?.naver_ad_api_key;
   const naverCreds = hasNaverSettings ? {
@@ -360,6 +363,54 @@ export default async function ReportPage({
           </div>
         </div>
 
+        {/* 만료 임박 계약 */}
+        {(() => {
+          const today = dayjs();
+          const expiring = report.validity
+            .filter((v: { expiryDate: string; subject: string; category: string }) => v.expiryDate)
+            .map((v: { expiryDate: string; subject: string; category: string }) => ({
+              ...v,
+              daysLeft: dayjs(v.expiryDate).diff(today, "day"),
+            }))
+            .filter((v: { daysLeft: number }) => v.daysLeft >= 0 && v.daysLeft <= 60)
+            .sort((a: { daysLeft: number }, b: { daysLeft: number }) => a.daysLeft - b.daysLeft);
+
+          if (expiring.length === 0) return null;
+          return (
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-orange-100 bg-orange-50">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <span className="text-sm font-bold text-orange-500">만료 임박 계약 ({expiring.length}건)</span>
+              </div>
+              <p className="text-[13px] text-[#6b7684] px-4 py-2.5 border-b border-gray-50">
+                곧 만료되는 계약을 확인해보세요.
+              </p>
+              <div className="divide-y divide-gray-50">
+                {expiring.map((item: { subject: string; category: string; daysLeft: number }, idx: number) => {
+                  const badgeColor = item.daysLeft <= 14
+                    ? "bg-red-50 text-red-500"
+                    : item.daysLeft <= 30
+                      ? "bg-orange-50 text-orange-500"
+                      : "bg-amber-50 text-amber-600";
+                  return (
+                    <div key={idx} className="flex items-center justify-between px-4 py-3">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800">{item.subject}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{item.category}</p>
+                      </div>
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${badgeColor}`}>
+                        D-{item.daysLeft}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* 월별 광고 집행 현황 */}
         <MonthlyTrendChart data={chartData} currentMonth={currentMonthNum} />
 
@@ -377,13 +428,13 @@ export default async function ReportPage({
         <CategoryDonutChart categories={categoriesWithNaver} total={totalWithNaver} />
 
         {/* 매체별 운영 현황 */}
-        <CategoryTable categories={categories} total={total} naverAdCosts={naverAdCosts} reportMonth={month} />
+        <CategoryTable categories={categories} total={total} naverAdCosts={naverAdCosts} reportMonth={month} colorMap={colorMap} />
 
         {/* 광고 계약·리포트 현황 */}
-        <ContractTable contracts={report.contracts} />
+        <ContractTable contracts={report.contracts} colorMap={colorMap} />
 
         {/* 광고 심의 및 운영 현황 */}
-        <ValidityTable validity={report.validity} />
+        <ValidityTable validity={report.validity} colorMap={colorMap} />
       </div>
     </div>
   );

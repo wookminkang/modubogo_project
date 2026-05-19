@@ -191,6 +191,19 @@ export async function logAlimtalk(data: {
   await supabase.from("alimtalk_logs").insert(data);
 }
 
+export async function getCategoryColorsFromDB(): Promise<Record<string, { bgHex: string; textHex: string }>> {
+  const { data } = await supabase.from("category_colors").select("*");
+  if (!data || data.length === 0) return {};
+  return Object.fromEntries(data.map((d) => [d.category, { bgHex: d.bg_hex, textHex: d.text_hex }]));
+}
+
+export async function upsertCategoryColor(category: string, bgHex: string, textHex: string) {
+  const { error } = await supabase
+    .from("category_colors")
+    .upsert({ category, bg_hex: bgHex, text_hex: textHex }, { onConflict: "category" });
+  if (error) throw error;
+}
+
 export async function getAlimtalkLogs() {
   const { data } = await supabase
     .from("alimtalk_logs")

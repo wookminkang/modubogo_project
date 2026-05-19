@@ -1,13 +1,19 @@
-const COLOR_MAP: Record<string, { bg: string; text: string }> = {
-  검색광고: { bg: "bg-green-100", text: "text-green-700" },
-  디스플레이: { bg: "bg-violet-100", text: "text-violet-700" },
-  동영상: { bg: "bg-orange-100", text: "text-orange-700" },
-  소셜: { bg: "bg-blue-100", text: "text-blue-700" },
-  브랜드: { bg: "bg-yellow-100", text: "text-yellow-700" },
-  오프라인: { bg: "bg-pink-100", text: "text-pink-700" },
-  기타: { bg: "bg-gray-100", text: "text-gray-500" },
+export const DEFAULT_COLORS: Record<string, { bgHex: string; textHex: string }> = {
+  검색광고: { bgHex: "#d1fae5", textHex: "#15803d" },
+  디스플레이: { bgHex: "#ede9fe", textHex: "#6d28d9" },
+  동영상:   { bgHex: "#ffedd5", textHex: "#c2410c" },
+  소셜:    { bgHex: "#dbeafe", textHex: "#1d4ed8" },
+  브랜드:   { bgHex: "#fef3c7", textHex: "#a16207" },
+  오프라인:  { bgHex: "#fce7f3", textHex: "#be185d" },
+  기타:    { bgHex: "#f3f4f6", textHex: "#6b7280" },
 };
 
-export function getCategoryColor(category: string) {
-  return COLOR_MAP[category] ?? { bg: "bg-gray-100", text: "text-gray-500" };
+export const CATEGORIES = ["검색광고", "디스플레이", "동영상", "소셜", "브랜드", "오프라인", "기타"];
+
+export function getCategoryColor(
+  category: string,
+  colorMap?: Record<string, { bgHex: string; textHex: string }>
+) {
+  const map = colorMap ?? DEFAULT_COLORS;
+  return map[category] ?? { bgHex: "#f3f4f6", textHex: "#6b7280" };
 }

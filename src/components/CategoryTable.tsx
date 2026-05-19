@@ -14,9 +14,10 @@ interface Props {
   total: number;
   naverAdCosts?: NaverAdCosts | null;
   reportMonth?: string;
+  colorMap?: Record<string, { bgHex: string; textHex: string }>;
 }
 
-export default function CategoryTable({ categories, naverAdCosts }: Props) {
+export default function CategoryTable({ categories, naverAdCosts, colorMap }: Props) {
   // category 기준으로 그룹핑 (순서 유지)
   const grouped = categories.reduce<{ category: string; items: ReportCategory[] }[]>(
     (acc, item) => {
@@ -52,7 +53,7 @@ export default function CategoryTable({ categories, naverAdCosts }: Props) {
 
       <div className="flex flex-col gap-3">
         {grouped.map(({ category, items }) => {
-          const { bg, text } = getCategoryColor(category);
+          const { bgHex, textHex } = getCategoryColor(category, colorMap);
           const naverExtra = (naverAdCosts && category === "검색광고")
             ? naverAdCosts.powerlink + naverAdCosts.place + naverAdCosts.powerContents
             : 0;
@@ -63,9 +64,9 @@ export default function CategoryTable({ categories, naverAdCosts }: Props) {
           return (
             <div key={category} className="bg-white rounded-2xl shadow-sm overflow-hidden">
               {/* 카테고리 헤더 */}
-              <div className={`flex items-center justify-between px-4 py-2.5 ${bg}`}>
-                <span className={`text-xs font-bold ${text}`}>{category}</span>
-                <span className={`text-xs font-semibold ${text}`}>
+              <div className="flex items-center justify-between px-4 py-2.5" style={{ backgroundColor: bgHex }}>
+                <span className="text-xs font-bold" style={{ color: textHex }}>{category}</span>
+                <span className="text-xs font-semibold" style={{ color: textHex }}>
                   ₩{groupTotal.toLocaleString()}원
                 </span>
               </div>

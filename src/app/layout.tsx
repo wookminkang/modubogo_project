@@ -23,7 +23,7 @@ export default function RootLayout({
     <html lang="ko" className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-gray-300">
         <QueryProvider>
-          <main className="flex-1 w-full max-w-[420px] mx-auto bg-[#F0F4FA] min-h-screen shadow-xl">
+          <main className="flex-1 w-full min-h-screen">
             {children}
           </main>
         </QueryProvider>
