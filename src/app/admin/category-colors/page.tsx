@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { isAdmin } from "@/lib/admin";
 import { getCategoryColorsFromDB } from "@/lib/db";
-import { DEFAULT_COLORS, CATEGORIES } from "@/lib/categoryColors";
 import { ArrowLeft } from "lucide-react";
 import CategoryColorEditor from "./CategoryColorEditor";
 
@@ -13,14 +12,10 @@ export default async function CategoryColorsPage() {
   if (!admin) redirect("/admin/login");
 
   const dbColors = await getCategoryColorsFromDB();
-  const colorMap = { ...DEFAULT_COLORS, ...dbColors };
-
-  // 기본 카테고리 + DB에 저장된 신규 카테고리 모두 표시
-  const allCategories = [...new Set([...CATEGORIES, ...Object.keys(dbColors)])];
-  const initialColors = allCategories.map((category) => ({
+  const initialColors = Object.entries(dbColors).map(([category, c]) => ({
     category,
-    bgHex: colorMap[category]?.bgHex ?? "#f3f4f6",
-    textHex: colorMap[category]?.textHex ?? "#6b7280",
+    bgHex: c.bgHex,
+    textHex: c.textHex,
   }));
 
   return (
