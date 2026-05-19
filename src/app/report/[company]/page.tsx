@@ -47,7 +47,7 @@ export default async function CompanyReportListPage({
   }
 
   return (
-    <div className="min-h-screen bg-[#F0F4FA]">
+    <div className="max-w-[420px] mx-auto min-h-screen bg-[#F0F4FA] shadow-xl">
       <div className="px-4 py-6 flex flex-col gap-4">
         <div>
           <Link href="/report" className="text-sm text-gray-400 mb-1 block">

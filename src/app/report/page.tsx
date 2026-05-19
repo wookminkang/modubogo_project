@@ -12,7 +12,7 @@ export default async function ReportListPage() {
   const companies = await getCompaniesSummaryFromDB();
 
   return (
-    <div className="min-h-screen bg-[#F0F4FA]">
+    <div className="max-w-[600px] mx-auto min-h-screen bg-[#F0F4FA] shadow-xl">
       <div className="px-4 py-6 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-[#0e299c]">보고서 목록</h1>

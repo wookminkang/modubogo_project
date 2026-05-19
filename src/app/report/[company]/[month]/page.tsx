@@ -141,7 +141,7 @@ export default async function ReportPage({
   const currentMonthNum = month.slice(5);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen max-w-[420px] mx-auto bg-[#F0F4FA] shadow-xl">
       <ScrollNav />
       <div className="flex justify-center overflow-hidden">
         <Image
