@@ -34,8 +34,8 @@ export default function DocsIndexPage() {
       {/* 주요 기능 */}
       <section className="mt-8">
         <h2 className="text-base font-semibold text-gray-900 mb-4">주요 기능</h2>
-        <div className="rounded-xl border border-gray-100 overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="rounded-xl border border-gray-100 overflow-hidden overflow-x-auto">
+          <table className="w-full text-sm min-w-[400px]">
             <thead className="bg-gray-50">
               <tr>
                 <th className="text-left py-2.5 px-4 text-gray-500 font-medium text-xs uppercase tracking-wide">구분</th>

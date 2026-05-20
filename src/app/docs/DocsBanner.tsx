@@ -9,31 +9,31 @@ const BARS = [
 
 export default function DocsBanner() {
   return (
-    <div className="w-full aspect-[21/9] bg-linear-to-br from-[#0e299c] to-[#071660] rounded-2xl overflow-hidden relative">
+    <div className="w-full aspect-[3/2] sm:aspect-[21/9] bg-linear-to-br from-[#0e299c] to-[#071660] rounded-2xl overflow-hidden relative">
       {/* 배경 장식 */}
       <div className="absolute -top-16 -right-16 w-72 h-72 rounded-full bg-white/4" />
       <div className="absolute -bottom-20 -left-10 w-80 h-80 rounded-full bg-white/3" />
 
-      <div className="relative h-full flex items-center px-8 gap-6">
+      <div className="relative h-full flex flex-col sm:flex-row items-center px-6 sm:px-8 py-6 sm:py-0 gap-4 sm:gap-6">
 
         {/* 텍스트 */}
-        <div className="flex-1 flex flex-col gap-3 min-w-0 pr-2">
-          <span className="self-start text-[11px] font-medium text-white/60 bg-white/10 border border-white/15 px-3 py-1 rounded-full leading-none">
+        <div className="flex-1 flex flex-col items-center sm:items-start gap-2 sm:gap-3 min-w-0 text-center sm:text-left sm:pr-2">
+          <span className="text-[11px] font-medium text-white/60 bg-white/10 border border-white/15 px-3 py-1 rounded-full leading-none">
             광고 운영 보고서 자동화
           </span>
           <div>
-            <h2 className="text-[clamp(1.5rem,3.2vw,2.4rem)] font-bold text-white tracking-tight leading-none">
+            <h2 className="text-2xl sm:text-[clamp(1.5rem,3.2vw,2.4rem)] font-bold text-white tracking-tight leading-none">
               모두보고<span className="text-red-400">.</span>
             </h2>
-            <p className="mt-2 text-blue-200 text-[clamp(0.7rem,1.1vw,0.95rem)] font-medium">
+            <p className="mt-2 text-blue-200 text-sm sm:text-[clamp(0.7rem,1.1vw,0.95rem)] font-medium">
               광고 운영 보고서, 더 쉽게
             </p>
           </div>
-          <p className="text-white/45 text-[clamp(0.6rem,0.9vw,0.8rem)] leading-relaxed">
+          <p className="text-white/45 text-xs sm:text-[clamp(0.6rem,0.9vw,0.8rem)] leading-relaxed">
             월별 광고 집행 현황을 자동으로 정리하고<br />
             클라이언트에게 깔끔하게 전달하세요.
           </p>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap justify-center sm:justify-start gap-1.5">
             {["네이버 API", "카카오 알림톡", "차트 시각화"].map((tag) => (
               <span
                 key={tag}
@@ -45,8 +45,8 @@ export default function DocsBanner() {
           </div>
         </div>
 
-        {/* 대시보드 목업 */}
-        <div className="w-[53%] h-[86%] shrink-0 rounded-xl border border-white/10 bg-white/6 p-3 flex flex-col gap-2">
+        {/* 대시보드 목업 — 모바일 숨김 */}
+        <div className="hidden sm:flex w-[53%] h-[86%] shrink-0 rounded-xl border border-white/10 bg-white/6 p-3 flex-col gap-2">
 
           {/* 윈도우 크롬 */}
           <div className="flex items-center gap-1.5 shrink-0">

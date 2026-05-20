@@ -1,12 +1,13 @@
 import Link from "next/link";
 import DocsSidebar from "./DocsSidebar";
+import DocsMobileNav from "./DocsMobileNav";
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-white">
       {/* 헤더 */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-[1080px] mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <span className="text-[#0e299c] font-bold text-base">
               모두보고<span className="text-red-400">.</span>
@@ -24,9 +25,14 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
         </div>
       </header>
 
-      <div className="max-w-[1080px] mx-auto flex">
-        {/* 왼쪽 사이드바 */}
-        <aside className="w-56 shrink-0 border-r border-gray-100 min-h-[calc(100vh-56px)]">
+      {/* 모바일 수평 탭 nav */}
+      <div className="md:hidden sticky top-14 z-10 bg-white border-b border-gray-100">
+        <DocsMobileNav />
+      </div>
+
+      <div className="max-w-6xl mx-auto flex">
+        {/* 데스크탑 사이드바 */}
+        <aside className="hidden md:block w-56 shrink-0 border-r border-gray-100 min-h-[calc(100vh-56px)]">
           <div className="sticky top-14 py-8 px-3">
             <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-4 px-3">
               가이드
@@ -36,7 +42,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
         </aside>
 
         {/* 본문 */}
-        <main className="flex-1 min-w-0 px-12 py-10 max-w-[720px]">
+        <main className="flex-1 min-w-0 px-4 py-6 md:px-12 md:py-10">
           {children}
         </main>
       </div>
