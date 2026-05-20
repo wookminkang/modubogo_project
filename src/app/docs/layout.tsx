@@ -1,6 +1,6 @@
 import Link from "next/link";
 import DocsSidebar from "./DocsSidebar";
-import DocsMobileNav from "./DocsMobileNav";
+import DocsMobileMenu from "./DocsMobileMenu";
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -16,19 +16,19 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
               Docs
             </span>
           </Link>
+
+          {/* 데스크탑: 관리자 로그인 */}
           <Link
             href="/admin/login"
-            className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+            className="hidden md:block text-sm text-gray-400 hover:text-gray-600 transition-colors"
           >
             관리자 로그인 →
           </Link>
+
+          {/* 모바일: 햄버거 */}
+          <DocsMobileMenu />
         </div>
       </header>
-
-      {/* 모바일 수평 탭 nav */}
-      <div className="md:hidden sticky top-14 z-10 bg-white border-b border-gray-100">
-        <DocsMobileNav />
-      </div>
 
       <div className="max-w-6xl mx-auto flex">
         {/* 데스크탑 사이드바 */}
