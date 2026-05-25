@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getReportFromDB } from "@/lib/db";
+import { getReportFromDB, getCategoryColorsFromDB } from "@/lib/db";
 import { isAdmin } from "@/lib/admin";
 import EditForm from "./EditForm";
 
@@ -14,7 +14,11 @@ export default async function ReportEditPage({ params }: Props) {
   if (!admin) redirect('/admin/login');
 
   const decoded = decodeURIComponent(company);
-  const report = await getReportFromDB(decoded, month);
+  const [report, dbColors] = await Promise.all([
+    getReportFromDB(decoded, month),
+    getCategoryColorsFromDB(),
+  ]);
+  const categoryOptions = Object.keys(dbColors).sort((a, b) => a.localeCompare(b, "ko"));
 
   if (!report) notFound();
 
@@ -23,6 +27,7 @@ export default async function ReportEditPage({ params }: Props) {
       reportId={report.id}
       company={decoded}
       month={month}
+      categoryOptions={categoryOptions}
       defaultValues={{
         company: report.company,
         month: report.month,

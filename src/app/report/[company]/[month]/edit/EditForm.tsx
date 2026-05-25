@@ -16,9 +16,27 @@ import { AmountInput } from "@/components/ui/amount-input";
 import { Trash2 } from "lucide-react";
 import Link from "next/link";
 
-interface CategoryField { category: string; channel: string; agency: string; period: string; amount: string; sort_order: string; }
-interface ValidityField { category: string; subject: string; expiryDate: string; sort_order: string; }
-interface ContractField { category: string; name: string; keyword: string; link: string; sort_order: string; }
+interface CategoryField {
+  category: string;
+  channel: string;
+  agency: string;
+  period: string;
+  amount: string;
+  sort_order: string;
+}
+interface ValidityField {
+  category: string;
+  subject: string;
+  expiryDate: string;
+  sort_order: string;
+}
+interface ContractField {
+  category: string;
+  name: string;
+  keyword: string;
+  link: string;
+  sort_order: string;
+}
 
 interface FormValues {
   company: string;
@@ -37,28 +55,57 @@ interface Props {
   defaultValues: FormValues;
   company: string;
   month: string;
+  categoryOptions: string[];
 }
 
-export default function EditForm({ reportId, defaultValues, company, month }: Props) {
+export default function EditForm({
+  reportId,
+  defaultValues,
+  company,
+  month,
+  categoryOptions,
+}: Props) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [redirectTo, setRedirectTo] = useState('');
+  const [redirectTo, setRedirectTo] = useState("");
 
   const { register, control, handleSubmit } = useForm<FormValues>({
-    defaultValues: { ...defaultValues, reporter: "전형진", email: "oper2068@kakao.com" },
+    defaultValues: {
+      ...defaultValues,
+      reporter: "전형진",
+      email: "oper2068@kakao.com",
+    },
   });
 
-  const { fields, append, remove } = useFieldArray({ control, name: "categories" });
-  const { fields: vFields, append: vAppend, remove: vRemove } = useFieldArray({ control, name: "validity" });
-  const { fields: cFields, append: cAppend, remove: cRemove } = useFieldArray({ control, name: "contracts" });
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "categories",
+  });
+  const {
+    fields: vFields,
+    append: vAppend,
+    remove: vRemove,
+  } = useFieldArray({ control, name: "validity" });
+  const {
+    fields: cFields,
+    append: cAppend,
+    remove: cRemove,
+  } = useFieldArray({ control, name: "contracts" });
 
   const onSubmit = async (data: FormValues) => {
     setSaving(true);
     try {
-      await upsertReport({ id: reportId, ...data, status: "완료", hospital_type: data.hospital_type || undefined });
-      setRedirectTo(`/report/${encodeURIComponent(data.company)}/${data.month}`);
+      await upsertReport({
+        id: reportId,
+        ...data,
+        status: "완료",
+        hospital_type: data.hospital_type || undefined,
+      });
+      setRedirectTo(
+        `/report/${encodeURIComponent(data.company)}/${data.month}`,
+      );
       setSaved(true);
     } catch (e) {
       console.error(e);
@@ -87,28 +134,51 @@ export default function EditForm({ reportId, defaultValues, company, month }: Pr
     return <ResultSuccess message="수정되었어요." redirectTo={redirectTo} />;
   }
 
-  const inputClass = "h-11 rounded-xl border-gray-200 text-gray-900 focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/20";
-  const rowInputClass = "flex-1 h-9 rounded-lg border-gray-200 text-gray-900 text-sm focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/20";
+  const inputClass =
+    "h-11 rounded-xl border-gray-200 text-gray-900 focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/20";
+  const rowInputClass =
+    "flex-1 h-9 rounded-lg border-gray-200 text-gray-900 text-sm focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/20";
 
   return (
     <div className="min-h-screen bg-[#F0F4FA]">
       <div className="px-4 py-6 flex flex-col gap-4">
         <div>
-          <Link href={`/report/${encodeURIComponent(company)}/${month}`} className="text-sm text-gray-400 mb-1 block">← 보고서 상세</Link>
-          <h1 className="text-2xl font-bold text-[#0e299c]">{company} · {month} 수정</h1>
+          <Link
+            href={`/report/${encodeURIComponent(company)}/${month}`}
+            className="text-sm text-gray-400 mb-1 block"
+          >
+            ← 보고서 상세
+          </Link>
+          <h1 className="text-2xl font-bold text-[#0e299c]">
+            {company} · {month} 수정
+          </h1>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           {/* 기본 정보 */}
           <Card>
-            <CardHeader><CardTitle className="text-[#0e299c]">기본 정보</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="text-[#0e299c]">기본 정보</CardTitle>
+            </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <Label className="text-gray-500 font-normal">병원 유형</Label>
-                <Controller control={control} name="hospital_type"
+                <Controller
+                  control={control}
+                  name="hospital_type"
                   render={({ field }) => (
                     <div className="flex flex-wrap gap-2">
-                      {(["메인 관리", "한의원", "한의원(네트워크)", "한의원(입원실)", "한방병원", "정신과", "양방"] as const).map((type) => (
+                      {(
+                        [
+                          "메인 관리",
+                          "한의원",
+                          "한의원(네트워크)",
+                          "한의원(입원실)",
+                          "한방병원",
+                          "정신과",
+                          "양방",
+                        ] as const
+                      ).map((type) => (
                         <button
                           key={type}
                           type="button"
@@ -127,99 +197,230 @@ export default function EditForm({ reportId, defaultValues, company, month }: Pr
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="company" className="text-gray-500 font-normal">상호명</Label>
-                <Input id="company" {...register("company", { required: true })} className={inputClass} />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-gray-500 font-normal">보고 월</Label>
-                <Controller control={control} name="month" rules={{ required: true }}
-                  render={({ field }) => <MonthPicker value={field.value} onChange={field.onChange} />}
+                <Label htmlFor="company" className="text-gray-500 font-normal">
+                  상호명
+                </Label>
+                <Input
+                  id="company"
+                  {...register("company", { required: true })}
+                  className={inputClass}
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="reporter" className="text-gray-500 font-normal">보고자</Label>
-                <Input id="reporter" {...register("reporter", { required: true })} className={`${inputClass} bg-gray-50 text-gray-400`} readOnly />
+                <Label className="text-gray-500 font-normal">보고 월</Label>
+                <Controller
+                  control={control}
+                  name="month"
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <MonthPicker
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="email" className="text-gray-500 font-normal">이메일</Label>
-                <Input id="email" {...register("email")} type="email" className={`${inputClass} bg-gray-50 text-gray-400`} readOnly />
+                <Label htmlFor="reporter" className="text-gray-500 font-normal">
+                  보고자
+                </Label>
+                <Input
+                  id="reporter"
+                  {...register("reporter", { required: true })}
+                  className={`${inputClass} bg-gray-50 text-gray-400`}
+                  readOnly
+                />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="password" className="text-gray-500 font-normal">열람 비밀번호 <span className="text-gray-300">(선택)</span></Label>
-                <Input id="password" {...register("password")} type="password" placeholder="설정 시 보고서 열람에 비밀번호가 필요합니다" className={inputClass} />
+                <Label htmlFor="email" className="text-gray-500 font-normal">
+                  이메일
+                </Label>
+                <Input
+                  id="email"
+                  {...register("email")}
+                  type="email"
+                  className={`${inputClass} bg-gray-50 text-gray-400`}
+                  readOnly
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="password" className="text-gray-500 font-normal">
+                  열람 비밀번호 <span className="text-gray-300">(선택)</span>
+                </Label>
+                <Input
+                  id="password"
+                  {...register("password")}
+                  type="password"
+                  placeholder="설정 시 보고서 열람에 비밀번호가 필요합니다"
+                  className={inputClass}
+                />
               </div>
             </CardContent>
           </Card>
 
           {/* 집행 항목 */}
           <Card>
-            <CardHeader><CardTitle className="text-[#0e299c]">집행 항목</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="text-[#0e299c]">집행 항목</CardTitle>
+            </CardHeader>
             <CardContent className="flex flex-col gap-3">
               {fields.map((field, index) => (
-                <div key={field.id} className="border border-gray-100 rounded-xl overflow-hidden">
+                <div
+                  key={field.id}
+                  className="border border-gray-100 rounded-xl overflow-hidden"
+                >
                   <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                     <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 flex items-center justify-center bg-[#0e299c] text-white text-xs font-bold rounded-full">{index + 1}</span>
-                      <span className="text-sm font-semibold text-gray-700">항목 {index + 1}</span>
+                      <span className="w-5 h-5 flex items-center justify-center bg-[#0e299c] text-white text-xs font-bold rounded-full">
+                        {index + 1}
+                      </span>
+                      <span className="text-sm font-semibold text-gray-700">
+                        항목 {index + 1}
+                      </span>
                     </div>
                     {fields.length > 1 && (
-                      <Button type="button" variant="ghost" size="xs" onClick={() => remove(index)} className="text-red-400 hover:text-red-500 hover:bg-red-50 gap-1">
-                        <Trash2 className="w-3.5 h-3.5" />삭제
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="xs"
+                        onClick={() => remove(index)}
+                        className="text-red-400 hover:text-red-500 hover:bg-red-50 gap-1"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        삭제
                       </Button>
                     )}
                   </div>
                   <div className="divide-y divide-gray-50">
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">구분</span>
-                      <Input {...register(`categories.${index}.category`)} placeholder="구분" className={rowInputClass} />
+                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                        구분
+                      </span>
+                      <select
+                        {...register(`categories.${index}.category`)}
+                        className={`${rowInputClass} px-2 cursor-pointer`}
+                      >
+                        <option value="">선택</option>
+                        {categoryOptions.map((cat) => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">채널</span>
-                      <Input {...register(`categories.${index}.channel`)} placeholder="채널" className={rowInputClass} />
+                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                        채널
+                      </span>
+                      <Input
+                        {...register(`categories.${index}.channel`)}
+                        placeholder="채널"
+                        className={rowInputClass}
+                      />
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">집행사</span>
-                      <Input {...register(`categories.${index}.agency`)} placeholder="집행사" className={rowInputClass} />
+                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                        집행사
+                      </span>
+                      <Input
+                        {...register(`categories.${index}.agency`)}
+                        placeholder="집행사"
+                        className={rowInputClass}
+                      />
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">순서</span>
+                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                        순서
+                      </span>
                       <div className="flex items-center gap-2 flex-1 flex-wrap">
-                        <Controller control={control} name={`categories.${index}.sort_order`}
-                          render={({ field }) => <OrderStepper value={field.value} onChange={field.onChange} />}
+                        <Controller
+                          control={control}
+                          name={`categories.${index}.sort_order`}
+                          render={({ field }) => (
+                            <OrderStepper
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
+                          )}
                         />
-                        <span className="text-xs text-[#0e299c]">숫자가 낮을수록 먼저 집행됩니다.</span>
+                        <span className="text-xs text-[#0e299c]">
+                          숫자가 낮을수록 먼저 집행됩니다.
+                        </span>
                       </div>
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">계약기간(월)</span>
-                      <Controller control={control} name={`categories.${index}.period`}
+                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                        계약기간(월)
+                      </span>
+                      <Controller
+                        control={control}
+                        name={`categories.${index}.period`}
                         render={({ field }) => {
-                          const raw = /^\d{4}-\d{2}$/.test(field.value) ? 1 : (parseInt(field.value) || 1);
+                          const raw = /^\d{4}-\d{2}$/.test(field.value)
+                            ? 1
+                            : parseInt(field.value) || 1;
                           const num = Math.max(1, raw);
                           return (
                             <div className="flex items-center gap-1 bg-[#0e299c]/10 px-2 py-1 rounded-lg">
-                              <button type="button" onClick={() => field.onChange(String(Math.max(1, num - 1)))}
-                                className="w-6 h-6 flex items-center justify-center text-[#0e299c] hover:bg-[#0e299c]/20 rounded font-bold text-base">−</button>
-                              <span className="w-8 text-center text-sm text-[#0e299c] font-bold">{num}</span>
-                              <button type="button" onClick={() => field.onChange(String(num + 1))}
-                                className="w-6 h-6 flex items-center justify-center text-[#0e299c] hover:bg-[#0e299c]/20 rounded font-bold text-base">+</button>
-                              <span className="text-xs text-[#0e299c] font-medium pr-1">개월</span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  field.onChange(String(Math.max(1, num - 1)))
+                                }
+                                className="w-6 h-6 flex items-center justify-center text-[#0e299c] hover:bg-[#0e299c]/20 rounded font-bold text-base"
+                              >
+                                −
+                              </button>
+                              <span className="w-8 text-center text-sm text-[#0e299c] font-bold">
+                                {num}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => field.onChange(String(num + 1))}
+                                className="w-6 h-6 flex items-center justify-center text-[#0e299c] hover:bg-[#0e299c]/20 rounded font-bold text-base"
+                              >
+                                +
+                              </button>
+                              <span className="text-xs text-[#0e299c] font-medium pr-1">
+                                개월
+                              </span>
                             </div>
                           );
                         }}
                       />
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">집행금액 (원)</span>
-                      <Controller control={control} name={`categories.${index}.amount`}
-                        render={({ field }) => <AmountInput value={field.value} onChange={field.onChange} placeholder="총 계약금액" className={rowInputClass} />}
+                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                        집행금액 (원)
+                      </span>
+                      <Controller
+                        control={control}
+                        name={`categories.${index}.amount`}
+                        render={({ field }) => (
+                          <AmountInput
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="총 계약금액"
+                            className={rowInputClass}
+                          />
+                        )}
                       />
                     </div>
                   </div>
                 </div>
               ))}
-              <button type="button" onClick={() => append({ category: "", channel: "", agency: "", period: "1", amount: "", sort_order: String(fields.length) })}
-                className="w-full border border-dashed border-gray-300 rounded-xl py-3 text-sm text-gray-400 hover:border-[#0e299c] hover:text-[#0e299c] transition-colors">
+              <button
+                type="button"
+                onClick={() =>
+                  append({
+                    category: "",
+                    channel: "",
+                    agency: "",
+                    period: "1",
+                    amount: "",
+                    sort_order: String(fields.length),
+                  })
+                }
+                className="w-full border border-dashed border-gray-300 rounded-xl py-3 text-sm text-gray-400 hover:border-[#0e299c] hover:text-[#0e299c] transition-colors"
+              >
                 + 항목 추가
               </button>
             </CardContent>
@@ -227,52 +428,118 @@ export default function EditForm({ reportId, defaultValues, company, month }: Pr
 
           {/* 광고 계약·리포트 */}
           <Card>
-            <CardHeader><CardTitle className="text-[#0e299c]">광고 계약·리포트</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="text-[#0e299c]">광고 계약·리포트</CardTitle>
+            </CardHeader>
             <CardContent className="flex flex-col gap-3">
               {cFields.map((field, index) => (
-                <div key={field.id} className="border border-gray-100 rounded-xl overflow-hidden">
+                <div
+                  key={field.id}
+                  className="border border-gray-100 rounded-xl overflow-hidden"
+                >
                   <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                     <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 flex items-center justify-center bg-[#0e299c] text-white text-xs font-bold rounded-full">{index + 1}</span>
-                      <span className="text-sm font-semibold text-gray-700">항목 {index + 1}</span>
+                      <span className="w-5 h-5 flex items-center justify-center bg-[#0e299c] text-white text-xs font-bold rounded-full">
+                        {index + 1}
+                      </span>
+                      <span className="text-sm font-semibold text-gray-700">
+                        항목 {index + 1}
+                      </span>
                     </div>
                     {cFields.length > 1 && (
-                      <Button type="button" variant="ghost" size="xs" onClick={() => cRemove(index)} className="text-red-400 hover:text-red-500 hover:bg-red-50 gap-1">
-                        <Trash2 className="w-3.5 h-3.5" />삭제
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="xs"
+                        onClick={() => cRemove(index)}
+                        className="text-red-400 hover:text-red-500 hover:bg-red-50 gap-1"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        삭제
                       </Button>
                     )}
                   </div>
                   <div className="divide-y divide-gray-50">
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">구분값</span>
-                      <Input {...register(`contracts.${index}.category`)} placeholder="구분값" className={rowInputClass} />
+                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                        구분
+                      </span>
+                      <select
+                        {...register(`contracts.${index}.category`)}
+                        className={`${rowInputClass} px-2 cursor-pointer`}
+                      >
+                        <option value="">선택</option>
+                        {categoryOptions.map((cat) => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">계약명</span>
-                      <Input {...register(`contracts.${index}.name`)} placeholder="계약명" className={rowInputClass} />
+                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                        계약명
+                      </span>
+                      <Input
+                        {...register(`contracts.${index}.name`)}
+                        placeholder="계약명"
+                        className={rowInputClass}
+                      />
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">키워드</span>
-                      <Input {...register(`contracts.${index}.keyword`)} placeholder="키워드" className={rowInputClass} />
+                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                        키워드
+                      </span>
+                      <Input
+                        {...register(`contracts.${index}.keyword`)}
+                        placeholder="키워드"
+                        className={rowInputClass}
+                      />
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">링크</span>
-                      <Input {...register(`contracts.${index}.link`)} placeholder="보고서 링크 URL" className={rowInputClass} />
+                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                        링크
+                      </span>
+                      <Input
+                        {...register(`contracts.${index}.link`)}
+                        placeholder="보고서 링크 URL"
+                        className={rowInputClass}
+                      />
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">순서</span>
+                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                        순서
+                      </span>
                       <div className="flex items-center gap-2 flex-1 flex-wrap">
-                        <Controller control={control} name={`contracts.${index}.sort_order`}
-                          render={({ field }) => <OrderStepper value={field.value} onChange={field.onChange} />}
+                        <Controller
+                          control={control}
+                          name={`contracts.${index}.sort_order`}
+                          render={({ field }) => (
+                            <OrderStepper
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
+                          )}
                         />
-                        <span className="text-xs text-[#0e299c]">숫자가 낮을수록 먼저 집행됩니다.</span>
+                        <span className="text-xs text-[#0e299c]">
+                          숫자가 낮을수록 먼저 집행됩니다.
+                        </span>
                       </div>
                     </div>
                   </div>
                 </div>
               ))}
-              <button type="button" onClick={() => cAppend({ category: "", name: "", keyword: "", link: "", sort_order: String(cFields.length) })}
-                className="w-full border border-dashed border-gray-300 rounded-xl py-3 text-sm text-gray-400 hover:border-[#0e299c] hover:text-[#0e299c] transition-colors">
+              <button
+                type="button"
+                onClick={() =>
+                  cAppend({
+                    category: "",
+                    name: "",
+                    keyword: "",
+                    link: "",
+                    sort_order: String(cFields.length),
+                  })
+                }
+                className="w-full border border-dashed border-gray-300 rounded-xl py-3 text-sm text-gray-400 hover:border-[#0e299c] hover:text-[#0e299c] transition-colors"
+              >
                 + 항목 추가
               </button>
             </CardContent>
@@ -280,62 +547,134 @@ export default function EditForm({ reportId, defaultValues, company, month }: Pr
 
           {/* 광고 심의 및 운영 현황 */}
           <Card>
-            <CardHeader><CardTitle className="text-[#0e299c]">광고 심의 및 운영 현황</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="text-[#0e299c]">
+                광고 심의 및 운영 현황
+              </CardTitle>
+            </CardHeader>
             <CardContent className="flex flex-col gap-3">
               {vFields.map((field, index) => (
-                <div key={field.id} className="border border-gray-100 rounded-xl overflow-hidden">
+                <div
+                  key={field.id}
+                  className="border border-gray-100 rounded-xl overflow-hidden"
+                >
                   <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                     <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 flex items-center justify-center bg-[#0e299c] text-white text-xs font-bold rounded-full">{index + 1}</span>
-                      <span className="text-sm font-semibold text-gray-700">항목 {index + 1}</span>
+                      <span className="w-5 h-5 flex items-center justify-center bg-[#0e299c] text-white text-xs font-bold rounded-full">
+                        {index + 1}
+                      </span>
+                      <span className="text-sm font-semibold text-gray-700">
+                        항목 {index + 1}
+                      </span>
                     </div>
                     {vFields.length > 1 && (
-                      <Button type="button" variant="ghost" size="xs" onClick={() => vRemove(index)} className="text-red-400 hover:text-red-500 hover:bg-red-50 gap-1">
-                        <Trash2 className="w-3.5 h-3.5" />삭제
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="xs"
+                        onClick={() => vRemove(index)}
+                        className="text-red-400 hover:text-red-500 hover:bg-red-50 gap-1"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        삭제
                       </Button>
                     )}
                   </div>
                   <div className="divide-y divide-gray-50">
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">구분</span>
-                      <Input {...register(`validity.${index}.category`)} placeholder="구분" className={rowInputClass} />
+                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                        구분
+                      </span>
+                      <select
+                        {...register(`validity.${index}.category`)}
+                        className={`${rowInputClass} px-2 cursor-pointer`}
+                      >
+                        <option value="">선택</option>
+                        {categoryOptions.map((cat) => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">주제</span>
-                      <Input {...register(`validity.${index}.subject`)} placeholder="주제" className={rowInputClass} />
+                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                        주제
+                      </span>
+                      <Input
+                        {...register(`validity.${index}.subject`)}
+                        placeholder="주제"
+                        className={rowInputClass}
+                      />
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">순서</span>
+                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                        순서
+                      </span>
                       <div className="flex items-center gap-2 flex-1 flex-wrap">
-                        <Controller control={control} name={`validity.${index}.sort_order`}
-                          render={({ field }) => <OrderStepper value={field.value} onChange={field.onChange} />}
+                        <Controller
+                          control={control}
+                          name={`validity.${index}.sort_order`}
+                          render={({ field }) => (
+                            <OrderStepper
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
+                          )}
                         />
-                        <span className="text-xs text-[#0e299c]">숫자가 낮을수록 먼저 집행됩니다.</span>
+                        <span className="text-xs text-[#0e299c]">
+                          숫자가 낮을수록 먼저 집행됩니다.
+                        </span>
                       </div>
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">유효기간</span>
-                      <Controller control={control} name={`validity.${index}.expiryDate`}
-                        render={({ field }) => <DatePicker value={field.value} onChange={field.onChange} />}
+                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                        유효기간
+                      </span>
+                      <Controller
+                        control={control}
+                        name={`validity.${index}.expiryDate`}
+                        render={({ field }) => (
+                          <DatePicker
+                            value={field.value}
+                            onChange={field.onChange}
+                          />
+                        )}
                       />
                     </div>
                   </div>
                 </div>
               ))}
-              <button type="button" onClick={() => vAppend({ category: "", subject: "", expiryDate: "", sort_order: String(vFields.length) })}
-                className="w-full border border-dashed border-gray-300 rounded-xl py-3 text-sm text-gray-400 hover:border-[#0e299c] hover:text-[#0e299c] transition-colors">
+              <button
+                type="button"
+                onClick={() =>
+                  vAppend({
+                    category: "",
+                    subject: "",
+                    expiryDate: "",
+                    sort_order: String(vFields.length),
+                  })
+                }
+                className="w-full border border-dashed border-gray-300 rounded-xl py-3 text-sm text-gray-400 hover:border-[#0e299c] hover:text-[#0e299c] transition-colors"
+              >
                 + 유효기간 추가
               </button>
             </CardContent>
           </Card>
 
-          <Button type="submit" disabled={saving}
-            className="w-full bg-[#0e299c] hover:bg-[#0b2180] text-white font-semibold h-14 rounded-2xl text-sm">
+          <Button
+            type="submit"
+            disabled={saving}
+            className="w-full bg-[#0e299c] hover:bg-[#0b2180] text-white font-semibold h-14 rounded-2xl text-sm"
+          >
             {saving ? "저장 중..." : "수정 완료"}
           </Button>
 
-          <Button type="button" variant="ghost" disabled={deleting} onClick={handleDelete}
-            className="w-full text-red-400 hover:text-red-500 hover:bg-red-50 h-12 rounded-2xl text-sm">
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={deleting}
+            onClick={handleDelete}
+            className="w-full text-red-400 hover:text-red-500 hover:bg-red-50 h-12 rounded-2xl text-sm"
+          >
             {deleting ? "삭제 중..." : "보고서 삭제"}
           </Button>
         </form>
