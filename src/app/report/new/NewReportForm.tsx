@@ -26,6 +26,7 @@ interface FormValues {
   reporter: string;
   email: string;
   password: string;
+  hospital_type: string;
   categories: CategoryField[];
   validity: ValidityField[];
   contracts: ContractField[];
@@ -41,6 +42,7 @@ export default function ReportNewPage() {
     defaultValues: {
       reporter: "전형진",
       email: "oper2068@kakao.com",
+      hospital_type: "",
       categories: [{ category: "", channel: "", agency: "", period: "1", amount: "", sort_order: "0" }],
       validity: [{ category: "", subject: "", expiryDate: "", sort_order: "0" }],
       contracts: [{ category: "", name: "", keyword: "", link: "", sort_order: "0" }],
@@ -75,7 +77,7 @@ export default function ReportNewPage() {
   const onSubmit = async (data: FormValues) => {
     setSaving(true);
     try {
-      await upsertReport({ ...data, status: "작성중" });
+      await upsertReport({ ...data, status: "작성중", hospital_type: data.hospital_type || undefined });
       setRedirectTo(`/report/${encodeURIComponent(data.company)}/${data.month}`);
       setSaved(true);
     } catch (e) {
@@ -117,6 +119,29 @@ export default function ReportNewPage() {
           <Card>
             <CardHeader><CardTitle className="text-[#0e299c]">기본 정보</CardTitle></CardHeader>
             <CardContent className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-gray-500 font-normal">병원 유형</Label>
+                <Controller control={control} name="hospital_type" rules={{ required: true }}
+                  render={({ field }) => (
+                    <div className="flex flex-wrap gap-2">
+                      {(["메인 관리", "한의원", "한의원(네트워크)", "한의원(입원실)", "한방병원", "정신과", "양방"] as const).map((type) => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => field.onChange(type)}
+                          className={`px-3 py-2 rounded-full text-sm font-medium transition-colors border ${
+                            field.value === type
+                              ? "bg-[#0e299c] text-white border-[#0e299c]"
+                              : "bg-white text-gray-400 border-gray-200 hover:text-gray-600"
+                          }`}
+                        >
+                          {type}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                />
+              </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="company" className="text-gray-500 font-normal">상호명</Label>
                 <Input id="company" {...register("company", { required: true })} placeholder="ex) 모두보고" className={inputClass} />

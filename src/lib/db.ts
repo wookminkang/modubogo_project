@@ -55,12 +55,12 @@ export async function getReportsByCompanyFromDB(company: string) {
 export async function getCompaniesSummaryFromDB() {
   const { data: reports } = await supabase
     .from("reports")
-    .select("company, month, status")
+    .select("company, month, status, hospital_type")
     .order("month", { ascending: false });
 
   if (!reports) return [];
 
-  const map = new Map<string, { latestMonth: string; reportCount: number; status: string }>();
+  const map = new Map<string, { latestMonth: string; reportCount: number; status: string; hospitalType: string | null }>();
   for (const r of reports) {
     const existing = map.get(r.company);
     if (!existing || r.month > existing.latestMonth) {
@@ -68,6 +68,7 @@ export async function getCompaniesSummaryFromDB() {
         latestMonth: r.month,
         reportCount: (existing?.reportCount ?? 0) + 1,
         status: r.status,
+        hospitalType: r.hospital_type ?? null,
       });
     } else {
       existing.reportCount += 1;
@@ -84,6 +85,7 @@ export async function upsertReport(data: {
   reporter: string;
   email: string;
   password?: string;
+  hospital_type?: string;
   categories: { category: string; channel: string; agency: string; period: string; amount: string; sort_order: string }[];
   validity: { category: string; subject: string; expiryDate: string; sort_order: string }[];
   contracts: { category: string; name: string; keyword: string; link: string; sort_order: string }[];
@@ -99,6 +101,7 @@ export async function upsertReport(data: {
         reporter: data.reporter,
         email: data.email,
         password: data.password || null,
+        hospital_type: data.hospital_type || null,
       },
       { onConflict: "id" }
     )
