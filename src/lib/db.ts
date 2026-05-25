@@ -74,7 +74,9 @@ export async function getCompaniesSummaryFromDB() {
       existing.reportCount += 1;
     }
   }
-  return Array.from(map.entries()).map(([company, data]) => ({ company, ...data }));
+  return Array.from(map.entries())
+    .map(([company, data]) => ({ company, ...data }))
+    .sort((a, b) => a.company.localeCompare(b.company, "ko"));
 }
 
 export async function upsertReport(data: {
