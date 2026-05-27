@@ -4,7 +4,15 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { Search } from "lucide-react";
 
-type HospitalType = "전체" | "메인 관리" | "한의원" | "한의원(네트워크)" | "한의원(입원실)" | "한방병원" | "정신과" | "양방";
+type HospitalType =
+  | "전체"
+  | "메인 관리"
+  | "한의원"
+  | "한의원(네트워크)"
+  | "한의원(입원실)"
+  | "한방병원"
+  | "정신과"
+  | "양방";
 
 interface Company {
   company: string;
@@ -14,7 +22,16 @@ interface Company {
   hospitalType?: string | null;
 }
 
-const TABS: HospitalType[] = ["전체", "메인 관리", "한의원", "한의원(네트워크)", "한의원(입원실)", "한방병원", "정신과", "양방"];
+const TABS: HospitalType[] = [
+  "전체",
+  "메인 관리",
+  "한의원",
+  "한의원(네트워크)",
+  "한의원(입원실)",
+  "한방병원",
+  "정신과",
+  "양방",
+];
 
 export default function CompanyList({ companies }: { companies: Company[] }) {
   const [query, setQuery] = useState("");
@@ -29,7 +46,9 @@ export default function CompanyList({ companies }: { companies: Company[] }) {
 
   const filtered = companies.filter((c) => {
     const matchesTab = activeTab === "전체" || c.hospitalType === activeTab;
-    const matchesQuery = c.company.toLowerCase().includes(debouncedQuery.toLowerCase());
+    const matchesQuery = c.company
+      .toLowerCase()
+      .includes(debouncedQuery.toLowerCase());
     return matchesTab && matchesQuery;
   });
 
@@ -40,12 +59,18 @@ export default function CompanyList({ companies }: { companies: Company[] }) {
         {TABS.map((tab, i) => (
           <button
             key={tab}
-            ref={(el) => { tabRefs.current[i] = el; }}
+            ref={(el) => {
+              tabRefs.current[i] = el;
+            }}
             onClick={() => {
               setActiveTab(tab);
-              tabRefs.current[i]?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+              tabRefs.current[i]?.scrollIntoView({
+                behavior: "smooth",
+                inline: "center",
+                block: "nearest",
+              });
             }}
-            className={`shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+            className={`shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
               activeTab === tab
                 ? "bg-[#0e299c] text-white"
                 : "bg-white text-gray-400 shadow-sm hover:text-gray-600"
@@ -74,7 +99,9 @@ export default function CompanyList({ companies }: { companies: Company[] }) {
       {/* 목록 */}
       {filtered.length === 0 ? (
         <p className="text-center text-gray-400 text-sm py-10">
-          {debouncedQuery ? "검색 결과가 없습니다." : "등록된 보고서가 없습니다."}
+          {debouncedQuery
+            ? "검색 결과가 없습니다."
+            : "등록된 보고서가 없습니다."}
         </p>
       ) : (
         <div className="grid grid-cols-2 gap-3">
