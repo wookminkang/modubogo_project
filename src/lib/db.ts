@@ -156,6 +156,14 @@ export async function upsertReport(data: {
   return report;
 }
 
+export async function getHospitalList() {
+  const { data } = await supabase
+    .from("company_settings")
+    .select("company")
+    .order("company", { ascending: true });
+  return (data ?? []) as { company: string }[];
+}
+
 export async function getCompanySettings(company: string) {
   const { data } = await supabase
     .from("company_settings")
