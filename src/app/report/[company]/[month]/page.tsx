@@ -19,7 +19,7 @@ import ContractTable from "@/components/ContractTable";
 import Image from "next/image";
 import CopyLinkButton from "@/components/CopyLinkButton";
 import { getBizmoney, getNaverAdCosts } from "@/lib/naverAd";
-import { getKakaoMomentBalance } from "@/lib/kakaoAd";
+import { getKakaoMomentBalance, type KakaoCredentials } from "@/lib/kakaoAd";
 
 interface ReportPageProps {
   params: Promise<{ company: string; month: string }>;
@@ -52,13 +52,27 @@ export default async function ReportPage({
   const year = month.slice(0, 4);
   const yearReports = allReports.filter((r) => r.month.startsWith(year));
 
-  const kakaoAdAccountId = settings?.kakao_ad_account_id ?? null;
+  const kakaoCreds: KakaoCredentials | null =
+    settings?.kakao_ad_account_id &&
+    settings?.kakao_access_token &&
+    settings?.kakao_refresh_token &&
+    settings?.kakao_rest_api_key &&
+    settings?.kakao_client_secret
+      ? {
+          company: decoded,
+          kakao_ad_account_id: settings.kakao_ad_account_id,
+          kakao_access_token: settings.kakao_access_token,
+          kakao_refresh_token: settings.kakao_refresh_token,
+          kakao_rest_api_key: settings.kakao_rest_api_key,
+          kakao_client_secret: settings.kakao_client_secret,
+        }
+      : null;
 
   // 현재 달 + 연도 내 모든 달의 네이버 비용을 병렬로 가져옴
   const [bizmoney, naverAdCosts, kakaoBalance, ...yearNaverCostResults] = await Promise.all([
     naverCreds ? getBizmoney(naverCreds).catch(() => null) : Promise.resolve(null),
     naverCreds ? getNaverAdCosts(month, settings!).catch(() => null) : Promise.resolve(null),
-    kakaoAdAccountId ? getKakaoMomentBalance(kakaoAdAccountId).catch(() => null) : Promise.resolve(null),
+    kakaoCreds ? getKakaoMomentBalance(kakaoCreds).catch(() => null) : Promise.resolve(null),
     ...yearReports.map((r) =>
       naverCreds && r.month !== month
         ? getNaverAdCosts(r.month, settings!).catch(() => null)
@@ -82,7 +96,7 @@ export default async function ReportPage({
     bizmoney: bizmoney ?? null,
   });
   console.log(`[KakaoMoment] ${decoded} / ${month}`, {
-    adAccountId: kakaoAdAccountId,
+    adAccountId: kakaoCreds?.kakao_ad_account_id ?? null,
     balance: kakaoBalance,
   });
 
