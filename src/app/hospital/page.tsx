@@ -6,9 +6,10 @@ import {
 } from "@tanstack/react-query";
 import { getHospitalList } from "@/lib/db";
 import { HospitalList } from "@/app/hospital/_components/HospitalList";
+import { getQueryClient } from "@/hooks/get-query-client";
 
 export default async function HospitalListPage() {
-  const queryClient = new QueryClient();
+  const queryClient = getQueryClient();
 
   await queryClient.prefetchQuery({
     queryKey: ["hospitalList"],
