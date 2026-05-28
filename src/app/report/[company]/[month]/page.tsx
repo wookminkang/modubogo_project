@@ -19,7 +19,6 @@ import ContractTable from "@/components/ContractTable";
 import Image from "next/image";
 import CopyLinkButton from "@/components/CopyLinkButton";
 import { getBizmoney, getNaverAdCosts } from "@/lib/naverAd";
-import { getKakaoMomentBalance, type KakaoCredentials } from "@/lib/kakaoAd";
 
 interface ReportPageProps {
   params: Promise<{ company: string; month: string }>;
@@ -52,27 +51,10 @@ export default async function ReportPage({
   const year = month.slice(0, 4);
   const yearReports = allReports.filter((r) => r.month.startsWith(year));
 
-  const kakaoCreds: KakaoCredentials | null =
-    settings?.kakao_ad_account_id &&
-    settings?.kakao_access_token &&
-    settings?.kakao_refresh_token &&
-    settings?.kakao_rest_api_key &&
-    settings?.kakao_client_secret
-      ? {
-          company: decoded,
-          kakao_ad_account_id: settings.kakao_ad_account_id,
-          kakao_access_token: settings.kakao_access_token,
-          kakao_refresh_token: settings.kakao_refresh_token,
-          kakao_rest_api_key: settings.kakao_rest_api_key,
-          kakao_client_secret: settings.kakao_client_secret,
-        }
-      : null;
-
   // 현재 달 + 연도 내 모든 달의 네이버 비용을 병렬로 가져옴
-  const [bizmoney, naverAdCosts, kakaoBalance, ...yearNaverCostResults] = await Promise.all([
+  const [bizmoney, naverAdCosts, ...yearNaverCostResults] = await Promise.all([
     naverCreds ? getBizmoney(naverCreds).catch(() => null) : Promise.resolve(null),
     naverCreds ? getNaverAdCosts(month, settings!).catch(() => null) : Promise.resolve(null),
-    kakaoCreds ? getKakaoMomentBalance(kakaoCreds).catch(() => null) : Promise.resolve(null),
     ...yearReports.map((r) =>
       naverCreds && r.month !== month
         ? getNaverAdCosts(r.month, settings!).catch(() => null)
@@ -94,10 +76,6 @@ export default async function ReportPage({
     place: naverAdCosts?.place ?? null,
     powerContents: naverAdCosts?.powerContents ?? null,
     bizmoney: bizmoney ?? null,
-  });
-  console.log(`[KakaoMoment] ${decoded} / ${month}`, {
-    adAccountId: kakaoCreds?.kakao_ad_account_id ?? null,
-    balance: kakaoBalance,
   });
 
   if (!report) notFound();
@@ -304,7 +282,7 @@ export default async function ReportPage({
 
           {/* 비즈머니 잔액 */}
           {bizmoney !== null && (
-            <div className="flex items-center justify-between bg-[#03C75A]/10 rounded-xl px-3 py-2.5 mb-2">
+            <div className="flex items-center justify-between bg-[#03C75A]/10 rounded-xl px-3 py-2.5 mb-4">
               <div className="flex items-center gap-2">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect width="24" height="24" rx="4" fill="#03C75A"/>
@@ -314,22 +292,6 @@ export default async function ReportPage({
               </div>
               <span className="text-sm font-bold text-[#03C75A]">
                 {Math.floor(Number(bizmoney)).toLocaleString()}원
-              </span>
-            </div>
-          )}
-
-          {/* 카카오 모먼트 잔액 */}
-          {kakaoBalance !== null && (
-            <div className="flex items-center justify-between bg-[#FEE500]/10 rounded-xl px-3 py-2.5 mb-4">
-              <div className="flex items-center gap-2">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="24" height="24" rx="4" fill="#FEE500"/>
-                  <text x="12" y="17" textAnchor="middle" fontSize="11" fontWeight="bold" fill="#3C1E1E" fontFamily="sans-serif">K</text>
-                </svg>
-                <span className="text-xs font-medium text-[#B8860B]">카카오모먼트 잔액</span>
-              </div>
-              <span className="text-sm font-bold text-[#B8860B]">
-                {Math.floor(Number(kakaoBalance)).toLocaleString()}원
               </span>
             </div>
           )}

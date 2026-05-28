@@ -188,14 +188,6 @@ export async function upsertCompanySettings(data: {
   if (error) throw error;
 }
 
-export async function updateKakaoAccessToken(company: string, newAccessToken: string) {
-  const { error } = await supabase
-    .from("company_settings")
-    .update({ kakao_access_token: newAccessToken })
-    .eq("company", company);
-  if (error) console.error("[DB] updateKakaoAccessToken error:", error);
-}
-
 export async function deleteReport(id: number) {
   const { error } = await supabase.from("reports").delete().eq("id", id);
   if (error) throw error;
