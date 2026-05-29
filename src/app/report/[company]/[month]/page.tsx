@@ -306,19 +306,23 @@ export default async function ReportPage({
             </div>
           )}
 
-          {/* 데이블 광고 잔액 + 오늘 소진 */}
-          {dableReport !== null && (
+          {/* 데이블 광고 잔액 + 오늘/월 소진 */}
+          {(dableReport !== null || dableMonthlySpend !== null) && (
             <div className="flex flex-col gap-1.5 mb-4">
-              {dableReport.rateLimited ? (
-                <div className="flex items-center gap-2 bg-[#FF6B35]/10 rounded-xl px-3 py-2.5">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="24" height="24" rx="4" fill="#FF6B35"/>
-                    <text x="12" y="17" textAnchor="middle" fontSize="11" fontWeight="bold" fill="white" fontFamily="sans-serif">D</text>
-                  </svg>
-                  <span className="text-xs text-[#FF6B35]">데이블 · 10분 후 업데이트</span>
-                </div>
-              ) : (
-                <>
+              {/* 잔액: rate limit 여부에 따라 분기 */}
+              {dableReport !== null && (
+                dableReport.rateLimited ? (
+                  <div className="flex items-center justify-between bg-[#FF6B35]/10 rounded-xl px-3 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="24" height="24" rx="4" fill="#FF6B35"/>
+                        <text x="12" y="17" textAnchor="middle" fontSize="11" fontWeight="bold" fill="white" fontFamily="sans-serif">D</text>
+                      </svg>
+                      <span className="text-xs font-medium text-[#FF6B35]">데이블 광고 잔액</span>
+                    </div>
+                    <span className="text-xs text-[#FF6B35]">10분 후 업데이트</span>
+                  </div>
+                ) : (
                   <div className="flex items-center justify-between bg-[#FF6B35]/10 rounded-xl px-3 py-2.5">
                     <div className="flex items-center gap-2">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -331,34 +335,35 @@ export default async function ReportPage({
                       {Math.floor(dableReport.balance).toLocaleString()}원
                     </span>
                   </div>
-                  {dableMonthlySpend !== null && (
-                    <>
-                      <div className="flex items-center justify-between bg-[#FF6B35]/10 rounded-xl px-3 py-2.5">
-                        <div className="flex items-center gap-2">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect width="24" height="24" rx="4" fill="#FF6B35"/>
-                            <text x="12" y="17" textAnchor="middle" fontSize="11" fontWeight="bold" fill="white" fontFamily="sans-serif">D</text>
-                          </svg>
-                          <span className="text-xs font-medium text-[#FF6B35]">데이블 오늘 소진</span>
-                        </div>
-                        <span className="text-sm font-bold text-[#FF6B35]">
-                          {Math.floor(dableMonthlySpend.today).toLocaleString()}원
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between bg-[#FF6B35]/10 rounded-xl px-3 py-2.5">
-                        <div className="flex items-center gap-2">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect width="24" height="24" rx="4" fill="#FF6B35"/>
-                            <text x="12" y="17" textAnchor="middle" fontSize="11" fontWeight="bold" fill="white" fontFamily="sans-serif">D</text>
-                          </svg>
-                          <span className="text-xs font-medium text-[#FF6B35]">데이블 월 소진</span>
-                        </div>
-                        <span className="text-sm font-bold text-[#FF6B35]">
-                          {Math.floor(dableMonthlySpend.monthly).toLocaleString()}원
-                        </span>
-                      </div>
-                    </>
-                  )}
+                )
+              )}
+              {/* 오늘/월 소진: daily_report에서 항상 표시 */}
+              {dableMonthlySpend !== null && (
+                <>
+                  <div className="flex items-center justify-between bg-[#FF6B35]/10 rounded-xl px-3 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="24" height="24" rx="4" fill="#FF6B35"/>
+                        <text x="12" y="17" textAnchor="middle" fontSize="11" fontWeight="bold" fill="white" fontFamily="sans-serif">D</text>
+                      </svg>
+                      <span className="text-xs font-medium text-[#FF6B35]">데이블 오늘 소진</span>
+                    </div>
+                    <span className="text-sm font-bold text-[#FF6B35]">
+                      {Math.floor(dableMonthlySpend.today).toLocaleString()}원
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between bg-[#FF6B35]/10 rounded-xl px-3 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="24" height="24" rx="4" fill="#FF6B35"/>
+                        <text x="12" y="17" textAnchor="middle" fontSize="11" fontWeight="bold" fill="white" fontFamily="sans-serif">D</text>
+                      </svg>
+                      <span className="text-xs font-medium text-[#FF6B35]">데이블 월 소진</span>
+                    </div>
+                    <span className="text-sm font-bold text-[#FF6B35]">
+                      {Math.floor(dableMonthlySpend.monthly).toLocaleString()}원
+                    </span>
+                  </div>
                 </>
               )}
             </div>
