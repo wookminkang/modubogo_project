@@ -308,30 +308,42 @@ export default async function ReportPage({
           {/* 데이블 광고 잔액 + 오늘 소진 */}
           {dableReport !== null && (
             <div className="flex flex-col gap-1.5 mb-4">
-              <div className="flex items-center justify-between bg-[#FF6B35]/10 rounded-xl px-3 py-2.5">
-                <div className="flex items-center gap-2">
+              {dableReport.rateLimited ? (
+                <div className="flex items-center gap-2 bg-[#FF6B35]/10 rounded-xl px-3 py-2.5">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="24" height="24" rx="4" fill="#FF6B35"/>
                     <text x="12" y="17" textAnchor="middle" fontSize="11" fontWeight="bold" fill="white" fontFamily="sans-serif">D</text>
                   </svg>
-                  <span className="text-xs font-medium text-[#FF6B35]">데이블 광고 잔액</span>
+                  <span className="text-xs text-[#FF6B35]">데이블 · 10분 후 업데이트</span>
                 </div>
-                <span className="text-sm font-bold text-[#FF6B35]">
-                  {Math.floor(dableReport.balance).toLocaleString()}원
-                </span>
-              </div>
-              <div className="flex items-center justify-between bg-[#FF6B35]/10 rounded-xl px-3 py-2.5">
-                <div className="flex items-center gap-2">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="24" height="24" rx="4" fill="#FF6B35"/>
-                    <text x="12" y="17" textAnchor="middle" fontSize="11" fontWeight="bold" fill="white" fontFamily="sans-serif">D</text>
-                  </svg>
-                  <span className="text-xs font-medium text-[#FF6B35]">데이블 오늘 소진</span>
-                </div>
-                <span className="text-sm font-bold text-[#FF6B35]">
-                  {Math.floor(dableReport.today_cost_spent).toLocaleString()}원
-                </span>
-              </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between bg-[#FF6B35]/10 rounded-xl px-3 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="24" height="24" rx="4" fill="#FF6B35"/>
+                        <text x="12" y="17" textAnchor="middle" fontSize="11" fontWeight="bold" fill="white" fontFamily="sans-serif">D</text>
+                      </svg>
+                      <span className="text-xs font-medium text-[#FF6B35]">데이블 광고 잔액</span>
+                    </div>
+                    <span className="text-sm font-bold text-[#FF6B35]">
+                      {Math.floor(dableReport.balance).toLocaleString()}원
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between bg-[#FF6B35]/10 rounded-xl px-3 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="24" height="24" rx="4" fill="#FF6B35"/>
+                        <text x="12" y="17" textAnchor="middle" fontSize="11" fontWeight="bold" fill="white" fontFamily="sans-serif">D</text>
+                      </svg>
+                      <span className="text-xs font-medium text-[#FF6B35]">데이블 오늘 소진</span>
+                    </div>
+                    <span className="text-sm font-bold text-[#FF6B35]">
+                      {Math.floor(dableReport.today_cost_spent).toLocaleString()}원
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
