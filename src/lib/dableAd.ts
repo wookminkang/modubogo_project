@@ -35,11 +35,16 @@ export async function getDableReport(account: string, apiKey: string): Promise<D
   }
 }
 
-export async function getDableMonthlySpend(account: string, apiKey: string, month: string): Promise<number | null> {
+export type DableMonthlyReport = {
+  monthly: number;
+  today: number;
+};
+
+export async function getDableMonthlySpend(account: string, apiKey: string, month: string): Promise<DableMonthlyReport | null> {
   const startDate = dayjs(month).startOf('month').format('YYYYMMDD');
   const endOfMonth = dayjs(month).endOf('month').format('YYYYMMDD');
-  const today = dayjs().format('YYYYMMDD');
-  const endDate = today < endOfMonth ? today : endOfMonth;
+  const todayKey = dayjs().format('YYYYMMDD');
+  const endDate = todayKey < endOfMonth ? todayKey : endOfMonth;
 
   const url = `https://marketing.dable.io/api/client/${account}/daily_report?api_key=${apiKey}&start_date=${startDate}&end_date=${endDate}`;
   console.log(`[Dable Monthly] 요청 URL: ${url}`);
@@ -54,11 +59,12 @@ export async function getDableMonthlySpend(account: string, apiKey: string, mont
       return null;
     }
 
-    const total = Object.values(data as Record<string, { cost_spent: number }>)
-      .reduce((sum, day) => sum + (day.cost_spent ?? 0), 0);
+    const dailyData = data as Record<string, { cost_spent: number }>;
+    const monthly = Object.values(dailyData).reduce((sum, day) => sum + (day.cost_spent ?? 0), 0);
+    const today = dailyData[todayKey]?.cost_spent ?? 0;
 
-    console.log(`[Dable Monthly] ${month} 월 소진 합계: ${total}`);
-    return total;
+    console.log(`[Dable Monthly] ${month} 월 소진: ${monthly}, 오늘 소진: ${today}`);
+    return { monthly, today };
   } catch (e) {
     console.error('[Dable Monthly] error:', e);
     return null;
