@@ -11,6 +11,14 @@ export async function saveNaverAdSettings(data: {
   await upsertCompanySettings(data);
 }
 
+export async function saveDableSettings(data: {
+  company: string;
+  dable_api_key: string;
+  dable_account: string;
+}) {
+  await upsertCompanySettings(data);
+}
+
 export async function saveAlimtalkSettings(data: {
   company: string;
   recipient1?: string;

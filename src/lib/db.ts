@@ -181,6 +181,8 @@ export async function upsertCompanySettings(data: {
   recipient1?: string;
   recipient2?: string;
   recipient3?: string;
+  dable_api_key?: string;
+  dable_account?: string;
 }) {
   const { error } = await supabase
     .from("company_settings")

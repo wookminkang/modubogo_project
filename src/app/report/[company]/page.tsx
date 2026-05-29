@@ -7,6 +7,7 @@ import DeleteReportButton from "@/components/DeleteReportButton";
 import KakaoNotifyButton from "@/components/KakaoNotifyButton";
 import NaverAdSettingsButton from "@/components/NaverAdSettingsButton";
 import AlimtalkSettingsButton from "@/components/AlimtalkSettingsButton";
+import DableSettingsButton from "@/components/DableSettingsButton";
 import { getNaverAdCosts } from "@/lib/naverAd";
 
 interface CompanyReportListPageProps {
@@ -61,6 +62,9 @@ export default async function CompanyReportListPage({
               </div>
               <div className="flex-1">
                 <NaverAdSettingsButton company={decoded} defaultValues={settings ?? {}} />
+              </div>
+              <div className="flex-1">
+                <DableSettingsButton company={decoded} defaultValues={settings ?? {}} />
               </div>
             </div>
             <Link
