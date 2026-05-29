@@ -19,7 +19,7 @@ import ContractTable from "@/components/ContractTable";
 import Image from "next/image";
 import CopyLinkButton from "@/components/CopyLinkButton";
 import { getBizmoney, getNaverAdCosts } from "@/lib/naverAd";
-import { getDableReport } from "@/lib/dableAd";
+import { getDableReport, getDableMonthlySpend } from "@/lib/dableAd";
 
 interface ReportPageProps {
   params: Promise<{ company: string; month: string }>;
@@ -54,10 +54,11 @@ export default async function ReportPage({
   const yearReports = allReports.filter((r) => r.month.startsWith(year));
 
   // 현재 달 + 연도 내 모든 달의 네이버 비용을 병렬로 가져옴
-  const [bizmoney, naverAdCosts, dableReport, ...yearNaverCostResults] = await Promise.all([
+  const [bizmoney, naverAdCosts, dableReport, dableMonthlySpend, ...yearNaverCostResults] = await Promise.all([
     naverCreds ? getBizmoney(naverCreds).catch(() => null) : Promise.resolve(null),
     naverCreds ? getNaverAdCosts(month, settings!).catch(() => null) : Promise.resolve(null),
     hasDableSettings ? getDableReport(settings!.dable_account, settings!.dable_api_key).catch(() => null) : Promise.resolve(null),
+    hasDableSettings ? getDableMonthlySpend(settings!.dable_account, settings!.dable_api_key, month).catch(() => null) : Promise.resolve(null),
     ...yearReports.map((r) =>
       naverCreds && r.month !== month
         ? getNaverAdCosts(r.month, settings!).catch(() => null)
@@ -342,6 +343,20 @@ export default async function ReportPage({
                       {Math.floor(dableReport.today_cost_spent).toLocaleString()}원
                     </span>
                   </div>
+                  {dableMonthlySpend !== null && (
+                    <div className="flex items-center justify-between bg-[#FF6B35]/10 rounded-xl px-3 py-2.5">
+                      <div className="flex items-center gap-2">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect width="24" height="24" rx="4" fill="#FF6B35"/>
+                          <text x="12" y="17" textAnchor="middle" fontSize="11" fontWeight="bold" fill="white" fontFamily="sans-serif">D</text>
+                        </svg>
+                        <span className="text-xs font-medium text-[#FF6B35]">데이블 월 소진</span>
+                      </div>
+                      <span className="text-sm font-bold text-[#FF6B35]">
+                        {Math.floor(dableMonthlySpend).toLocaleString()}원
+                      </span>
+                    </div>
+                  )}
                 </>
               )}
             </div>
