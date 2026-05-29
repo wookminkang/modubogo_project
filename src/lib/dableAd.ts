@@ -44,7 +44,7 @@ export async function getDableMonthlySpend(account: string, apiKey: string, mont
   const url = `https://marketing.dable.io/api/client/${account}/daily_report?api_key=${apiKey}&start_date=${startDate}&end_date=${endDate}`;
   console.log(`[Dable Monthly] 요청 URL: ${url}`);
   try {
-    const res = await fetch(url, { next: { revalidate: 600 } });
+    const res = await fetch(url, { cache: 'no-store' });
 
     console.log(`[Dable Monthly] status: ${res.status}`);
     const data = await res.json();
