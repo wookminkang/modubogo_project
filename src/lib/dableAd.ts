@@ -6,21 +6,20 @@ export type DableReport = {
 };
 
 export async function getDableReport(account: string, apiKey: string): Promise<DableReport | null> {
+  const url = `https://marketing.dable.io/api/client/${account}/budget_report?api_key=${apiKey}`;
+  console.log(`[Dable API] 요청 URL: ${url}`);
   try {
-    const res = await fetch(
-      `https://marketing.dable.io/api/client/${account}/budget_report?api_key=${apiKey}`,
-      { next: { revalidate: 300 } }
-    );
+    const res = await fetch(url, { next: { revalidate: 300 } });
 
-    if (!res.ok) {
-      console.error(`[Dable API] status: ${res.status}`);
+    console.log(`[Dable API] status: ${res.status}`);
+    const data = await res.json();
+    console.log(`[Dable API] 응답:`, JSON.stringify(data));
+
+    if (!res.ok) return null;
+    if (typeof data.balance !== 'number' || typeof data.today_cost_spent !== 'number') {
+      console.warn('[Dable API] 예상과 다른 응답 타입:', typeof data.balance, typeof data.today_cost_spent);
       return null;
     }
-
-    const data = await res.json();
-    console.log(`[Dable API] account: ${account}`, JSON.stringify(data));
-
-    if (typeof data.balance !== 'number' || typeof data.today_cost_spent !== 'number') return null;
 
     return { balance: data.balance, today_cost_spent: data.today_cost_spent };
   } catch (e) {

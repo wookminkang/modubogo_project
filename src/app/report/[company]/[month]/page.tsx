@@ -80,6 +80,12 @@ export default async function ReportPage({
     powerContents: naverAdCosts?.powerContents ?? null,
     bizmoney: bizmoney ?? null,
   });
+  console.log(`[Dable] ${decoded} / ${month}`, {
+    hasDableSettings,
+    dable_account: settings?.dable_account ?? null,
+    dable_api_key: settings?.dable_api_key ? '***설정됨***' : null,
+    dableReport,
+  });
 
   if (!report) notFound();
 
