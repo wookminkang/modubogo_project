@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronRight } from "lucide-react";
 import { saveNaverAdSettings } from "@/lib/company-actions";
 import Toast from "./Toast";
 
@@ -42,13 +43,17 @@ export default function NaverAdSettingsButton({ company, defaultValues }: Props)
       <button
         onClick={() => setOpen(true)}
         title="네이버 광고 API 설정"
-        className="flex w-full items-center justify-center gap-1.5 text-sm text-gray-600 bg-white border border-gray-200 px-3 py-2 rounded-xl hover:bg-gray-50 transition-all"
+        className="flex w-full items-center gap-3 bg-white border border-gray-200 px-4 py-3 rounded-xl hover:bg-gray-50 transition-all cursor-pointer"
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <rect width="24" height="24" rx="4" fill="#03C75A"/>
-          <text x="12" y="17" textAnchor="middle" fontSize="13" fontWeight="bold" fill="white" fontFamily="sans-serif">N</text>
-        </svg>
-        API 설정
+        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#03C75A] shrink-0">
+          <svg width="16" height="16" viewBox="0 0 24 24">
+            <text x="12" y="17" textAnchor="middle" fontSize="14" fontWeight="bold" fill="white" fontFamily="sans-serif">N</text>
+          </svg>
+        </span>
+        <span className="flex-1 text-left text-sm font-medium text-gray-700">
+          API 설정
+        </span>
+        <ChevronRight size={16} className="text-gray-300 shrink-0" />
       </button>
 
       {open && (

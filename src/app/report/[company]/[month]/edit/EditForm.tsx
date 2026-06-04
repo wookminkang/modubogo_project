@@ -45,6 +45,7 @@ interface FormValues {
   email: string;
   password: string;
   hospital_type: string;
+  region: string;
   categories: CategoryField[];
   validity: ValidityField[];
   contracts: ContractField[];
@@ -203,6 +204,17 @@ export default function EditForm({
                 <Input
                   id="company"
                   {...register("company", { required: true })}
+                  className={inputClass}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="region" className="text-gray-500 font-normal">
+                  지역 <span className="text-gray-300">(선택)</span>
+                </Label>
+                <Input
+                  id="region"
+                  {...register("region")}
+                  placeholder="ex) 강남"
                   className={inputClass}
                 />
               </div>

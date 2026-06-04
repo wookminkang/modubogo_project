@@ -1,39 +1,14 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCompaniesSummaryFromDB } from "@/lib/db";
 import { isAdmin } from "@/lib/admin";
 import CompanyList from "./CompanyList";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function ReportListPage() {
   const admin = await isAdmin();
   if (!admin) redirect("/admin/login");
   const companies = await getCompaniesSummaryFromDB();
 
-  return (
-    <div className="max-w-[600px] mx-auto min-h-screen bg-[#F0F4FA] shadow-xl">
-      <div className="px-4 py-6 flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-[#0e299c]">보고서 목록</h1>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/admin/dashboard"
-              className="bg-white text-[#0e299c] text-sm font-medium px-3 py-2 rounded-xl shadow-sm border border-[#0e299c]/20"
-            >
-              대시보드
-            </Link>
-            <Link
-              href="/report/new"
-              className="bg-[#0e299c] text-white text-sm font-medium px-4 py-2 rounded-xl shadow-sm"
-            >
-              + 새 보고서
-            </Link>
-          </div>
-        </div>
-
-        <CompanyList companies={companies} />
-      </div>
-    </div>
-  );
+  return <CompanyList companies={companies} />;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronRight } from "lucide-react";
 import { saveAlimtalkSettings } from "@/lib/company-actions";
 import Toast from "./Toast";
 
@@ -42,13 +43,17 @@ export default function AlimtalkSettingsButton({ company, defaultValues }: Props
       <button
         onClick={() => setOpen(true)}
         title="알림톡 수신자 설정"
-        className="flex w-full items-center justify-center gap-1.5 text-sm text-gray-600 bg-white border border-gray-200 px-3 py-2 rounded-xl hover:bg-gray-50 transition-all"
+        className="flex w-full items-center gap-3 bg-white border border-gray-200 px-4 py-3 rounded-xl hover:bg-gray-50 transition-all cursor-pointer"
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="#3C1E1E" xmlns="http://www.w3.org/2000/svg">
-          <rect width="24" height="24" rx="4" fill="#FEE500"/>
-          <path d="M12 5C7.589 5 4 7.87 4 11.4c0 2.2 1.344 4.13 3.36 5.293l-.697 2.531a.268.268 0 0 0 .392.297L10.5 17.7c.49.077 1 .12 1.5.12 4.411 0 8-2.87 8-6.4S16.411 5 12 5z" />
-        </svg>
-        알림톡 설정
+        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#FEE500] shrink-0">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="#3C1E1E">
+            <path d="M12 5C7.589 5 4 7.87 4 11.4c0 2.2 1.344 4.13 3.36 5.293l-.697 2.531a.268.268 0 0 0 .392.297L10.5 17.7c.49.077 1 .12 1.5.12 4.411 0 8-2.87 8-6.4S16.411 5 12 5z" />
+          </svg>
+        </span>
+        <span className="flex-1 text-left text-sm font-medium text-gray-700">
+          알림톡 설정
+        </span>
+        <ChevronRight size={16} className="text-gray-300 shrink-0" />
       </button>
 
       {open && (

@@ -45,6 +45,7 @@ interface FormValues {
   email: string;
   password: string;
   hospital_type: string;
+  region: string;
   categories: CategoryField[];
   validity: ValidityField[];
   contracts: ContractField[];
@@ -62,6 +63,7 @@ export default function ReportNewPage({ categoryOptions }: { categoryOptions: st
         reporter: "전형진",
         email: "oper2068@kakao.com",
         hospital_type: "",
+        region: "",
         categories: [
           {
             category: "",
@@ -147,7 +149,7 @@ export default function ReportNewPage({ categoryOptions }: { categoryOptions: st
   }
 
   return (
-    <div className="min-h-screen bg-[#F0F4FA]">
+    <div className="flex-1 bg-[#F0F4FA]">
       <div className="px-4 py-6 flex flex-col gap-4">
         <div>
           <Link href="/report" className="text-sm text-gray-400 mb-1 block">
@@ -218,6 +220,17 @@ export default function ReportNewPage({ categoryOptions }: { categoryOptions: st
                   id="company"
                   {...register("company", { required: true })}
                   placeholder="ex) 모두보고"
+                  className={inputClass}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="region" className="text-gray-500 font-normal">
+                  지역 <span className="text-gray-300">(선택)</span>
+                </Label>
+                <Input
+                  id="region"
+                  {...register("region")}
+                  placeholder="ex) 강남"
                   className={inputClass}
                 />
               </div>

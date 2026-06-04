@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getReportFromDB, getCategoryColorsFromDB } from "@/lib/db";
+import { getReportFromDB, getCategoryColorsFromDB, getCompanySettings } from "@/lib/db";
 import { isAdmin } from "@/lib/admin";
 import EditForm from "./EditForm";
 
@@ -14,9 +14,10 @@ export default async function ReportEditPage({ params }: Props) {
   if (!admin) redirect('/admin/login');
 
   const decoded = decodeURIComponent(company);
-  const [report, dbColors] = await Promise.all([
+  const [report, dbColors, settings] = await Promise.all([
     getReportFromDB(decoded, month),
     getCategoryColorsFromDB(),
+    getCompanySettings(decoded),
   ]);
   const categoryOptions = Object.keys(dbColors).sort((a, b) => a.localeCompare(b, "ko"));
 
@@ -35,6 +36,7 @@ export default async function ReportEditPage({ params }: Props) {
         email: report.email,
         password: report.password ?? '',
         hospital_type: report.hospital_type ?? '',
+        region: settings?.region ?? '',
         categories: report.categories.map((c: { category: string; channel: string; agency: string; period: string; amount: string; sort_order?: number }) => ({ ...c, sort_order: String(c.sort_order ?? 0) })),
         validity: report.validity.map((v: { category: string; subject: string; expiryDate: string; sort_order?: number }) => ({ ...v, sort_order: String(v.sort_order ?? 0) })),
         contracts: report.contracts.map((ct: { category: string; name: string; keyword: string; link: string; sort_order?: number }) => ({ ...ct, sort_order: String(ct.sort_order ?? 0) })),

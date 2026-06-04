@@ -12,6 +12,14 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* 가로 스크롤 영역의 스크롤바 숨김 (모바일 탭 등) */
+@utility scrollbar-hide {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

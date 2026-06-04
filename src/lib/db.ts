@@ -60,6 +60,18 @@ export async function getCompaniesSummaryFromDB() {
 
   if (!reports) return [];
 
+  // 지역 정보는 company_settings.region 에서 가져온다.
+  // (컬럼이 아직 없으면 select 가 에러를 반환하므로 방어적으로 처리)
+  const regionMap = new Map<string, string>();
+  const { data: settings } = await supabase
+    .from("company_settings")
+    .select("company, region");
+  if (settings) {
+    for (const s of settings as { company: string; region: string | null }[]) {
+      if (s.region) regionMap.set(s.company, s.region);
+    }
+  }
+
   const map = new Map<string, { latestMonth: string; reportCount: number; status: string; hospitalType: string | null }>();
   for (const r of reports) {
     const existing = map.get(r.company);
@@ -75,7 +87,7 @@ export async function getCompaniesSummaryFromDB() {
     }
   }
   return Array.from(map.entries())
-    .map(([company, data]) => ({ company, ...data }))
+    .map(([company, data]) => ({ company, ...data, region: regionMap.get(company) ?? null }))
     .sort((a, b) => a.company.localeCompare(b.company, "ko"));
 }
 
@@ -88,6 +100,7 @@ export async function upsertReport(data: {
   email: string;
   password?: string;
   hospital_type?: string;
+  region?: string;
   categories: { category: string; channel: string; agency: string; period: string; amount: string; sort_order: string }[];
   validity: { category: string; subject: string; expiryDate: string; sort_order: string }[];
   contracts: { category: string; name: string; keyword: string; link: string; sort_order: string }[];
@@ -152,6 +165,23 @@ export async function upsertReport(data: {
       }))
     ),
   ]);
+
+  // 지역(region)은 회사 단위 속성이라 company_settings 에 저장한다.
+  // region 컬럼이 아직 없어도 보고서 저장은 실패하지 않도록 에러를 삼킨다.
+  if (data.region !== undefined) {
+    const { error: regionErr } = await supabase
+      .from("company_settings")
+      .upsert(
+        { company: data.company, region: data.region || null },
+        { onConflict: "company" }
+      );
+    if (regionErr) {
+      console.error(
+        "region 저장 실패 (company_settings.region 컬럼을 확인하세요):",
+        regionErr
+      );
+    }
+  }
 
   return report;
 }
@@ -233,4 +263,79 @@ export async function getDashboardRawDataFromDB() {
     .select(`id, company, month, status, reporter, report_categories(category, amount), validity_items(category, subject, expiry_date)`)
     .order("month", { ascending: false });
   return data ?? [];
+}
+
+/**
+ * 회사+월의 진료일정 배너 URL 조회.
+ * holiday_banners 테이블이 아직 없으면 에러를 무시하고 null 반환.
+ */
+export async function getHolidayBannerUrl(
+  company: string,
+  month: string
+): Promise<string | null> {
+  const { data } = await supabase
+    .from("holiday_banners")
+    .select("banner_url")
+    .eq("company", company)
+    .eq("month", month)
+    .maybeSingle();
+  return (data?.banner_url as string | undefined) ?? null;
+}
+
+export interface HolidayScheduleRow {
+  date: string;
+  holiday_name: string;
+  status: string; // open(정상) | closed(휴무) | morning(오전진료)
+  short_start: string | null;
+  short_end: string | null;
+  lunch_start: string | null;
+  lunch_end: string | null;
+  note: string | null;
+}
+
+/** 회사+월의 저장된 공휴일 진료여부 조회 (monthPrefix = 'YYYY-MM') */
+export async function getHolidaySchedules(
+  company: string,
+  monthPrefix: string
+): Promise<HolidayScheduleRow[]> {
+  const { data } = await supabase
+    .from("holiday_schedules")
+    .select(
+      "date, holiday_name, status, short_start, short_end, lunch_start, lunch_end, note"
+    )
+    .eq("company", company)
+    .gte("date", `${monthPrefix}-01`)
+    .lte("date", `${monthPrefix}-31`);
+  return (data as HolidayScheduleRow[] | null) ?? [];
+}
+
+export interface HolidayScheduleSnapshotItem {
+  date: string;
+  holiday_name: string;
+  status: string; // morning | open | closed
+  short_start: string;
+  short_end: string;
+  lunch_start: string;
+  lunch_end: string;
+  noLunch: boolean;
+}
+
+export interface HolidaySubmissionRow {
+  id: number;
+  submitted_at: string;
+  schedule: HolidayScheduleSnapshotItem[];
+}
+
+/** 회사+월의 원장 제출(등록/수정) 이력 — 오래된 순 */
+export async function getHolidaySubmissions(
+  company: string,
+  monthPrefix: string
+): Promise<HolidaySubmissionRow[]> {
+  const { data } = await supabase
+    .from("holiday_submissions")
+    .select("id, submitted_at, schedule")
+    .eq("company", company)
+    .eq("month", monthPrefix)
+    .order("submitted_at", { ascending: true });
+  return (data as HolidaySubmissionRow[] | null) ?? [];
 }
