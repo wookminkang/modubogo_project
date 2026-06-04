@@ -5,6 +5,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "모두보고",
   description: "광고 운영 보고서",
+  icons: { icon: "/images/modubogo_favicon.png" },
 };
 
 export const viewport: Viewport = {
