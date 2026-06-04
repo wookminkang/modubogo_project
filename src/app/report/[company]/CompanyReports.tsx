@@ -2,7 +2,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { ChevronRight, History, CalendarCheck } from "lucide-react";
 import dayjs from "@/lib/dayjs";
-import { getReportsByCompanyFromDB, getCompanySettings } from "@/lib/db";
+import {
+  getReportsByCompanyFromDB,
+  getCompanySettings,
+  getAlimtalkCountsByMonth,
+} from "@/lib/db";
 import { getTotalAmount } from "@/lib/mockData";
 import { notFound, redirect } from "next/navigation";
 import { isAdmin } from "@/lib/admin";
@@ -21,9 +25,10 @@ export default async function CompanyReports({ company }: { company: string }) {
   const admin = await isAdmin();
   if (!admin) redirect("/admin/login");
 
-  const [reports, settings] = await Promise.all([
+  const [reports, settings, alimtalkCounts] = await Promise.all([
     getReportsByCompanyFromDB(company),
     getCompanySettings(company),
+    getAlimtalkCountsByMonth(company),
   ]);
 
   if (reports.length === 0) notFound();
@@ -148,11 +153,23 @@ export default async function CompanyReports({ company }: { company: string }) {
                   href={`/report/${encodeURIComponent(company)}/${report.month}`}
                   className="flex-1 min-w-0"
                 >
-                  <p className="font-bold text-base text-gray-900">
-                    {dayjs(report.month).format("YYYY.MM")}
-                  </p>
-                  <p className="text-sm text-gray-400 mt-0.5">
-                    ₩{total.toLocaleString()} · {report.categories.length}건
+                  <div className="flex items-center gap-2">
+                    <p className="text-xl font-bold text-gray-900">
+                      {dayjs(report.month).format("YYYY.MM")}
+                    </p>
+                    {(alimtalkCounts[report.month] ?? 0) > 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-[#FEE500]/30 px-2 py-0.5 text-xs font-semibold text-[#3C1E1E]">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7L6 21l3.6-1.9c.8.1 1.6.2 2.4.2 5.5 0 10-3.6 10-8s-4.5-8-10-8z" />
+                        </svg>
+                        알림톡 {alimtalkCounts[report.month]}회
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1.5 flex items-baseline gap-1.5 text-sm font-medium text-gray-500">
+                    <span className="text-2xl font-extrabold text-[#0e299c]">
+                      ₩{total.toLocaleString()}원
+                    </span>
                   </p>
                 </Link>
                 <div className="flex items-center gap-1 shrink-0">

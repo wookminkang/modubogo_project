@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, ArrowLeft } from "lucide-react";
 import dayjs from "@/lib/dayjs";
 import { supabase } from "@/lib/supabase";
 import { sendHolidayAlimtalk } from "@/lib/bizgo";
@@ -214,8 +215,16 @@ export default function HolidayClient({
     <>
       <div className="flex-1 overflow-x-clip bg-[#F0F4FA] py-6 px-4">
         <div className="max-w-[1100px] mx-auto bg-white rounded-2xl shadow-sm px-4 py-6 md:px-8 md:py-8">
+          <Link
+            href={`/report/${encodeURIComponent(hospitalName)}`}
+            className="mb-5 inline-flex items-center gap-1.5 text-base font-semibold text-gray-600 transition-colors hover:text-[#0e299c]"
+          >
+            <ArrowLeft size={18} />
+            뒤로가기
+          </Link>
+
           {/* 헤더 + 저장하기 버튼 */}
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-[#0e299c] break-keep">
                 {hospitalName}
@@ -226,7 +235,7 @@ export default function HolidayClient({
               </p>
             </div>
 
-            <div className="flex shrink-0 flex-col items-end gap-1">
+            <div className="flex shrink-0 flex-col items-start gap-1 md:items-end">
               <div className="flex items-center gap-2">
                 <button
                   type="button"

@@ -1,6 +1,7 @@
 "use client";
 
-import { Smartphone, Upload } from "lucide-react";
+import Link from "next/link";
+import { Smartphone, Upload, ExternalLink } from "lucide-react";
 import dayjs from "@/lib/dayjs";
 import HolidayDetailPreview from "./HolidayDetailPreview";
 
@@ -132,11 +133,24 @@ export default function AlimtalkPanel({
         <div className="min-w-0 lg:flex-1">
       {/* 자세히 보기 화면 미리보기 (업로드 배너 반영) */}
       <div>
-        <div className="mb-4 flex items-center gap-2">
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#0e299c]/10 shrink-0">
-            <Smartphone size={13} className="text-[#0e299c]" />
-          </span>
-          <h3 className="text-sm font-bold text-gray-700">자세히 보기 화면</h3>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#0e299c]/10 shrink-0">
+              <Smartphone size={13} className="text-[#0e299c]" />
+            </span>
+            <h3 className="text-sm font-bold text-gray-700">자세히 보기 화면</h3>
+          </div>
+          <Link
+            href={`/holiday/${encodeURIComponent(hospitalName)}/${year}-${String(
+              month
+            ).padStart(2, "0")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500 transition-colors hover:border-[#0e299c] hover:text-[#0e299c]"
+          >
+            바로가기
+            <ExternalLink size={12} />
+          </Link>
         </div>
 
         <HolidayDetailPreview

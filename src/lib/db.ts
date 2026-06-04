@@ -257,6 +257,22 @@ export async function getAlimtalkLogs() {
   return data ?? [];
 }
 
+/** 회사의 월별 알림톡 발송 성공 횟수 (month → count) */
+export async function getAlimtalkCountsByMonth(
+  company: string
+): Promise<Record<string, number>> {
+  const { data } = await supabase
+    .from("alimtalk_logs")
+    .select("month")
+    .eq("company", company)
+    .eq("status", "success");
+  const counts: Record<string, number> = {};
+  for (const row of (data as { month: string }[] | null) ?? []) {
+    if (row.month) counts[row.month] = (counts[row.month] ?? 0) + 1;
+  }
+  return counts;
+}
+
 export async function getDashboardRawDataFromDB() {
   const { data } = await supabase
     .from("reports")
