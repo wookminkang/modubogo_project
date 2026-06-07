@@ -414,3 +414,54 @@ export async function getHolidayReplyCompanies(
       return a.company.localeCompare(b.company, "ko");
     });
 }
+
+export interface HolidaySendCompany {
+  company: string;
+  lastSentAt: string; // 가장 최근 발송 시각
+  recipients: string[]; // 가장 최근 발송의 수신 번호
+  status: "success" | "failed"; // 가장 최근 발송 결과
+  sendCount: number; // 해당 월 총 발송 횟수
+}
+
+/**
+ * 특정 월에 "진료일정 알림톡"을 발송한 회사 목록.
+ * alimtalk_logs 는 보고서 알림톡과 공용 테이블이라, report_url 에 '/holiday/' 가
+ * 포함된 건만 진료일정 발송으로 간주한다 (별도 type 컬럼 없이 구분).
+ * 회사별로 가장 최근 발송 1건을 대표값으로, 총 발송 횟수를 함께 반환. 최근 발송순 정렬.
+ */
+export async function getHolidaySends(
+  monthPrefix: string
+): Promise<HolidaySendCompany[]> {
+  const { data } = await supabase
+    .from("alimtalk_logs")
+    .select("company, recipients, status, sent_at, report_url")
+    .eq("month", monthPrefix)
+    .ilike("report_url", "%/holiday/%")
+    .order("sent_at", { ascending: false });
+
+  type Row = {
+    company: string;
+    recipients: string[] | null;
+    status: "success" | "failed";
+    sent_at: string;
+  };
+
+  const map = new Map<string, HolidaySendCompany>();
+  for (const r of (data as Row[] | null) ?? []) {
+    const existing = map.get(r.company);
+    if (!existing) {
+      // 최신순 정렬이라 첫 등장이 가장 최근 발송
+      map.set(r.company, {
+        company: r.company,
+        lastSentAt: r.sent_at,
+        recipients: r.recipients ?? [],
+        status: r.status,
+        sendCount: 1,
+      });
+    } else {
+      existing.sendCount += 1;
+    }
+  }
+
+  return Array.from(map.values());
+}

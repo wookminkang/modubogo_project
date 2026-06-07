@@ -5,12 +5,12 @@ import { usePathname } from "next/navigation";
 
 const TABS = [
   { href: "/report", label: "보고서" },
-  { href: "/holiday", label: "공휴일 회신" },
+  { href: "/holiday", label: "진료일정" },
 ];
 
 /**
  * 공통 상단 헤더.
- * showNav=true(관리자)일 때만 카테고리 탭(보고서/공휴일 회신)을 노출한다.
+ * showNav=true(관리자)일 때만 카테고리 탭(보고서/진료일정)을 노출한다.
  * 공개 페이지(원장/광고주)에는 탭을 숨긴다.
  */
 export default function ReportHeader({ showNav = false }: { showNav?: boolean }) {
