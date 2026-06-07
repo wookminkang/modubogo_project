@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ChevronRight, Send, Phone } from "lucide-react";
+import { Send, Phone } from "lucide-react";
 import dayjs from "@/lib/dayjs";
 import { isAdmin } from "@/lib/admin";
 import { getPublicHolidays } from "@/lib/publicHoliday";
 import {
+  getCompaniesSummaryFromDB,
   getHolidayReplyCompanies,
   getHolidaySends,
   type HolidaySendCompany,
@@ -33,58 +34,78 @@ interface Row {
 
 /**
  * 공휴일 진료일정 알림톡 통합 현황 (관리자 전용) — 테이블 뷰.
- * 회사별로 "발송 정보(시각·수신번호)"와 "회신 상태"를 한 행에 함께 보여준다.
- * 이번 달에 보낸 회사 ∪ 회신한 회사의 합집합을 최근 활동순으로 나열.
+ * 보고서 병원 전체를 baseline으로, 회사별 "발송 정보(시각·수신번호)"와
+ * "회신 상태"를 한 행에 함께 보여준다. (미발송 병원까지 노출)
  */
+type StatusKey = "all" | "unsent" | "awaiting" | "done";
+
 export default async function HolidayRepliesListPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string }>;
+  searchParams: Promise<{ month?: string; status?: string }>;
 }) {
   if (!(await isAdmin())) redirect("/admin/login");
 
-  const { month: monthParam } = await searchParams;
+  const { month: monthParam, status: statusParam } = await searchParams;
+  const activeStatus: StatusKey =
+    statusParam === "unsent" ||
+    statusParam === "awaiting" ||
+    statusParam === "done"
+      ? statusParam
+      : "all";
   const base = monthParam ? dayjs(`${monthParam}-01`) : dayjs().add(1, "month");
   const year = base.year();
   const month = base.month() + 1;
   const monthKey = `${year}-${pad(month)}`;
 
-  const [holidays, replies, sends] = await Promise.all([
+  const [holidays, companies, replies, sends] = await Promise.all([
     getPublicHolidays(year, month),
+    getCompaniesSummaryFromDB(),
     getHolidayReplyCompanies(monthKey),
     getHolidaySends(monthKey),
   ]);
   const total = holidays.length;
 
-  // 발송 ∪ 회신 합집합으로 회사별 행 구성
+  // 보고서 병원 전체 ∪ 회신 ∪ 발송 회사를 대상으로 회사별 행 구성
+  const replyMap = new Map(replies.map((r) => [r.company, r]));
   const sendMap = new Map(sends.map((s) => [s.company, s]));
+  const allCompanies = new Set<string>([
+    ...companies.map((c) => c.company),
+    ...replies.map((r) => r.company),
+    ...sends.map((s) => s.company),
+  ]);
   const rowMap = new Map<string, Row>();
-  for (const r of replies) {
-    rowMap.set(r.company, {
-      company: r.company,
-      responded: r.responded,
-      lastSubmittedAt: r.lastSubmittedAt,
-      send: sendMap.get(r.company) ?? null,
+  for (const company of allCompanies) {
+    const r = replyMap.get(company);
+    rowMap.set(company, {
+      company,
+      responded: r?.responded ?? 0,
+      lastSubmittedAt: r?.lastSubmittedAt ?? null,
+      send: sendMap.get(company) ?? null,
     });
   }
-  for (const s of sends) {
-    if (!rowMap.has(s.company)) {
-      rowMap.set(s.company, {
-        company: s.company,
-        responded: 0,
-        lastSubmittedAt: null,
-        send: s,
-      });
-    }
-  }
 
-  // 최근 활동(발송/회신 중 늦은 쪽)순 정렬
+  // 행 상태 분류: 미발송 → 발송·미회신 → 회신완료
+  const statusOf = (r: Row): Exclude<StatusKey, "all"> => {
+    if (total > 0 && r.responded >= total) return "done";
+    return r.send ? "awaiting" : "unsent";
+  };
+  const rank: Record<Exclude<StatusKey, "all">, number> = {
+    unsent: 0,
+    awaiting: 1,
+    done: 2,
+  };
+
+  // 상태 우선 정렬, 같은 상태 내에서는 최근 활동순
   const activityOf = (r: Row) => {
     const a = r.send?.lastSentAt ?? "";
     const b = r.lastSubmittedAt ?? "";
     return a > b ? a : b;
   };
-  const rows = Array.from(rowMap.values()).sort((a, b) => {
+  const allRows = Array.from(rowMap.values()).sort((a, b) => {
+    const ra = rank[statusOf(a)];
+    const rb = rank[statusOf(b)];
+    if (ra !== rb) return ra - rb;
     const av = activityOf(a);
     const bv = activityOf(b);
     if (av && bv) return bv.localeCompare(av);
@@ -93,23 +114,66 @@ export default async function HolidayRepliesListPage({
     return a.company.localeCompare(b.company, "ko");
   });
 
-  const sentCount = rows.filter((r) => r.send).length;
+  // 요약 카운트
+  const counts = {
+    all: allRows.length,
+    unsent: allRows.filter((r) => statusOf(r) === "unsent").length,
+    awaiting: allRows.filter((r) => statusOf(r) === "awaiting").length,
+    done: allRows.filter((r) => statusOf(r) === "done").length,
+  };
+
+  // 상태 필터 적용
+  const rows =
+    activeStatus === "all"
+      ? allRows
+      : allRows.filter((r) => statusOf(r) === activeStatus);
+
+  // 상태 필터 탭 정의
+  const filters: { key: StatusKey; label: string; count: number }[] = [
+    { key: "all", label: "전체", count: counts.all },
+    { key: "unsent", label: "미발송", count: counts.unsent },
+    { key: "awaiting", label: "발송·미회신", count: counts.awaiting },
+    { key: "done", label: "회신완료", count: counts.done },
+  ];
+  const tabHref = (key: StatusKey) =>
+    `/holiday?month=${monthKey}${key === "all" ? "" : `&status=${key}`}`;
 
   return (
     <ReportShell
       title={`${month}월 병원별 진료일정 목록`}
       actions={<MonthNav basePath="/holiday" month={monthKey} />}
     >
-      {rows.length === 0 ? (
-        <p className="py-20 text-center text-sm text-gray-400">
-          아직 발송하거나 회신한 병원이 없어요.
-        </p>
-      ) : (
-        <>
-          <p className="px-1 pb-3 text-xs text-gray-400">
-            발송 {sentCount}곳 · 전체 {rows.length}곳
-          </p>
+      <>
+        {/* 상태 필터 탭 (요약 카운트 겸용) */}
+        <div className="flex flex-wrap gap-1.5 pb-4">
+          {filters.map((f) => {
+            const active = f.key === activeStatus;
+            return (
+              <Link
+                key={f.key}
+                href={tabHref(f.key)}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  active
+                    ? "border-[#0e299c] bg-[#0e299c] text-white"
+                    : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+                }`}
+              >
+                {f.label}
+                <span className={active ? "text-white/80" : "text-gray-400"}>
+                  {f.count}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
 
+        {rows.length === 0 ? (
+          <p className="py-20 text-center text-sm text-gray-400">
+            {activeStatus === "all"
+              ? "표시할 병원이 없어요."
+              : "해당 상태의 병원이 없어요."}
+          </p>
+        ) : (
           <div className="rounded-xl border border-gray-100 bg-white">
             <Table>
               <TableHeader>
@@ -119,7 +183,7 @@ export default async function HolidayRepliesListPage({
                   <TableHead className="text-gray-500">발송 시각</TableHead>
                   <TableHead className="text-gray-500">수신번호</TableHead>
                   <TableHead className="text-gray-500">회신 상태</TableHead>
-                  <TableHead className="w-10" />
+                  <TableHead className="text-right text-gray-500">액션</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -131,9 +195,9 @@ export default async function HolidayRepliesListPage({
                     send && send.recipients.length > 1
                       ? ` 외 ${send.recipients.length - 1}`
                       : "";
-                  const href = `/report/${encodeURIComponent(
-                    row.company
-                  )}/holiday/replies?month=${monthKey}`;
+                  const enc = encodeURIComponent(row.company);
+                  const href = `/report/${enc}/holiday/replies?month=${monthKey}`;
+                  const sendHref = `/report/${enc}/holiday?month=${monthKey}`;
 
                   return (
                     <TableRow key={row.company} className="border-gray-100">
@@ -216,15 +280,33 @@ export default async function HolidayRepliesListPage({
                         )}
                       </TableCell>
 
-                      {/* 상세 이동 */}
+                      {/* 행별 액션 */}
                       <TableCell>
-                        <Link
-                          href={href}
-                          className="grid h-7 w-7 place-items-center rounded-lg text-gray-300 transition-colors hover:bg-gray-50 hover:text-[#0e299c]"
-                          aria-label={`${row.company} 회신 상세`}
-                        >
-                          <ChevronRight size={18} />
-                        </Link>
+                        <div className="flex items-center justify-end gap-1.5">
+                          {!send ? (
+                            <Link
+                              href={sendHref}
+                              className="rounded-lg bg-[#0e299c] px-2.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#0a1f78]"
+                            >
+                              발송하기
+                            </Link>
+                          ) : (
+                            <>
+                              <Link
+                                href={sendHref}
+                                className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-[#0e299c]"
+                              >
+                                재발송
+                              </Link>
+                              <Link
+                                href={href}
+                                className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-[#0e299c]"
+                              >
+                                회신확인
+                              </Link>
+                            </>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -232,8 +314,8 @@ export default async function HolidayRepliesListPage({
               </TableBody>
             </Table>
           </div>
-        </>
-      )}
+        )}
+      </>
     </ReportShell>
   );
 }
