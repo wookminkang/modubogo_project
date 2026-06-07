@@ -73,15 +73,13 @@ function TimeSelect({
     setOpen(false);
   };
 
-  const gridBtn = (active: boolean) =>
-    `rounded-xl py-3 text-center text-sm font-medium transition-colors cursor-pointer ${
-      active
-        ? "bg-[#0e299c] text-white"
-        : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+  const colBtn = (active: boolean) =>
+    `w-full shrink-0 rounded-lg py-3 text-center text-sm font-medium transition-colors cursor-pointer ${
+      active ? "bg-[#0e299c] text-white" : "text-gray-700 hover:bg-gray-100"
     }`;
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer open={open} onOpenChange={setOpen} handleOnly>
       <DrawerTrigger
         className={`flex min-h-10 w-full flex-1 cursor-pointer items-center justify-between gap-1 rounded-lg border border-gray-200 bg-white px-3 text-sm outline-none focus-visible:border-[#0e299c] ${
           value ? "text-gray-800" : "text-gray-400"
@@ -90,21 +88,26 @@ function TimeSelect({
         {value || placeholder}
         <Clock size={15} className="shrink-0 text-gray-400" />
       </DrawerTrigger>
-      <DrawerContent>
+      <DrawerContent className="mt-0 h-[60vh] max-h-[60vh]">
         <DrawerHeader>
           <DrawerTitle className="text-base">{placeholder} 선택</DrawerTitle>
         </DrawerHeader>
-        <div className="flex flex-col gap-5 px-4 pb-8">
+        <div className="flex flex-1 gap-3 overflow-hidden px-4 pb-6">
           {/* 시 */}
-          <div>
-            <p className="mb-2 text-xs font-semibold text-gray-400">시</p>
-            <div className="grid grid-cols-4 gap-2">
+          <div className="flex min-w-0 flex-1 flex-col">
+            <p className="mb-2 text-center text-xs font-semibold text-gray-400">
+              시
+            </p>
+            <div
+              data-vaul-no-drag
+              className="flex flex-1 flex-col gap-1 overflow-y-auto overscroll-contain rounded-xl bg-gray-50 p-1.5"
+            >
               {hours.map((h) => (
                 <button
                   key={h}
                   type="button"
                   onClick={() => selectHour(h)}
-                  className={gridBtn(h === hh)}
+                  className={colBtn(h === hh)}
                 >
                   {Number(h)}시
                 </button>
@@ -112,15 +115,20 @@ function TimeSelect({
             </div>
           </div>
           {/* 분 */}
-          <div>
-            <p className="mb-2 text-xs font-semibold text-gray-400">분</p>
-            <div className="grid grid-cols-4 gap-2">
+          <div className="flex min-w-0 flex-1 flex-col">
+            <p className="mb-2 text-center text-xs font-semibold text-gray-400">
+              분
+            </p>
+            <div
+              data-vaul-no-drag
+              className="flex flex-1 flex-col gap-1 overflow-y-auto overscroll-contain rounded-xl bg-gray-50 p-1.5"
+            >
               {minutes.map((m) => (
                 <button
                   key={m}
                   type="button"
                   onClick={() => selectMin(m)}
-                  className={gridBtn(m === mm)}
+                  className={colBtn(m === mm)}
                 >
                   {m}분
                 </button>
