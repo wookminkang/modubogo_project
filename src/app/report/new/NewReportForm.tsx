@@ -150,7 +150,7 @@ export default function ReportNewPage({ categoryOptions }: { categoryOptions: st
 
   return (
     <div className="flex-1 bg-[#F0F4FA]">
-      <div className="px-4 py-6 flex flex-col gap-4">
+      <div className="max-w-[640px] mx-auto px-4 py-6 flex flex-col gap-4">
         <div>
           <Link href="/report" className="text-sm text-gray-400 mb-1 block">
             ← 전체 목록
