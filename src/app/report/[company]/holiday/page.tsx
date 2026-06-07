@@ -5,18 +5,23 @@ import HolidayClient from "./HolidayClient";
 
 interface CompanyParamsType {
   params: Promise<{ company: string }>;
+  searchParams: Promise<{ month?: string }>;
 }
 
 export const dynamic = "force-dynamic";
 
-export default async function Holiday({ params }: CompanyParamsType) {
+export default async function Holiday({
+  params,
+  searchParams,
+}: CompanyParamsType) {
   const { company } = await params;
+  const { month: monthParam } = await searchParams;
   const hospitalName = decodeURIComponent(company);
 
-  // 다음 달 (예: 현재 6월이면 7월)
-  const next = dayjs().add(1, "month");
-  const year = next.year();
-  const month = next.month() + 1; // dayjs month는 0-based
+  // 기본 다음 달, ?month=YYYY-MM 로 다른 달 조회
+  const base = monthParam ? dayjs(`${monthParam}-01`) : dayjs().add(1, "month");
+  const year = base.year();
+  const month = base.month() + 1; // dayjs month는 0-based
 
   const holidays = await getPublicHolidays(year, month);
 

@@ -10,6 +10,7 @@ import {
   type HolidaySendCompany,
 } from "@/lib/db";
 import ReportShell from "@/app/report/ReportShell";
+import MonthNav from "@/components/MonthNav";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -36,10 +37,15 @@ interface Row {
  * 회사별로 "발송 정보(시각·수신번호)"와 "회신 상태"를 한 행에 함께 보여준다.
  * 이번 달에 보낸 회사 ∪ 회신한 회사의 합집합을 최근 활동순으로 나열.
  */
-export default async function HolidayRepliesListPage() {
+export default async function HolidayRepliesListPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ month?: string }>;
+}) {
   if (!(await isAdmin())) redirect("/admin/login");
 
-  const base = dayjs().add(1, "month");
+  const { month: monthParam } = await searchParams;
+  const base = monthParam ? dayjs(`${monthParam}-01`) : dayjs().add(1, "month");
   const year = base.year();
   const month = base.month() + 1;
   const monthKey = `${year}-${pad(month)}`;
@@ -91,7 +97,10 @@ export default async function HolidayRepliesListPage() {
   const sentCount = rows.filter((r) => r.send).length;
 
   return (
-    <ReportShell title={`${month}월 병원별 진료일정 목록`}>
+    <ReportShell
+      title={`${month}월 병원별 진료일정 목록`}
+      actions={<MonthNav basePath="/holiday" month={monthKey} />}
+    >
       {rows.length === 0 ? (
         <p className="py-20 text-center text-sm text-gray-400">
           아직 발송하거나 회신한 병원이 없어요.

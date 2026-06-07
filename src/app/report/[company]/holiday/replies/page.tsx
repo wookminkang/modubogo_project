@@ -1,16 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import {
-  ArrowLeft,
-  ArrowRight,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronDown } from "lucide-react";
 import dayjs from "@/lib/dayjs";
 import { isAdmin } from "@/lib/admin";
 import { getPublicHolidays } from "@/lib/publicHoliday";
 import { getHolidaySchedules, getHolidaySubmissions } from "@/lib/db";
+import MonthNav from "@/components/MonthNav";
 import { diffSnapshotItems, type SnapItem } from "../replyFormat";
 
 export const dynamic = "force-dynamic";
@@ -178,11 +173,6 @@ export default async function HolidayRepliesPage({ params, searchParams }: Props
       ? submissions[submissions.length - 1].submitted_at
       : null;
 
-  const prevMonth = base.subtract(1, "month").format("YYYY-MM");
-  const nextMonth = base.add(1, "month").format("YYYY-MM");
-  const navBtn =
-    "grid h-8 w-8 place-items-center rounded-lg text-gray-500 hover:bg-gray-50 transition-colors";
-
   return (
     <div className="flex-1 overflow-x-clip bg-[#F0F4FA] py-6 px-4">
       <div className="max-w-[1200px] mx-auto">
@@ -206,25 +196,7 @@ export default async function HolidayRepliesPage({ params, searchParams }: Props
                 원장님이 회신한 공휴일 근무 여부를 확인할 수 있어요.
               </p>
             </div>
-            <div className="flex shrink-0 items-center gap-1 rounded-xl border border-gray-200 bg-white px-1 py-1">
-              <Link
-                href={`/report/${enc}/holiday/replies?month=${prevMonth}`}
-                className={navBtn}
-                aria-label="이전 달"
-              >
-                <ChevronLeft size={18} />
-              </Link>
-              <span className="px-2 text-sm font-bold text-gray-800">
-                {year}.{pad(month)}
-              </span>
-              <Link
-                href={`/report/${enc}/holiday/replies?month=${nextMonth}`}
-                className={navBtn}
-                aria-label="다음 달"
-              >
-                <ChevronRight size={18} />
-              </Link>
-            </div>
+            <MonthNav basePath={`/report/${enc}/holiday/replies`} month={monthKey} />
           </div>
 
           <div className="my-5 border-t border-gray-100" />
