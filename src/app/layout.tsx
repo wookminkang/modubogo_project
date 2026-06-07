@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { QueryProvider } from "@/providers/QueryProvider";
+import ChannelTalk from "@/components/ChannelTalk";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -26,6 +27,7 @@ export default function RootLayout({
         <QueryProvider>
           <main className="flex-1 w-full min-h-screen">{children}</main>
         </QueryProvider>
+        <ChannelTalk />
       </body>
     </html>
   );
