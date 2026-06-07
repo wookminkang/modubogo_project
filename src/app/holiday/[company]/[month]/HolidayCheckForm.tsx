@@ -6,10 +6,12 @@ import { Check, ArrowRight, Clock } from "lucide-react";
 import dayjs from "@/lib/dayjs";
 import { submitHolidaySchedule } from "./actions";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 
 type Status = "morning" | "open" | "closed";
 
@@ -70,29 +72,33 @@ function TimeSelect({
   };
 
   const colBtn = (active: boolean) =>
-    `w-full shrink-0 rounded-md px-2 py-2 text-center text-sm transition-colors cursor-pointer ${
+    `w-full shrink-0 rounded-lg px-2 py-3 text-center text-sm transition-colors cursor-pointer ${
       active
         ? "bg-[#0e299c] font-semibold text-white"
         : "text-gray-700 hover:bg-gray-100"
     }`;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger
         className={`flex min-h-10 w-full flex-1 cursor-pointer items-center justify-between gap-1 rounded-lg border border-gray-200 bg-white px-3 text-sm outline-none focus-visible:border-[#0e299c] ${
           value ? "text-gray-800" : "text-gray-400"
         }`}
       >
         {value || placeholder}
         <Clock size={15} className="shrink-0 text-gray-400" />
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-[180px] p-2">
-        <div className="flex gap-1">
+      </DrawerTrigger>
+      <DrawerContent>
+        <DrawerHeader>
+          <DrawerTitle className="text-base">{placeholder} 선택</DrawerTitle>
+        </DrawerHeader>
+        <div className="flex gap-3 px-4 pb-8">
+          {/* 시 */}
           <div className="min-w-0 flex-1">
-            <p className="mb-1 text-center text-xs font-medium text-gray-400">
+            <p className="mb-2 text-center text-xs font-semibold text-gray-400">
               시
             </p>
-            <div className="flex max-h-48 flex-col gap-0.5 overflow-y-auto pr-1">
+            <div className="flex max-h-[45vh] flex-col gap-1 overflow-y-auto rounded-xl bg-gray-50 p-1.5">
               {hours.map((h) => (
                 <button
                   key={h}
@@ -105,11 +111,12 @@ function TimeSelect({
               ))}
             </div>
           </div>
-          <div className="w-16 shrink-0">
-            <p className="mb-1 text-center text-xs font-medium text-gray-400">
+          {/* 분 */}
+          <div className="min-w-0 flex-1">
+            <p className="mb-2 text-center text-xs font-semibold text-gray-400">
               분
             </p>
-            <div className="flex max-h-48 flex-col gap-0.5 overflow-y-auto">
+            <div className="flex max-h-[45vh] flex-col gap-1 overflow-y-auto rounded-xl bg-gray-50 p-1.5">
               {minutes.map((m) => (
                 <button
                   key={m}
@@ -123,8 +130,8 @@ function TimeSelect({
             </div>
           </div>
         </div>
-      </PopoverContent>
-    </Popover>
+      </DrawerContent>
+    </Drawer>
   );
 }
 
