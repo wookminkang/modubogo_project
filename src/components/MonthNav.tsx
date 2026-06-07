@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import dayjs from "@/lib/dayjs";
-
-const pad = (n: number) => String(n).padStart(2, "0");
+import { pad } from "@/lib/utils";
 
 /**
  * 진료일정 화면 공통 월 네비게이션.

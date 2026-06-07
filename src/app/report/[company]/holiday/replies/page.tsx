@@ -6,11 +6,10 @@ import { isAdmin } from "@/lib/admin";
 import { getPublicHolidays } from "@/lib/publicHoliday";
 import { getHolidaySchedules, getHolidaySubmissions } from "@/lib/db";
 import MonthNav from "@/components/MonthNav";
+import { pad } from "@/lib/utils";
 import { diffSnapshotItems, type SnapItem } from "../replyFormat";
 
 export const dynamic = "force-dynamic";
-
-const pad = (n: number) => String(n).padStart(2, "0");
 
 interface Props {
   params: Promise<{ company: string }>;

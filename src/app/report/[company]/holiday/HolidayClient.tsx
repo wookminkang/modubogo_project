@@ -8,6 +8,7 @@ import { sendHolidayAlimtalk } from "@/lib/bizgo";
 import Toast from "@/components/Toast";
 import ConfirmToast from "@/components/ConfirmToast";
 import MonthNav from "@/components/MonthNav";
+import { pad } from "@/lib/utils";
 import AlimtalkPanel from "./AlimtalkPanel";
 
 interface Holiday {
@@ -16,7 +17,6 @@ interface Holiday {
 }
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
-const pad = (n: number) => String(n).padStart(2, "0");
 
 export default function HolidayClient({
   hospitalName,

@@ -11,6 +11,7 @@ import {
 } from "@/lib/db";
 import ReportShell from "@/app/report/ReportShell";
 import MonthNav from "@/components/MonthNav";
+import { pad } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -22,8 +23,6 @@ import {
 } from "@/components/ui/table";
 
 export const dynamic = "force-dynamic";
-
-const pad = (n: number) => String(n).padStart(2, "0");
 
 interface Row {
   company: string;
