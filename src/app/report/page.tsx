@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCompaniesSummaryFromDB } from "@/lib/db";
 import { getAdminUser } from "@/lib/admin";
 import CompanyList from "./CompanyList";
+import ScrollNav from "@/components/ScrollNav";
 
 export const dynamic = "force-dynamic";
 
@@ -10,5 +11,10 @@ export default async function ReportListPage() {
   if (!me) redirect("/admin/login");
   const companies = await getCompaniesSummaryFromDB();
 
-  return <CompanyList companies={companies} isSuper={me.role === "super"} />;
+  return (
+    <>
+      <CompanyList companies={companies} isSuper={me.role === "super"} />
+      <ScrollNav />
+    </>
+  );
 }

@@ -355,3 +355,62 @@ export async function getHolidaySubmissions(
     .order("submitted_at", { ascending: true });
   return (data as HolidaySubmissionRow[] | null) ?? [];
 }
+
+export interface HolidayReplyCompany {
+  company: string;
+  responded: number; // 응답한 공휴일 수
+  lastSubmittedAt: string | null; // 최근 회신 시각
+}
+
+/**
+ * 특정 월에 회신(진료일정 제출)한 회사 목록.
+ * holiday_schedules(회사별 응답 공휴일 수) + holiday_submissions(최근 회신 시각)을 합산.
+ * 최근 회신순 정렬.
+ */
+export async function getHolidayReplyCompanies(
+  monthPrefix: string
+): Promise<HolidayReplyCompany[]> {
+  const [{ data: sched }, { data: subs }] = await Promise.all([
+    supabase
+      .from("holiday_schedules")
+      .select("company, date")
+      .gte("date", `${monthPrefix}-01`)
+      .lte("date", `${monthPrefix}-31`),
+    supabase
+      .from("holiday_submissions")
+      .select("company, submitted_at")
+      .eq("month", monthPrefix)
+      .order("submitted_at", { ascending: false }),
+  ]);
+
+  const respondedMap = new Map<string, Set<string>>();
+  for (const r of (sched as { company: string; date: string }[] | null) ?? []) {
+    if (!respondedMap.has(r.company)) respondedMap.set(r.company, new Set());
+    respondedMap.get(r.company)!.add(r.date);
+  }
+
+  const lastMap = new Map<string, string>();
+  for (const s of (subs as { company: string; submitted_at: string }[] | null) ??
+    []) {
+    if (!lastMap.has(s.company)) lastMap.set(s.company, s.submitted_at); // 최신순이라 first=최신
+  }
+
+  const companies = new Set<string>([
+    ...respondedMap.keys(),
+    ...lastMap.keys(),
+  ]);
+
+  return Array.from(companies)
+    .map((company) => ({
+      company,
+      responded: respondedMap.get(company)?.size ?? 0,
+      lastSubmittedAt: lastMap.get(company) ?? null,
+    }))
+    .sort((a, b) => {
+      if (a.lastSubmittedAt && b.lastSubmittedAt)
+        return b.lastSubmittedAt.localeCompare(a.lastSubmittedAt);
+      if (a.lastSubmittedAt) return -1;
+      if (b.lastSubmittedAt) return 1;
+      return a.company.localeCompare(b.company, "ko");
+    });
+}
