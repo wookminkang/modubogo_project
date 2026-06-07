@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { unstable_cache } from "next/cache";
 import { ChevronRight, History, CalendarCheck, Inbox } from "lucide-react";
 import dayjs from "@/lib/dayjs";
 import {
@@ -33,11 +34,17 @@ export default async function CompanyReports({ company }: { company: string }) {
 
   if (reports.length === 0) notFound();
 
-  // 네이버 API 설정이 있으면 각 월의 비용을 병렬로 가져옴
+  // 네이버 API 설정이 있으면 각 월의 비용을 병렬로 가져옴.
+  // 과거 달은 값이 변하지 않으므로 회사+월 단위로 캐싱(과거 1일 / 현재달 10분)해 렌더 속도 개선.
   const naverCostMap: Record<string, number> = {};
   if (settings?.naver_ad_api_key) {
+    const currentMonth = dayjs().format("YYYY-MM");
     const results = await Promise.all(
-      reports.map((r) => getNaverAdCosts(r.month, settings).catch(() => null)),
+      reports.map((r) =>
+        unstable_cache(() => getNaverAdCosts(r.month, settings), ["naver-costs", company, r.month], {
+          revalidate: r.month >= currentMonth ? 600 : 86400,
+        })().catch(() => null),
+      ),
     );
     for (let i = 0; i < reports.length; i++) {
       const costs = results[i];
