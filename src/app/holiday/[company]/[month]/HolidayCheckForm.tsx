@@ -174,7 +174,9 @@ export default function HolidayCheckForm({
   const [error, setError] = useState("");
 
   const update = (i: number, patch: Partial<Item>) =>
-    setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
+    setItems((prev) =>
+      prev.map((it, idx) => (idx === i ? { ...it, ...patch } : it)),
+    );
 
   // 모든 공휴일 입력이 끝나야 확인 완료 버튼 활성화
   const allComplete = items.length > 0 && items.every(isItemComplete);
@@ -228,7 +230,7 @@ export default function HolidayCheckForm({
       if (isKakaoInApp()) {
         setTimeout(() => {
           window.location.href = "kakaotalk://inappbrowser/close";
-        }, 1500);
+        }, 800);
       }
     } catch (e) {
       console.error("일정 제출 실패:", e);
@@ -249,7 +251,9 @@ export default function HolidayCheckForm({
             <Check size={28} className="text-[#0e299c]" />
           </span>
           <div>
-            <p className="text-lg font-bold text-gray-900">확인 완료되었습니다</p>
+            <p className="text-lg font-bold text-gray-900">
+              확인 완료되었습니다
+            </p>
             <p className="mt-1 text-sm text-gray-500">
               {monthLabel} 진료일정을 확인해 주셔서 감사합니다.
             </p>
@@ -283,8 +287,11 @@ export default function HolidayCheckForm({
             </h1>
             <p className="text-sm leading-relaxed text-gray-500">
               다가오는 공휴일에 우리 병원이 진료하는지 확인하는 페이지예요.
-              공휴일마다 <b className="font-semibold text-gray-700">오전진료·정상진료·휴무</b>를
-              선택하시고, 변경할 내용이 있으면 수정 후 아래{" "}
+              공휴일마다{" "}
+              <b className="font-semibold text-gray-700">
+                오전진료·정상진료·휴무
+              </b>
+              를 선택하시고, 변경할 내용이 있으면 수정 후 아래{" "}
               <b className="font-semibold text-gray-700">확인 완료</b> 버튼을
               눌러주세요.
             </p>
@@ -362,9 +369,7 @@ export default function HolidayCheckForm({
             </div>
           )}
 
-          {error && (
-            <p className="text-center text-sm text-red-400">{error}</p>
-          )}
+          {error && <p className="text-center text-sm text-red-400">{error}</p>}
 
           {items.length > 0 && !allComplete && (
             <p className="text-center text-xs text-gray-400">
