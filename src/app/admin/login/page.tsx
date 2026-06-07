@@ -1,10 +1,15 @@
+import { redirect } from 'next/navigation';
 import { loginAdmin } from '@/lib/admin-actions';
+import { getAdminUser } from '@/lib/admin';
 
 interface Props {
   searchParams: Promise<{ error?: string }>;
 }
 
 export default async function AdminLoginPage({ searchParams }: Props) {
+  // 이미 로그인했으면 로그인 폼 대신 보고서 목록으로
+  if (await getAdminUser()) redirect('/report');
+
   const { error } = await searchParams;
 
   return (
@@ -18,19 +23,29 @@ export default async function AdminLoginPage({ searchParams }: Props) {
             </svg>
           </div>
           <h1 className="text-lg font-bold text-gray-900">관리자 로그인</h1>
-          <p className="text-sm text-gray-400 mt-1">관리자 비밀번호를 입력해주세요.</p>
+          <p className="text-sm text-gray-400 mt-1">아이디와 비밀번호를 입력해주세요.</p>
         </div>
 
         <form action={loginAdmin} className="flex flex-col gap-3">
           <input
+            type="text"
+            name="username"
+            placeholder="아이디를 입력하세요"
+            autoFocus
+            autoComplete="username"
+            className="w-full h-11 px-4 rounded-xl border border-gray-200 text-gray-900 text-sm outline-none focus:border-[#0e299c] focus:ring-2 focus:ring-[#0e299c]/20"
+          />
+          <input
             type="password"
             name="password"
             placeholder="비밀번호를 입력하세요"
-            autoFocus
+            autoComplete="current-password"
             className="w-full h-11 px-4 rounded-xl border border-gray-200 text-gray-900 text-sm outline-none focus:border-[#0e299c] focus:ring-2 focus:ring-[#0e299c]/20"
           />
           {error && (
-            <p className="text-xs text-red-500">비밀번호가 올바르지 않습니다.</p>
+            <p className="text-xs text-red-500">
+              아이디 또는 비밀번호가 올바르지 않습니다.
+            </p>
           )}
           <button
             type="submit"
