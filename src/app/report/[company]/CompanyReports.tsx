@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronRight, History, CalendarCheck } from "lucide-react";
+import { ChevronRight, History, CalendarCheck, Inbox } from "lucide-react";
 import dayjs from "@/lib/dayjs";
 import {
   getReportsByCompanyFromDB,
@@ -104,6 +104,20 @@ export default async function CompanyReports({ company }: { company: string }) {
             </span>
             <span className="flex-1 text-left text-sm font-medium text-gray-700">
               진료일정 체크
+            </span>
+            <ChevronRight size={16} className="text-gray-300 shrink-0" />
+          </Link>
+
+          {/* 원장 회신 확인 → holiday/replies 페이지로 이동 */}
+          <Link
+            href={`/report/${encodeURIComponent(company)}/holiday/replies`}
+            className="flex w-full items-center gap-3 bg-white border border-gray-200 px-4 py-3 rounded-xl hover:bg-gray-50 transition-all cursor-pointer"
+          >
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#2563eb] shrink-0">
+              <Inbox size={15} className="text-white" />
+            </span>
+            <span className="flex-1 text-left text-sm font-medium text-gray-700">
+              원장 회신 확인
             </span>
             <ChevronRight size={16} className="text-gray-300 shrink-0" />
           </Link>

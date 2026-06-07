@@ -9,67 +9,16 @@ import { sendHolidayAlimtalk } from "@/lib/bizgo";
 import Toast from "@/components/Toast";
 import ConfirmToast from "@/components/ConfirmToast";
 import AlimtalkPanel from "./AlimtalkPanel";
+import {
+  lunchText,
+  diffSnapshots,
+  type ScheduleRow,
+  type SnapItem,
+} from "./replyFormat";
 
 interface Holiday {
   date: string;
   name: string;
-}
-
-interface ScheduleRow {
-  date: string;
-  holiday_name: string;
-  status: string; // morning | open | closed
-  short_start: string | null;
-  short_end: string | null;
-  lunch_start: string | null;
-  lunch_end: string | null;
-  note: string | null;
-}
-
-// 점심시간 표시 문구
-function lunchText(sc: ScheduleRow) {
-  if (sc.lunch_start && sc.lunch_end)
-    return `점심 ${sc.lunch_start}~${sc.lunch_end}`;
-  if (sc.note?.includes("점심시간 없음")) return "점심시간 없음";
-  return "";
-}
-
-// 제출 이력 스냅샷 (holiday_submissions.schedule)
-interface SnapItem {
-  date: string;
-  holiday_name: string;
-  status: string; // morning | open | closed
-  short_start: string;
-  short_end: string;
-  lunch_start: string;
-  lunch_end: string;
-  noLunch: boolean;
-}
-
-function formatSnapshot(it: SnapItem): string {
-  if (it.status === "closed") return "휴무";
-  const lunch = it.noLunch
-    ? " (점심없음)"
-    : it.lunch_start && it.lunch_end
-      ? ` (점심 ${it.lunch_start}~${it.lunch_end})`
-      : "";
-  if (it.status === "morning")
-    return `오전진료 ${it.short_start}~${it.short_end}${lunch}`;
-  return `정상진료${lunch}`;
-}
-
-// 이전 제출과 비교해 바뀐 공휴일만 추출
-function diffSnapshots(prev: SnapItem[], cur: SnapItem[]) {
-  const prevMap = new Map(prev.map((it) => [it.date, it]));
-  const out: { date: string; name: string; from: string; to: string }[] = [];
-  for (const it of cur) {
-    const p = prevMap.get(it.date);
-    const to = formatSnapshot(it);
-    const from = p ? formatSnapshot(p) : "—";
-    if (from !== to)
-      out.push({ date: it.date, name: it.holiday_name, from, to });
-  }
-  return out;
 }
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
