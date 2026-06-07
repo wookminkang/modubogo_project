@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Send, Phone } from "lucide-react";
 import dayjs from "@/lib/dayjs";
 import { isAdmin } from "@/lib/admin";
 import { getPublicHolidays } from "@/lib/publicHoliday";
@@ -8,29 +7,16 @@ import {
   getCompaniesSummaryFromDB,
   getHolidayReplyCompanies,
   getHolidaySends,
-  type HolidaySendCompany,
 } from "@/lib/db";
 import ReportShell from "@/app/report/ReportShell";
 import MonthNav from "@/components/MonthNav";
+import ScrollNav from "@/components/ScrollNav";
 import { pad } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import HolidayHubTable, { type HubRow } from "./HolidayHubTable";
 
 export const dynamic = "force-dynamic";
 
-interface Row {
-  company: string;
-  responded: number;
-  lastSubmittedAt: string | null;
-  send: HolidaySendCompany | null;
-}
+type Row = HubRow;
 
 /**
  * 공휴일 진료일정 알림톡 통합 현황 (관리자 전용) — 테이블 뷰.
@@ -174,147 +160,10 @@ export default async function HolidayRepliesListPage({
               : "해당 상태의 병원이 없어요."}
           </p>
         ) : (
-          <div className="rounded-xl border border-gray-100 bg-white">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="text-gray-500">병원</TableHead>
-                  <TableHead className="text-gray-500">발송</TableHead>
-                  <TableHead className="text-gray-500">발송 시각</TableHead>
-                  <TableHead className="text-gray-500">수신번호</TableHead>
-                  <TableHead className="text-gray-500">회신 상태</TableHead>
-                  <TableHead className="text-right text-gray-500">액션</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((row) => {
-                  const complete = total > 0 && row.responded >= total;
-                  const send = row.send;
-                  const failed = send?.status === "failed";
-                  const moreRecipients =
-                    send && send.recipients.length > 1
-                      ? ` 외 ${send.recipients.length - 1}`
-                      : "";
-                  const enc = encodeURIComponent(row.company);
-                  const href = `/report/${enc}/holiday/replies?month=${monthKey}`;
-                  const sendHref = `/report/${enc}/holiday?month=${monthKey}`;
-
-                  return (
-                    <TableRow key={row.company} className="border-gray-100">
-                      {/* 병원명 */}
-                      <TableCell>
-                        <Link
-                          href={href}
-                          className="font-bold text-gray-900 hover:text-[#0e299c]"
-                        >
-                          {row.company}
-                        </Link>
-                      </TableCell>
-
-                      {/* 발송 여부 */}
-                      <TableCell>
-                        {!send ? (
-                          <Badge
-                            variant="outline"
-                            className="text-gray-400"
-                          >
-                            미발송
-                          </Badge>
-                        ) : failed ? (
-                          <Badge variant="destructive">
-                            <Send />
-                            발송 실패
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="secondary"
-                            className="text-gray-700"
-                          >
-                            <Send />
-                            발송
-                            {send.sendCount > 1 && ` ${send.sendCount}회`}
-                          </Badge>
-                        )}
-                      </TableCell>
-
-                      {/* 발송 시각 */}
-                      <TableCell className="text-gray-500">
-                        {send
-                          ? dayjs(send.lastSentAt).format(
-                              "YYYY.MM.DD HH:mm:ss"
-                            )
-                          : "—"}
-                      </TableCell>
-
-                      {/* 수신번호 */}
-                      <TableCell className="text-gray-500">
-                        {send && send.recipients.length > 0 ? (
-                          <span className="inline-flex items-center gap-1">
-                            <Phone size={12} className="text-gray-300" />
-                            {send.recipients[0]}
-                            {moreRecipients && (
-                              <span className="text-gray-400">
-                                {moreRecipients}
-                              </span>
-                            )}
-                          </span>
-                        ) : (
-                          "—"
-                        )}
-                      </TableCell>
-
-                      {/* 회신 상태 */}
-                      <TableCell>
-                        {complete ? (
-                          <Badge className="bg-[#0e299c]/10 text-[#0e299c]">
-                            회신 완료
-                          </Badge>
-                        ) : row.responded > 0 ? (
-                          <Badge className="bg-amber-50 text-amber-600">
-                            {row.responded}/{total} 회신
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary" className="text-gray-500">
-                            회신 대기
-                          </Badge>
-                        )}
-                      </TableCell>
-
-                      {/* 행별 액션 */}
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-1.5">
-                          {!send ? (
-                            <Link
-                              href={sendHref}
-                              className="rounded-lg bg-[#0e299c] px-2.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#0a1f78]"
-                            >
-                              발송하기
-                            </Link>
-                          ) : (
-                            <>
-                              <Link
-                                href={sendHref}
-                                className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-[#0e299c]"
-                              >
-                                재발송
-                              </Link>
-                              <Link
-                                href={href}
-                                className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-[#0e299c]"
-                              >
-                                회신확인
-                              </Link>
-                            </>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+          <HolidayHubTable rows={rows} total={total} monthKey={monthKey} />
         )}
+
+        <ScrollNav />
       </>
     </ReportShell>
   );
