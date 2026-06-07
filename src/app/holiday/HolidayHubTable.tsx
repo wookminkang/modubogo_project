@@ -21,6 +21,7 @@ import { sendBulkHolidayAlimtalk } from "./actions";
 
 export interface HubRow {
   company: string;
+  region: string | null;
   responded: number;
   lastSubmittedAt: string | null;
   send: HolidaySendCompany | null;
@@ -147,8 +148,8 @@ export default function HolidayHubTable({
                   ? ` 외 ${send.recipients.length - 1}`
                   : "";
               const enc = encodeURIComponent(row.company);
-              const href = `/report/${enc}/holiday/replies?month=${monthKey}`;
-              const sendHref = `/report/${enc}/holiday?month=${monthKey}`;
+              const href = `/holiday/${enc}/replies?month=${monthKey}`;
+              const sendHref = `/holiday/${enc}/send?month=${monthKey}`;
               const checked = selected.has(row.company);
 
               return (
@@ -168,14 +169,24 @@ export default function HolidayHubTable({
                     />
                   </TableCell>
 
-                  {/* 병원명 */}
+                  {/* 병원명 + 지역 */}
                   <TableCell>
-                    <Link
-                      href={href}
-                      className="font-bold text-gray-900 hover:text-[#0e299c]"
-                    >
-                      {row.company}
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={href}
+                        className="font-bold text-gray-900 hover:text-[#0e299c]"
+                      >
+                        {row.company}
+                      </Link>
+                      {row.region && (
+                        <Badge
+                          variant="secondary"
+                          className="bg-gray-100 font-medium text-gray-500"
+                        >
+                          {row.region}
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
 
                   {/* 발송 여부 */}

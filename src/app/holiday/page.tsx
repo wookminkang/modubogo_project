@@ -55,6 +55,7 @@ export default async function HolidayRepliesListPage({
   // 보고서 병원 전체 ∪ 회신 ∪ 발송 회사를 대상으로 회사별 행 구성
   const replyMap = new Map(replies.map((r) => [r.company, r]));
   const sendMap = new Map(sends.map((s) => [s.company, s]));
+  const regionMap = new Map(companies.map((c) => [c.company, c.region]));
   const allCompanies = new Set<string>([
     ...companies.map((c) => c.company),
     ...replies.map((r) => r.company),
@@ -65,6 +66,7 @@ export default async function HolidayRepliesListPage({
     const r = replyMap.get(company);
     rowMap.set(company, {
       company,
+      region: regionMap.get(company) ?? null,
       responded: r?.responded ?? 0,
       lastSubmittedAt: r?.lastSubmittedAt ?? null,
       send: sendMap.get(company) ?? null,

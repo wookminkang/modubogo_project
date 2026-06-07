@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import dayjs from "@/lib/dayjs";
+import { isAdmin } from "@/lib/admin";
 import { getPublicHolidays } from "@/lib/publicHoliday";
 import { getCompanySettings } from "@/lib/db";
 import HolidayClient from "./HolidayClient";
@@ -14,6 +16,8 @@ export default async function Holiday({
   params,
   searchParams,
 }: CompanyParamsType) {
+  if (!(await isAdmin())) redirect("/admin/login");
+
   const { company } = await params;
   const { month: monthParam } = await searchParams;
   const hospitalName = decodeURIComponent(company);

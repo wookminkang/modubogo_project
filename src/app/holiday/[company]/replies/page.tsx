@@ -178,7 +178,7 @@ export default async function HolidayRepliesPage({ params, searchParams }: Props
         {/* 카드 1: 병원명 + 공휴일 진료 체크 */}
         <section className="bg-white rounded-2xl shadow-sm px-5 py-5 md:px-7 md:py-6">
           <Link
-            href={`/report/${enc}`}
+            href="/holiday"
             className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 transition-colors hover:text-[#0e299c]"
           >
             <ArrowLeft size={17} />
@@ -195,7 +195,7 @@ export default async function HolidayRepliesPage({ params, searchParams }: Props
                 원장님이 회신한 공휴일 근무 여부를 확인할 수 있어요.
               </p>
             </div>
-            <MonthNav basePath={`/report/${enc}/holiday/replies`} month={monthKey} />
+            <MonthNav basePath={`/holiday/${enc}/replies`} month={monthKey} />
           </div>
 
           <div className="my-5 border-t border-gray-100" />
