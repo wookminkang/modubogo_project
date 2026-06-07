@@ -21,16 +21,16 @@ export async function submitHolidaySchedule(
   if (items.length === 0) return;
 
   const rows = items.map((it) => {
-    // 점심시간은 오전진료·정상진료에서, '점심시간 없음' 미체크일 때만 저장
-    const hasLunch =
-      (it.status === "morning" || it.status === "open") && !it.noLunch;
+    // 근무시간·점심시간은 오전진료·정상진료에서 저장
+    const hasHours = it.status === "morning" || it.status === "open";
+    const hasLunch = hasHours && !it.noLunch;
     return {
       company,
       date: it.date,
       holiday_name: it.holiday_name,
       status: it.status,
-      short_start: it.status === "morning" ? it.short_start || null : null,
-      short_end: it.status === "morning" ? it.short_end || null : null,
+      short_start: hasHours ? it.short_start || null : null,
+      short_end: hasHours ? it.short_end || null : null,
       lunch_start: hasLunch ? it.lunch_start || null : null,
       lunch_end: hasLunch ? it.lunch_end || null : null,
       note:

@@ -85,16 +85,17 @@ export default function AlimtalkPanel({
           />
 
           <div className="flex flex-col gap-3 px-4 py-4 text-sm leading-relaxed text-gray-600">
+            <p>안녕하세요. (주)알리다고입니다.</p>
+
             <p>
-              안녕하세요. (주)알리다고입니다.
-              <br />
-              {month}월 진료일정 안내 드립니다.
+              병원정보 관리 서비스의 원활한 운영을 위해 {hospitalName}의 {month}월
+              진료일정 확인이 필요하여 안내드립니다.
             </p>
 
             <div>
-              <p className="font-semibold text-gray-800">■ 일정</p>
+              <p className="font-semibold text-gray-800">■ 확인 필요 일정</p>
               {holidays.length === 0 ? (
-                <p>{month}월 공휴일이 없습니다.</p>
+                <p>- {month}월 공휴일이 없습니다.</p>
               ) : (
                 holidays.map((h) => (
                   <p key={h.date}>
@@ -105,26 +106,26 @@ export default function AlimtalkPanel({
             </div>
 
             <p>
+              고객님께서 회신해주신 진료일정은 네이버 플레이스, 카카오맵 등 병원
+              정보 플랫폼의 운영시간 및 휴무일 정보 관리에 활용될 예정입니다.
+            </p>
+
+            <p>
               ▶ 진료일정 이미지는 알리다고 공통 디자인으로 제작 및 배포될
               예정입니다. 광고주별 개별 맞춤 디자인 제작은 어려운 점 양해
               부탁드립니다.
             </p>
 
             <p>
-              ▶ 이미지 사용 여부와 관계없이 일정 공유를 부탁드립니다. 네이버
-              플레이스, 카카오맵 등 각종 플랫폼의 운영시간 및 휴무일 설정에
-              반영하기 위해 반드시 확인이 필요합니다.
+              ▶ 정확한 정보 반영을 위해 {month}월 진료일정을 회신해 주시기
+              바랍니다.
             </p>
 
-            <p>
-              바쁘시겠지만 확인 부탁드립니다.
-              <br />
-              감사합니다.
-            </p>
+            <p>감사합니다.</p>
           </div>
 
           <div className="border-t border-gray-100 py-3 text-center text-sm font-medium text-gray-600">
-            자세한 내용 확인하기
+            진료일정 회신하기
           </div>
         </div>
       </div>

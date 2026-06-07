@@ -64,7 +64,7 @@ function Chips({
       <span className={`${PILL} bg-gray-100 text-gray-700`}>
         {morning ? "오전 진료" : "정상 진료"}
       </span>
-      {morning && it.short_start && it.short_end && (
+      {it.short_start && it.short_end && (
         <span className={SUB}>
           {it.short_start} ~ {it.short_end}
         </span>
@@ -133,9 +133,9 @@ function HolidayCard({
         )}
       </div>
 
-      {sc && !closed && (morning || lunch) && (
+      {sc && !closed && ((sc.short_start && sc.short_end) || lunch) && (
         <div className="mt-3 flex flex-col gap-1.5 border-t border-gray-100 pt-3">
-          {morning && sc.short_start && sc.short_end && (
+          {sc.short_start && sc.short_end && (
             <Field label="진료시간" value={`${sc.short_start} ~ ${sc.short_end}`} />
           )}
           {lunch && <Field label="점심시간" value={lunch} />}

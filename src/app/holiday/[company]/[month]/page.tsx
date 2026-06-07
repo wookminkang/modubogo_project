@@ -8,7 +8,7 @@ interface Props {
 
 export const dynamic = "force-dynamic";
 
-// 원장이 알림톡 '자세한 내용 확인하기'로 진입하는 공개 페이지.
+// 원장이 알림톡 '진료일정 회신하기'로 진입하는 공개 페이지.
 // month = 'YYYY-MM'
 export default async function HolidayLandingPage({ params }: Props) {
   const { company, month } = await params;
@@ -29,7 +29,7 @@ export default async function HolidayLandingPage({ params }: Props) {
     return {
       date: h.date,
       holiday_name: h.name,
-      status: (ex?.status as "open" | "closed" | "morning") ?? "open",
+      status: (ex?.status as "morning" | "open" | "closed" | "") ?? "",
       short_start: ex?.short_start ?? "",
       short_end: ex?.short_end ?? "",
       noLunch: (ex?.note ?? "").includes("점심시간 없음"),

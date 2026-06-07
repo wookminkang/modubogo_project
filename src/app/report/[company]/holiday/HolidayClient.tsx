@@ -2,19 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import dayjs from "@/lib/dayjs";
 import { supabase } from "@/lib/supabase";
 import { sendHolidayAlimtalk } from "@/lib/bizgo";
 import Toast from "@/components/Toast";
 import ConfirmToast from "@/components/ConfirmToast";
 import AlimtalkPanel from "./AlimtalkPanel";
-import {
-  lunchText,
-  diffSnapshots,
-  type ScheduleRow,
-  type SnapItem,
-} from "./replyFormat";
 
 interface Holiday {
   date: string;
@@ -42,8 +36,6 @@ export default function HolidayClient({
   holidays,
   initialBanner,
   recipients,
-  schedules,
-  submissions,
 }: {
   hospitalName: string;
   year: number;
@@ -51,11 +43,7 @@ export default function HolidayClient({
   holidays: Holiday[];
   initialBanner?: string;
   recipients?: string[];
-  schedules: ScheduleRow[];
-  submissions: { id: number; submitted_at: string; schedule: SnapItem[] }[];
 }) {
-  const scheduleMap = new Map(schedules.map((s) => [s.date, s]));
-  const respondedCount = holidays.filter((h) => scheduleMap.has(h.date)).length;
   // 자세히보기 화면에 노출되는 배너 (업로드 이미지)
   const [bannerUrl, setBannerUrl] = useState(initialBanner || DEFAULT_BANNER);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -75,11 +63,12 @@ export default function HolidayClient({
   const handleSend = async () => {
     setSendStep("sending");
     try {
+      // 템플릿이 "- #{공휴일}" 로 첫 dash를 제공하므로, 변수는 dash 없이 "\n- " 로 연결
       const schedule =
         holidays.length > 0
           ? holidays
-              .map((h) => `- ${dayjs(h.date).format("M월 D일(ddd)")} ${h.name}`)
-              .join("\n")
+              .map((h) => `${dayjs(h.date).format("M월 D일(ddd)")} ${h.name}`)
+              .join("\n- ")
           : `${month}월 공휴일이 없습니다.`;
       const detailUrl = `https://modubogo.com/holiday/${encodeURIComponent(hospitalName)}/${monthKey}`;
 
@@ -279,169 +268,6 @@ export default function HolidayClient({
                 })}
               </div>
 
-              {/* 원장 회신 현황 */}
-              <div className="mt-8">
-                <div className="mb-1 flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-gray-700">
-                    원장 회신 현황
-                  </h3>
-                  {holidays.length > 0 &&
-                    (respondedCount === holidays.length ? (
-                      <span className="rounded-full bg-[#0e299c]/10 px-2.5 py-1 text-xs font-semibold text-[#0e299c]">
-                        회신 완료
-                      </span>
-                    ) : respondedCount > 0 ? (
-                      <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-600">
-                        {respondedCount}/{holidays.length} 회신
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-400">
-                        회신 대기
-                      </span>
-                    ))}
-                </div>
-
-                <p className="mb-3 text-[#6b7684] mt-1 text-sm">
-                  원장님이 확인하고 회신한 공휴일 진료여부를 확인할 수 있어요.
-                </p>
-
-                {holidays.length === 0 ? (
-                  <p className="text-sm text-gray-400">
-                    이번 달 공휴일이 없어요.
-                  </p>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    {holidays.map((h) => {
-                      const sc = scheduleMap.get(h.date);
-                      return (
-                        <div
-                          key={h.date}
-                          className="flex items-center justify-between gap-2 rounded-lg border border-gray-100 px-3 py-2.5"
-                        >
-                          <div className="min-w-0">
-                            <p className="text-md font-semibold text-gray-800">
-                              {dayjs(h.date).format("M월 D일(ddd)")}
-                            </p>
-                            <p className="text-sm text-red-500">{h.name}</p>
-                          </div>
-                          <div className="shrink-0 text-right">
-                            {!sc ? (
-                              <span className="text-xs font-medium text-gray-400">
-                                미응답
-                              </span>
-                            ) : sc.status === "closed" ? (
-                              <span className="rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-500">
-                                휴무
-                              </span>
-                            ) : sc.status === "morning" ? (
-                              <div>
-                                <span className="rounded-full bg-[#0d9488]/10 px-2.5 py-1 text-xs font-semibold text-[#0d9488]">
-                                  오전진료
-                                </span>
-                                <p className="mt-1 text-md font-medium text-gray-500">
-                                  {sc.short_start}~{sc.short_end}
-                                  {lunchText(sc) ? ` · ${lunchText(sc)}` : ""}
-                                </p>
-                              </div>
-                            ) : (
-                              <div>
-                                <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-500">
-                                  정상진료
-                                </span>
-                                {lunchText(sc) && (
-                                  <p className="mt-1 text-md font-medium text-gray-500">
-                                    {lunchText(sc)}
-                                  </p>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {/* 회신 이력 */}
-              <div className="mt-8">
-                <h3 className="mb-1 text-lg font-bold text-gray-700">
-                  회신 이력
-                </h3>
-                <p className="mb-3 text-[#6b7684] mt-1 text-sm">
-                  원장님이 등록·수정한 시점을 확인할 수 있어요.
-                </p>
-                {submissions.length === 0 ? (
-                  <p className="text-sm text-gray-400">
-                    아직 회신 이력이 없어요.
-                  </p>
-                ) : (
-                  <ol className="flex flex-col gap-2.5">
-                    {submissions.map((s, i) => {
-                      const changes =
-                        i === 0
-                          ? []
-                          : diffSnapshots(
-                              submissions[i - 1].schedule,
-                              s.schedule
-                            );
-                      return (
-                        <li
-                          key={s.id}
-                          className="rounded-xl border border-gray-100 p-3"
-                        >
-                          {/* 배지 + 시각 */}
-                          <div className="flex items-center justify-between">
-                            <span
-                              className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                                i === 0
-                                  ? "bg-[#0e299c]/10 text-[#0e299c]"
-                                  : "bg-amber-50 text-amber-600"
-                              }`}
-                            >
-                              {i === 0 ? "최초 등록" : "수정"}
-                            </span>
-                            <span className="text-xs text-gray-400">
-                              {dayjs(s.submitted_at).format("YYYY.MM.DD HH:mm")}
-                            </span>
-                          </div>
-
-                          {/* 변경 내역 */}
-                          {changes.length > 0 && (
-                            <div className="mt-2.5 flex flex-col gap-2">
-                              {changes.map((c) => (
-                                <div
-                                  key={c.date}
-                                  className="rounded-lg bg-[#F0F4FA] px-3 py-2"
-                                >
-                                  <p className="text-xs font-bold text-gray-800">
-                                    {dayjs(c.date).format("M월 D일 (ddd)")}{" "}
-                                    <span className="text-red-500">
-                                      {c.name}
-                                    </span>
-                                  </p>
-                                  <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
-                                    <span className="rounded-md border border-gray-200 bg-white px-2 py-0.5 font-medium text-gray-600">
-                                      {c.from}
-                                    </span>
-                                    <ArrowRight
-                                      size={13}
-                                      className="shrink-0 text-gray-400"
-                                    />
-                                    <span className="rounded-md bg-[#0e299c] px-2 py-0.5 font-medium text-white">
-                                      {c.to}
-                                    </span>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ol>
-                )}
-              </div>
             </div>
 
             {/* 오른쪽: 배너 업로드 + 알림톡/자세히보기 미리보기 (나란히) */}

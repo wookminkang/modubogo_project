@@ -11,7 +11,7 @@ interface Holiday {
 const SAMPLE_BANNER = "/images/talk_sample_img.jpg";
 
 /**
- * '자세한 내용 확인하기' 클릭 시 보이는 공개 안내 페이지(/holiday/[company]/[month]) 미리보기.
+ * '진료일정 회신하기' 클릭 시 보이는 공개 안내 페이지(/holiday/[company]/[month]) 미리보기.
  * - 상단 배너 이미지
  * - 공휴일별 진료여부 버튼 (미리보기 — 액션 없음)
  */

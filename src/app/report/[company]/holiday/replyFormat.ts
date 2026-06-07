@@ -35,14 +35,15 @@ export function lunchText(sc: ScheduleRow): string {
 
 export function formatSnapshot(it: SnapItem): string {
   if (it.status === "closed") return "휴무";
+  const time =
+    it.short_start && it.short_end ? ` ${it.short_start}~${it.short_end}` : "";
   const lunch = it.noLunch
     ? " (점심없음)"
     : it.lunch_start && it.lunch_end
       ? ` (점심 ${it.lunch_start}~${it.lunch_end})`
       : "";
-  if (it.status === "morning")
-    return `오전진료 ${it.short_start}~${it.short_end}${lunch}`;
-  return `정상진료${lunch}`;
+  const label = it.status === "morning" ? "오전진료" : "정상진료";
+  return `${label}${time}${lunch}`;
 }
 
 // 이전 제출과 비교해 바뀐 공휴일만 추출 (문자열 from/to)

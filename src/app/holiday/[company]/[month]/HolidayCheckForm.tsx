@@ -2,18 +2,23 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, ArrowRight } from "lucide-react";
+import { Check, ArrowRight, Clock } from "lucide-react";
 import dayjs from "@/lib/dayjs";
 import { submitHolidaySchedule } from "./actions";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 type Status = "morning" | "open" | "closed";
 
 interface Item {
   date: string;
   holiday_name: string;
-  status: Status;
-  short_start: string; // 오전진료 진료 시작
-  short_end: string; // 오전진료 진료 종료
+  status: Status | ""; // "" = 아직 미선택
+  short_start: string; // 진료 시작 (오전/정상진료)
+  short_end: string; // 진료 종료 (오전/정상진료)
   noLunch: boolean; // 점심시간 없음
   lunch_start: string; // 점심 시작
   lunch_end: string; // 점심 종료
@@ -25,44 +30,115 @@ const STATUS_OPTIONS: { key: Status; label: string }[] = [
   { key: "closed", label: "휴무" },
 ];
 
-// 진료 시간 셀렉트 옵션 (08:00 ~ 18:00, 30분 단위)
+// 시간 옵션 생성 (30분 단위)
 const pad2 = (n: number) => String(n).padStart(2, "0");
-const TIME_OPTIONS: string[] = (() => {
+const buildTimes = (startH: number, endH: number): string[] => {
   const out: string[] = [];
-  for (let h = 8; h <= 18; h++) {
+  for (let h = startH; h <= endH; h++) {
     out.push(`${pad2(h)}:00`);
-    if (h < 18) out.push(`${pad2(h)}:30`);
+    if (h < endH) out.push(`${pad2(h)}:30`);
   }
   return out;
-})();
+};
 
+// 진료시간: 08:00 ~ 22:00 (저녁 진료 병원 대응)
+const TIME_OPTIONS = buildTimes(8, 22);
+// 점심시간: 11:00 ~ 15:00 (점심대만)
+const LUNCH_OPTIONS = buildTimes(11, 15);
+
+// 시·분 2컬럼 타임피커: 시를 고르면 분을 고르는 직관적 방식
 function TimeSelect({
   value,
   onChange,
   placeholder,
+  options = TIME_OPTIONS,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder: string;
+  options?: string[];
 }) {
+  const [open, setOpen] = useState(false);
+  const hours = Array.from(new Set(options.map((t) => t.split(":")[0])));
+  const minutes = Array.from(new Set(options.map((t) => t.split(":")[1])));
+  const [hh, mm] = value ? value.split(":") : ["", ""];
+
+  const selectHour = (h: string) => onChange(`${h}:${mm || minutes[0]}`);
+  const selectMin = (m: string) => {
+    onChange(`${hh || hours[0]}:${m}`);
+    setOpen(false);
+  };
+
+  const colBtn = (active: boolean) =>
+    `w-full shrink-0 rounded-md px-2 py-2 text-center text-sm transition-colors cursor-pointer ${
+      active
+        ? "bg-[#0e299c] font-semibold text-white"
+        : "text-gray-700 hover:bg-gray-100"
+    }`;
+
   return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="flex-1 cursor-pointer rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none focus:border-[#0e299c]"
-    >
-      <option value="">{placeholder}</option>
-      {TIME_OPTIONS.map((t) => (
-        <option key={t} value={t}>
-          {t}
-        </option>
-      ))}
-    </select>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        className={`flex min-h-10 w-full flex-1 cursor-pointer items-center justify-between gap-1 rounded-lg border border-gray-200 bg-white px-3 text-sm outline-none focus-visible:border-[#0e299c] ${
+          value ? "text-gray-800" : "text-gray-400"
+        }`}
+      >
+        {value || placeholder}
+        <Clock size={15} className="shrink-0 text-gray-400" />
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-[180px] p-2">
+        <div className="flex gap-1">
+          <div className="min-w-0 flex-1">
+            <p className="mb-1 text-center text-xs font-medium text-gray-400">
+              시
+            </p>
+            <div className="flex max-h-48 flex-col gap-0.5 overflow-y-auto pr-1">
+              {hours.map((h) => (
+                <button
+                  key={h}
+                  type="button"
+                  onClick={() => selectHour(h)}
+                  className={colBtn(h === hh)}
+                >
+                  {Number(h)}시
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="w-16 shrink-0">
+            <p className="mb-1 text-center text-xs font-medium text-gray-400">
+              분
+            </p>
+            <div className="flex max-h-48 flex-col gap-0.5 overflow-y-auto">
+              {minutes.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => selectMin(m)}
+                  className={colBtn(m === mm)}
+                >
+                  {m}분
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
 // 상단 배너는 고정 (알림톡 샘플 배너)
 const FIXED_BANNER = "/images/talk_sample_img.jpg";
+
+// 항목 입력 완료 여부 (확인 완료 버튼 활성화 조건)
+function isItemComplete(it: Item): boolean {
+  if (!it.status) return false; // 진료 여부 미선택
+  if (it.status === "closed") return true; // 휴무는 추가 입력 없음
+  if (!it.short_start || !it.short_end) return false; // 진료시간 필수
+  if (!it.noLunch && (!it.lunch_start || !it.lunch_end)) return false; // 점심시간
+  return true;
+}
 
 export default function HolidayCheckForm({
   hospitalName,
@@ -80,6 +156,9 @@ export default function HolidayCheckForm({
 
   const update = (i: number, patch: Partial<Item>) =>
     setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
+
+  // 모든 공휴일 입력이 끝나야 확인 완료 버튼 활성화
+  const allComplete = items.length > 0 && items.every(isItemComplete);
 
   // 점심시간 입력 (오전진료·정상진료 공용)
   const renderLunch = (it: Item, i: number) => (
@@ -102,12 +181,14 @@ export default function HolidayCheckForm({
             value={it.lunch_start}
             onChange={(v) => update(i, { lunch_start: v })}
             placeholder="시작 시간"
+            options={LUNCH_OPTIONS}
           />
           <span className="text-gray-400">~</span>
           <TimeSelect
             value={it.lunch_end}
             onChange={(v) => update(i, { lunch_end: v })}
             placeholder="종료 시간"
+            options={LUNCH_OPTIONS}
           />
         </div>
       )}
@@ -118,7 +199,11 @@ export default function HolidayCheckForm({
     setSaving(true);
     setError("");
     try {
-      await submitHolidaySchedule(hospitalName, items);
+      // 버튼은 allComplete 일 때만 활성 → 이 시점 status 는 항상 선택돼 있음
+      await submitHolidaySchedule(
+        hospitalName,
+        items.map((it) => ({ ...it, status: it.status as Status })),
+      );
       setDone(true);
     } catch (e) {
       console.error("일정 제출 실패:", e);
@@ -225,7 +310,7 @@ export default function HolidayCheckForm({
                     ))}
                   </div>
 
-                  {it.status === "morning" && (
+                  {(it.status === "morning" || it.status === "open") && (
                     <div className="mt-3 flex flex-col gap-2">
                       {/* 진료 시간 */}
                       <div className="flex items-center gap-2">
@@ -245,10 +330,6 @@ export default function HolidayCheckForm({
                       {renderLunch(it, i)}
                     </div>
                   )}
-
-                  {it.status === "open" && (
-                    <div className="mt-3">{renderLunch(it, i)}</div>
-                  )}
                 </div>
               ))}
             </div>
@@ -258,10 +339,16 @@ export default function HolidayCheckForm({
             <p className="text-center text-sm text-red-400">{error}</p>
           )}
 
+          {items.length > 0 && !allComplete && (
+            <p className="text-center text-xs text-gray-400">
+              모든 공휴일의 진료 여부와 진료시간·점심시간을 선택해 주세요.
+            </p>
+          )}
+
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={saving || items.length === 0}
+            disabled={saving || !allComplete}
             className="w-full cursor-pointer rounded-xl bg-[#0e299c] py-3.5 text-sm font-bold text-white transition-colors hover:bg-[#0a1f78] disabled:cursor-not-allowed disabled:opacity-40"
           >
             {saving ? "확인 중..." : "확인 완료"}

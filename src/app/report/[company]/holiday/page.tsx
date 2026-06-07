@@ -1,11 +1,6 @@
 import dayjs from "@/lib/dayjs";
 import { getPublicHolidays } from "@/lib/publicHoliday";
-import {
-  getHolidayBannerUrl,
-  getCompanySettings,
-  getHolidaySchedules,
-  getHolidaySubmissions,
-} from "@/lib/db";
+import { getHolidayBannerUrl, getCompanySettings } from "@/lib/db";
 import HolidayClient from "./HolidayClient";
 
 interface CompanyParamsType {
@@ -27,13 +22,11 @@ export default async function Holiday({ params }: CompanyParamsType) {
 
   const holidays = await getPublicHolidays(year, month);
 
-  // 배너 + 수신자(원장 번호) + 원장 회신 현황
+  // 배너 + 수신자(원장 번호)
   const monthKey = `${year}-${pad(month)}`;
-  const [initialBanner, settings, schedules, submissions] = await Promise.all([
+  const [initialBanner, settings] = await Promise.all([
     getHolidayBannerUrl(hospitalName, monthKey),
     getCompanySettings(hospitalName),
-    getHolidaySchedules(hospitalName, monthKey),
-    getHolidaySubmissions(hospitalName, monthKey),
   ]);
   const recipients = [
     settings?.recipient1,
@@ -49,12 +42,6 @@ export default async function Holiday({ params }: CompanyParamsType) {
       holidays={holidays}
       initialBanner={initialBanner ?? undefined}
       recipients={recipients}
-      schedules={schedules}
-      submissions={submissions.map((s) => ({
-        id: s.id,
-        submitted_at: s.submitted_at,
-        schedule: s.schedule,
-      }))}
     />
   );
 }
