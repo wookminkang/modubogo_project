@@ -167,6 +167,12 @@ export default async function HolidayRepliesPage({ params, searchParams }: Props
   const scheduleMap = new Map(schedules.map((s) => [s.date, s]));
   const respondedCount = holidays.filter((h) => scheduleMap.has(h.date)).length;
   const allResponded = holidays.length > 0 && respondedCount === holidays.length;
+
+  // 임의(비공휴일) 휴무일 — 원장이 추가한 행
+  const holidayDates = new Set(holidays.map((h) => h.date));
+  const customDays = schedules
+    .filter((s) => !holidayDates.has(s.date))
+    .sort((a, b) => a.date.localeCompare(b.date));
   const lastSubmittedAt =
     submissions.length > 0
       ? submissions[submissions.length - 1].submitted_at
@@ -237,6 +243,29 @@ export default async function HolidayRepliesPage({ params, searchParams }: Props
             </div>
           )}
         </section>
+
+        {/* 카드 1.5: 추가 휴무일 (원장이 임의로 등록한 비공휴일) */}
+        {customDays.length > 0 && (
+          <section className="mt-4 bg-white rounded-2xl shadow-sm px-5 py-5 md:px-7 md:py-6">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-base font-bold text-gray-900">추가 휴무일</h2>
+              <span className="text-sm text-gray-500">{customDays.length}일</span>
+            </div>
+            <p className="text-[#6b7684] mt-1 text-sm">
+              원장님이 행사 등으로 추가 등록한 휴무·진료일이에요.
+            </p>
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {customDays.map((s) => (
+                <HolidayCard
+                  key={s.date}
+                  date={s.date}
+                  name={s.holiday_name}
+                  schedule={s}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* 카드 2: 회신 이력 */}
         <section className="mt-4 bg-white rounded-2xl shadow-sm px-5 py-5 md:px-7 md:py-6">

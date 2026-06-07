@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, ArrowRight, Clock } from "lucide-react";
+import { Check, ArrowRight, Clock, Plus, X } from "lucide-react";
+import { ko } from "date-fns/locale";
 import dayjs from "@/lib/dayjs";
 import { submitHolidaySchedule } from "./actions";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Drawer,
   DrawerContent,
@@ -24,6 +26,7 @@ interface Item {
   noLunch: boolean; // 점심시간 없음
   lunch_start: string; // 점심 시작
   lunch_end: string; // 점심 종료
+  isCustom?: boolean; // 원장이 임의로 추가한 휴무일(공휴일 아님)
 }
 
 const STATUS_OPTIONS: { key: Status; label: string }[] = [
@@ -162,10 +165,12 @@ function isItemComplete(it: Item): boolean {
 export default function HolidayCheckForm({
   hospitalName,
   monthLabel,
+  month,
   items: initialItems,
 }: {
   hospitalName: string;
   monthLabel: string;
+  month: string; // 'YYYY-MM'
   items: Item[];
 }) {
   const [items, setItems] = useState<Item[]>(initialItems);
@@ -173,13 +178,64 @@ export default function HolidayCheckForm({
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
 
+  // 임의 휴무일 추가용 캘린더 Drawer
+  const [addOpen, setAddOpen] = useState(false);
+  const [picked, setPicked] = useState<Date[]>([]);
+
+  const hadInitial = initialItems.length > 0;
+
   const update = (i: number, patch: Partial<Item>) =>
     setItems((prev) =>
       prev.map((it, idx) => (idx === i ? { ...it, ...patch } : it)),
     );
 
-  // 모든 공휴일 입력이 끝나야 확인 완료 버튼 활성화
-  const allComplete = items.length > 0 && items.every(isItemComplete);
+  // 임의 휴무일 추가: 선택한 날짜를 휴무 기본값으로 카드 생성 (중복 제외)
+  const addCustomDays = (dates: Date[]) => {
+    setItems((prev) => {
+      const existing = new Set(prev.map((it) => it.date));
+      const additions: Item[] = dates
+        .map((d) => dayjs(d).format("YYYY-MM-DD"))
+        .filter((ds) => !existing.has(ds))
+        .map((ds) => ({
+          date: ds,
+          holiday_name: "임시 휴무",
+          status: "closed" as Status,
+          short_start: "",
+          short_end: "",
+          noLunch: false,
+          lunch_start: "",
+          lunch_end: "",
+          isCustom: true,
+        }));
+      const next = [...prev, ...additions];
+      // 공휴일 먼저, 그다음 임의 휴무 — 각 그룹 내 날짜순
+      return next.sort((a, b) => {
+        if (!!a.isCustom !== !!b.isCustom) return a.isCustom ? 1 : -1;
+        return a.date.localeCompare(b.date);
+      });
+    });
+  };
+
+  const removeCustom = (date: string) =>
+    setItems((prev) => prev.filter((it) => it.date !== date));
+
+  // 모든 항목 입력이 끝나야 확인 완료 버튼 활성화.
+  // 처음에 항목이 있었다면(hadInitial) 모두 지운 빈 상태도 저장 허용(삭제 반영).
+  const allComplete =
+    items.every(isItemComplete) && (items.length > 0 || hadInitial);
+
+  // 이미 추가/등록된 날짜 (캘린더에서 중복 비활성화용)
+  const usedDates = new Set(items.map((it) => it.date));
+  const monthStart = dayjs(`${month}-01`);
+  const monthEnd = monthStart.endOf("month");
+  const todayStart = dayjs().startOf("day");
+  const isDateDisabled = (date: Date) => {
+    const d = dayjs(date);
+    const ds = d.format("YYYY-MM-DD");
+    if (d.isBefore(monthStart) || d.isAfter(monthEnd)) return true; // 대상 월만
+    if (d.isBefore(todayStart)) return true; // 지난 날짜 제외
+    return usedDates.has(ds); // 공휴일/이미 추가된 날짜 제외
+  };
 
   // 점심시간 입력 (오전진료·정상진료 공용)
   const renderLunch = (it: Item, i: number) => (
@@ -216,6 +272,85 @@ export default function HolidayCheckForm({
     </div>
   );
 
+  // 항목 카드 (공휴일 / 임의 휴무 공용)
+  const renderCard = (it: Item, i: number) => (
+    <div key={it.date} className="rounded-xl border border-gray-100 p-4">
+      {it.isCustom ? (
+        <>
+          <div className="flex items-center justify-between gap-2">
+            <p className="flex items-center gap-1.5 font-bold text-gray-900">
+              <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[11px] font-semibold text-gray-500">
+                임시
+              </span>
+              {dayjs(it.date).format("M월 D일 (ddd)")}
+            </p>
+            <button
+              type="button"
+              onClick={() => removeCustom(it.date)}
+              aria-label="이 휴무일 삭제"
+              className="grid h-7 w-7 place-items-center rounded-lg text-gray-300 transition-colors hover:bg-gray-50 hover:text-red-500"
+            >
+              <X size={16} />
+            </button>
+          </div>
+          <input
+            type="text"
+            value={it.holiday_name === "임시 휴무" ? "" : it.holiday_name}
+            onChange={(e) =>
+              update(i, { holiday_name: e.target.value || "임시 휴무" })
+            }
+            placeholder="사유 (예: 행사·학회·개인사정)"
+            className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#0e299c]"
+          />
+        </>
+      ) : (
+        <p className="font-bold text-gray-900">
+          {dayjs(it.date).format("M월 D일 (ddd)")}{" "}
+          <span className="font-semibold text-red-500">{it.holiday_name}</span>
+        </p>
+      )}
+
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        {STATUS_OPTIONS.map((s) => (
+          <button
+            key={s.key}
+            type="button"
+            aria-pressed={it.status === s.key}
+            onClick={() => update(i, { status: s.key })}
+            className={`cursor-pointer rounded-lg py-2 text-sm font-medium transition-colors ${
+              it.status === s.key
+                ? "bg-[#0e299c] text-white"
+                : "bg-[#F0F4FA] text-gray-500 hover:bg-[#e7edf6]"
+            }`}
+          >
+            {s.label}
+          </button>
+        ))}
+      </div>
+
+      {(it.status === "morning" || it.status === "open") && (
+        <div className="mt-3 flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <TimeSelect
+              value={it.short_start}
+              onChange={(v) => update(i, { short_start: v })}
+              placeholder="시작 시간"
+              options={START_OPTIONS}
+            />
+            <span className="text-gray-400">~</span>
+            <TimeSelect
+              value={it.short_end}
+              onChange={(v) => update(i, { short_end: v })}
+              placeholder="종료 시간"
+              options={END_OPTIONS}
+            />
+          </div>
+          {renderLunch(it, i)}
+        </div>
+      )}
+    </div>
+  );
+
   const handleSubmit = async () => {
     setSaving(true);
     setError("");
@@ -223,7 +358,17 @@ export default function HolidayCheckForm({
       // 버튼은 allComplete 일 때만 활성 → 이 시점 status 는 항상 선택돼 있음
       await submitHolidaySchedule(
         hospitalName,
-        items.map((it) => ({ ...it, status: it.status as Status })),
+        month,
+        items.map((it) => ({
+          date: it.date,
+          holiday_name: it.holiday_name || "임시 휴무",
+          status: it.status as Status,
+          short_start: it.short_start,
+          short_end: it.short_end,
+          noLunch: it.noLunch,
+          lunch_start: it.lunch_start,
+          lunch_end: it.lunch_end,
+        })),
       );
       setDone(true);
       // 카카오톡 인앱 브라우저면 완료 화면을 잠깐 보여준 뒤 자동 종료
@@ -272,6 +417,11 @@ export default function HolidayCheckForm({
     );
   }
 
+  // 공휴일 / 임의 휴무 분리 (원본 인덱스 유지 → update/삭제 정확)
+  const indexed = items.map((it, i) => ({ it, i }));
+  const holidayRows = indexed.filter((x) => !x.it.isCustom);
+  const customRows = indexed.filter((x) => x.it.isCustom);
+
   return (
     <div className="flex-1 bg-[#F0F4FA] px-4 py-6">
       <div className="mx-auto max-w-[480px] overflow-hidden rounded-2xl bg-white shadow-sm">
@@ -282,16 +432,11 @@ export default function HolidayCheckForm({
         <div className="flex flex-col gap-5 p-5">
           {/* 타이틀 + 보조설명 */}
           <div className="flex flex-col gap-1.5">
-            <h1 className="text-xl font-bold text-gray-900">
-              공휴일 진료일정 확인
-            </h1>
+            <h1 className="text-xl font-bold text-gray-900">진료일정 확인</h1>
             <p className="text-sm leading-relaxed text-gray-500">
-              다가오는 공휴일에 우리 병원이 진료하는지 확인하는 페이지예요.
-              공휴일마다{" "}
-              <b className="font-semibold text-gray-700">
-                오전진료·정상진료·휴무
-              </b>
-              를 선택하시고, 변경할 내용이 있으면 수정 후 아래{" "}
+              다가오는 공휴일의 진료 여부를 확인하고, 행사 등으로 쉬는 평일이
+              있으면 <b className="font-semibold text-gray-700">휴무일로 추가</b>해
+              주세요. 입력 후 아래{" "}
               <b className="font-semibold text-gray-700">확인 완료</b> 버튼을
               눌러주세요.
             </p>
@@ -302,78 +447,88 @@ export default function HolidayCheckForm({
             <p className="text-base font-bold text-[#0e299c] break-keep">
               {hospitalName}
             </p>
-            <p className="mt-0.5 text-xs text-gray-500">
-              {monthLabel} 공휴일 진료일정
-            </p>
+            <p className="mt-0.5 text-xs text-gray-500">{monthLabel} 진료일정</p>
           </div>
 
-          {items.length === 0 ? (
-            <p className="py-8 text-center text-sm text-gray-400">
-              {monthLabel}에는 공휴일이 없어요.
-            </p>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {items.map((it, i) => (
-                <div
-                  key={it.date}
-                  className="rounded-xl border border-gray-100 p-4"
-                >
-                  <p className="font-bold text-gray-900">
-                    {dayjs(it.date).format("M월 D일 (ddd)")}{" "}
-                    <span className="font-semibold text-red-500">
-                      {it.holiday_name}
-                    </span>
-                  </p>
+          {/* ① 공휴일 진료일정 */}
+          <section className="flex flex-col gap-2">
+            <h2 className="text-sm font-bold text-gray-700">공휴일 진료일정</h2>
+            {holidayRows.length === 0 ? (
+              <p className="py-4 text-center text-sm text-gray-400">
+                {monthLabel}에는 공휴일이 없어요.
+              </p>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {holidayRows.map(({ it, i }) => renderCard(it, i))}
+              </div>
+            )}
+          </section>
 
-                  <div className="mt-3 grid grid-cols-3 gap-2">
-                    {STATUS_OPTIONS.map((s) => (
-                      <button
-                        key={s.key}
-                        type="button"
-                        onClick={() => update(i, { status: s.key })}
-                        className={`cursor-pointer rounded-lg py-2 text-sm font-medium transition-colors ${
-                          it.status === s.key
-                            ? "bg-[#0e299c] text-white"
-                            : "bg-[#F0F4FA] text-gray-500 hover:bg-[#e7edf6]"
-                        }`}
-                      >
-                        {s.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  {(it.status === "morning" || it.status === "open") && (
-                    <div className="mt-3 flex flex-col gap-2">
-                      {/* 진료 시간 */}
-                      <div className="flex items-center gap-2">
-                        <TimeSelect
-                          value={it.short_start}
-                          onChange={(v) => update(i, { short_start: v })}
-                          placeholder="시작 시간"
-                          options={START_OPTIONS}
-                        />
-                        <span className="text-gray-400">~</span>
-                        <TimeSelect
-                          value={it.short_end}
-                          onChange={(v) => update(i, { short_end: v })}
-                          placeholder="종료 시간"
-                          options={END_OPTIONS}
-                        />
-                      </div>
-                      {/* 점심시간 */}
-                      {renderLunch(it, i)}
-                    </div>
-                  )}
+          {/* ② 추가 휴무일 (행사 등) */}
+          <section className="flex flex-col gap-2">
+            <h2 className="text-sm font-bold text-gray-700">
+              추가 휴무일{" "}
+              <span className="font-normal text-gray-400">(행사 등)</span>
+            </h2>
+            {customRows.length > 0 && (
+              <div className="flex flex-col gap-3">
+                {customRows.map(({ it, i }) => renderCard(it, i))}
+              </div>
+            )}
+            <Drawer
+              open={addOpen}
+              onOpenChange={(o) => {
+                setAddOpen(o);
+                if (!o) setPicked([]);
+              }}
+              handleOnly
+            >
+              <DrawerTrigger className="flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-gray-300 py-3 text-sm font-medium text-gray-500 transition-colors hover:border-[#0e299c] hover:text-[#0e299c]">
+                <Plus size={16} />
+                휴무일 추가
+              </DrawerTrigger>
+              <DrawerContent className="max-h-[85vh]">
+                <DrawerHeader>
+                  <DrawerTitle className="text-base">
+                    휴무일 선택 ({monthLabel})
+                  </DrawerTitle>
+                </DrawerHeader>
+                <div className="flex flex-col items-center gap-4 px-4 pb-6">
+                  <Calendar
+                    mode="multiple"
+                    selected={picked}
+                    onSelect={(d) => setPicked(d ?? [])}
+                    disabled={isDateDisabled}
+                    defaultMonth={monthStart.toDate()}
+                    startMonth={monthStart.toDate()}
+                    endMonth={monthEnd.toDate()}
+                    locale={ko}
+                    className="[--cell-size:2.75rem] text-base"
+                  />
+                  <button
+                    type="button"
+                    disabled={picked.length === 0}
+                    onClick={() => {
+                      addCustomDays(picked);
+                      setPicked([]);
+                      setAddOpen(false);
+                    }}
+                    className="w-full rounded-xl bg-[#0e299c] py-3 text-sm font-bold text-white transition-colors hover:bg-[#0a1f78] disabled:opacity-40"
+                  >
+                    {picked.length > 0
+                      ? `${picked.length}일 추가`
+                      : "날짜를 선택하세요"}
+                  </button>
                 </div>
-              ))}
-            </div>
-          )}
+              </DrawerContent>
+            </Drawer>
+          </section>
 
           {error && <p className="text-center text-sm text-red-400">{error}</p>}
 
           {items.length > 0 && !allComplete && (
             <p className="text-center text-xs text-gray-400">
-              모든 공휴일의 진료 여부와 진료시간·점심시간을 선택해 주세요.
+              모든 항목의 진료 여부와 진료시간·점심시간을 선택해 주세요.
             </p>
           )}
 

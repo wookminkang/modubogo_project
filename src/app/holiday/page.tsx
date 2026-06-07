@@ -51,6 +51,7 @@ export default async function HolidayRepliesListPage({
     getHolidaySends(monthKey),
   ]);
   const total = holidays.length;
+  const holidayDateSet = new Set(holidays.map((h) => h.date));
 
   // 보고서 병원 전체 ∪ 회신 ∪ 발송 회사를 대상으로 회사별 행 구성
   const replyMap = new Map(replies.map((r) => [r.company, r]));
@@ -64,10 +65,15 @@ export default async function HolidayRepliesListPage({
   const rowMap = new Map<string, Row>();
   for (const company of allCompanies) {
     const r = replyMap.get(company);
+    // 회신 완료/카운트는 공휴일 기준. 임의(비공휴일) 휴무는 별도로 표기.
+    const dates = r?.respondedDates ?? [];
+    const responded = dates.filter((d) => holidayDateSet.has(d)).length;
+    const customCount = dates.filter((d) => !holidayDateSet.has(d)).length;
     rowMap.set(company, {
       company,
       region: regionMap.get(company) ?? null,
-      responded: r?.responded ?? 0,
+      responded,
+      customCount,
       lastSubmittedAt: r?.lastSubmittedAt ?? null,
       send: sendMap.get(company) ?? null,
     });

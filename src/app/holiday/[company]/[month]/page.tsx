@@ -24,25 +24,41 @@ export default async function HolidayLandingPage({ params }: Props) {
 
   // 공휴일 + 저장된 진료여부 병합
   const existingMap = new Map(existing.map((e) => [e.date, e]));
-  const items = holidays.map((h) => {
-    const ex = existingMap.get(h.date);
+  const toItem = (
+    date: string,
+    holidayName: string,
+    isCustom: boolean
+  ) => {
+    const ex = existingMap.get(date);
     return {
-      date: h.date,
-      holiday_name: h.name,
+      date,
+      holiday_name: holidayName,
       status: (ex?.status as "morning" | "open" | "closed" | "") ?? "",
       short_start: ex?.short_start ?? "",
       short_end: ex?.short_end ?? "",
       noLunch: (ex?.note ?? "").includes("점심시간 없음"),
       lunch_start: ex?.lunch_start ?? "",
       lunch_end: ex?.lunch_end ?? "",
+      isCustom,
     };
-  });
+  };
+
+  // ① 공휴일 항목
+  const holidayItems = holidays.map((h) => toItem(h.date, h.name, false));
+
+  // ② 임의(비공휴일) 휴무 항목 — 기존 저장분 중 공휴일이 아닌 date
+  const holidayDates = new Set(holidays.map((h) => h.date));
+  const customItems = existing
+    .filter((e) => !holidayDates.has(e.date))
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map((e) => toItem(e.date, e.holiday_name || "임시 휴무", true));
 
   return (
     <HolidayCheckForm
       hospitalName={hospitalName}
       monthLabel={`${year}년 ${monthNum}월`}
-      items={items}
+      month={month}
+      items={[...holidayItems, ...customItems]}
     />
   );
 }

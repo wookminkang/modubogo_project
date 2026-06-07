@@ -22,7 +22,8 @@ import { sendBulkHolidayAlimtalk } from "./actions";
 export interface HubRow {
   company: string;
   region: string | null;
-  responded: number;
+  responded: number; // 응답한 공휴일 수
+  customCount: number; // 임의(비공휴일) 휴무 수
   lastSubmittedAt: string | null;
   send: HolidaySendCompany | null;
 }
@@ -233,19 +234,30 @@ export default function HolidayHubTable({
 
                   {/* 회신 상태 */}
                   <TableCell>
-                    {complete ? (
-                      <Badge className="bg-[#0e299c]/10 text-[#0e299c]">
-                        회신 완료
-                      </Badge>
-                    ) : row.responded > 0 ? (
-                      <Badge className="bg-amber-50 text-amber-600">
-                        {row.responded}/{total} 회신
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary" className="text-gray-500">
-                        회신 대기
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {complete ? (
+                        <Badge className="bg-[#0e299c]/10 text-[#0e299c]">
+                          회신 완료
+                        </Badge>
+                      ) : row.responded > 0 ? (
+                        <Badge className="bg-amber-50 text-amber-600">
+                          {row.responded}/{total} 회신
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="text-gray-500">
+                          회신 대기
+                        </Badge>
+                      )}
+                      {row.customCount > 0 && (
+                        <Badge
+                          variant="outline"
+                          className="text-gray-400"
+                          title="원장이 추가한 임의 휴무일"
+                        >
+                          +{row.customCount} 임시휴무
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
 
                   {/* 행별 액션 */}

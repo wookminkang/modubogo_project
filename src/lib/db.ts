@@ -341,7 +341,8 @@ export async function getHolidaySubmissions(
 
 export interface HolidayReplyCompany {
   company: string;
-  responded: number; // 응답한 공휴일 수
+  responded: number; // 응답한 날짜 수(공휴일+임의 휴무 전체)
+  respondedDates: string[]; // 응답한 날짜 목록 (공휴일/임의 구분은 호출부에서 공휴일 교집합으로 계산)
   lastSubmittedAt: string | null; // 최근 회신 시각
 }
 
@@ -387,6 +388,7 @@ export async function getHolidayReplyCompanies(
     .map((company) => ({
       company,
       responded: respondedMap.get(company)?.size ?? 0,
+      respondedDates: Array.from(respondedMap.get(company) ?? []),
       lastSubmittedAt: lastMap.get(company) ?? null,
     }))
     .sort((a, b) => {
