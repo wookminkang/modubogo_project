@@ -88,7 +88,7 @@ function TimeSelect({
         {value || placeholder}
         <Clock size={15} className="shrink-0 text-gray-400" />
       </DrawerTrigger>
-      <DrawerContent>
+      <DrawerContent className="overscroll-contain">
         <DrawerHeader>
           <DrawerTitle className="text-base">{placeholder} 선택</DrawerTitle>
         </DrawerHeader>
@@ -100,7 +100,7 @@ function TimeSelect({
             </p>
             <div
               data-vaul-no-drag
-              className="flex max-h-[45vh] flex-col gap-1 overflow-y-auto rounded-xl bg-gray-50 p-1.5"
+              className="flex max-h-[45vh] flex-col gap-1 overflow-y-auto overscroll-contain rounded-xl bg-gray-50 p-1.5"
             >
               {hours.map((h) => (
                 <button
@@ -121,7 +121,7 @@ function TimeSelect({
             </p>
             <div
               data-vaul-no-drag
-              className="flex max-h-[45vh] flex-col gap-1 overflow-y-auto rounded-xl bg-gray-50 p-1.5"
+              className="flex max-h-[45vh] flex-col gap-1 overflow-y-auto overscroll-contain rounded-xl bg-gray-50 p-1.5"
             >
               {minutes.map((m) => (
                 <button
