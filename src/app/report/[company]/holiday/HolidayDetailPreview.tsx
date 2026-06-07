@@ -25,12 +25,11 @@ export default function HolidayDetailPreview({
   year: number;
   month: number;
   holidays: Holiday[];
-  bannerUrl?: string; // (미사용) 호출부 호환용 — 배너는 고정
 }) {
   return (
     <div className="rounded-2xl border border-gray-100 bg-[#F0F4FA] p-4">
       <div className="overflow-hidden rounded-xl bg-white shadow-sm">
-        {/* 상단 배너 (업로드 반영) */}
+        {/* 상단 배너 (고정 샘플) */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={SAMPLE_BANNER} alt="공휴일 진료 안내" className="h-auto w-full" />
 

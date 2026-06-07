@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { unstable_cache } from "next/cache";
-import { ChevronRight, History, CalendarCheck, Inbox } from "lucide-react";
+import { ChevronRight, CalendarCheck, Inbox } from "lucide-react";
 import dayjs from "@/lib/dayjs";
 import {
   getReportsByCompanyFromDB,
@@ -128,20 +128,6 @@ export default async function CompanyReports({ company }: { company: string }) {
             </span>
             <ChevronRight size={16} className="text-gray-300 shrink-0" />
           </Link>
-
-          {/* 히스토리 작성 — 동작 연결은 추후 (현재 레이아웃 플레이스홀더) */}
-          <button
-            type="button"
-            className="flex w-full items-center gap-3 bg-white border border-gray-200 px-4 py-3 rounded-xl hover:bg-gray-50 transition-all cursor-pointer"
-          >
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#7c3aed] shrink-0">
-              <History size={15} className="text-white" />
-            </span>
-            <span className="flex-1 text-left text-sm font-medium text-gray-700">
-              히스토리 작성
-            </span>
-            <ChevronRight size={16} className="text-gray-300 shrink-0" />
-          </button>
 
           <AlimtalkSettingsButton
             company={company}

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Smartphone, Upload, ExternalLink } from "lucide-react";
+import { Smartphone, ExternalLink } from "lucide-react";
 import dayjs from "@/lib/dayjs";
 import HolidayDetailPreview from "./HolidayDetailPreview";
 
@@ -14,49 +14,22 @@ interface Holiday {
 const FIXED_ALIMTALK_BANNER = "/images/talk_sample_img.jpg";
 
 /**
- * 오른쪽 패널 (프레젠테이션): 배너 선택 박스 + 알림톡 미리보기(배너 고정) +
- * 자세히보기 미리보기(업로드 배너) + 전송 버튼.
- * 배너 선택/저장 상태는 상위 HolidayClient에서 관리한다.
+ * 오른쪽 패널 (프레젠테이션): 알림톡 미리보기 + 자세히보기 미리보기.
+ * 배너는 고정 샘플 이미지를 사용한다.
  */
 export default function AlimtalkPanel({
   hospitalName,
   year,
   month,
   holidays,
-  bannerUrl,
-  fileName,
-  onSelectFile,
 }: {
   hospitalName: string;
   year: number;
   month: number;
   holidays: Holiday[];
-  bannerUrl: string;
-  fileName: string;
-  onSelectFile: (file: File) => void;
 }) {
   return (
     <div>
-      {/* 진료일정 배너 선택 (저장은 상단 '저장하기' 버튼) */}
-      <div className="mb-6">
-        <p className="mb-2 text-sm font-bold text-gray-700">
-          {month}월 진료일정 배너
-        </p>
-        <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-gray-300 px-4 py-3 text-sm text-gray-500 transition-colors hover:border-[#0e299c] hover:text-[#0e299c]">
-          <Upload size={16} className="shrink-0" />
-          <span className="truncate">{fileName || "배너 이미지 업로드"}</span>
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) onSelectFile(f);
-            }}
-          />
-        </label>
-      </div>
-
       {/* 알림톡 미리보기 + 자세히보기 (나란히) */}
       <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-5">
         <div className="min-w-0 lg:flex-1">
@@ -132,7 +105,7 @@ export default function AlimtalkPanel({
         </div>
 
         <div className="min-w-0 lg:flex-1">
-      {/* 자세히 보기 화면 미리보기 (업로드 배너 반영) */}
+      {/* 자세히 보기 화면 미리보기 */}
       <div>
         <div className="mb-4 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -159,7 +132,6 @@ export default function AlimtalkPanel({
           year={year}
           month={month}
           holidays={holidays}
-          bannerUrl={bannerUrl}
         />
       </div>
         </div>

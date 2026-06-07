@@ -1,6 +1,6 @@
 import dayjs from "@/lib/dayjs";
 import { getPublicHolidays } from "@/lib/publicHoliday";
-import { getHolidayBannerUrl, getCompanySettings } from "@/lib/db";
+import { getCompanySettings } from "@/lib/db";
 import HolidayClient from "./HolidayClient";
 
 interface CompanyParamsType {
@@ -8,8 +8,6 @@ interface CompanyParamsType {
 }
 
 export const dynamic = "force-dynamic";
-
-const pad = (n: number) => String(n).padStart(2, "0");
 
 export default async function Holiday({ params }: CompanyParamsType) {
   const { company } = await params;
@@ -22,12 +20,8 @@ export default async function Holiday({ params }: CompanyParamsType) {
 
   const holidays = await getPublicHolidays(year, month);
 
-  // 배너 + 수신자(원장 번호)
-  const monthKey = `${year}-${pad(month)}`;
-  const [initialBanner, settings] = await Promise.all([
-    getHolidayBannerUrl(hospitalName, monthKey),
-    getCompanySettings(hospitalName),
-  ]);
+  // 수신자(원장 번호)
+  const settings = await getCompanySettings(hospitalName);
   const recipients = [
     settings?.recipient1,
     settings?.recipient2,
@@ -40,7 +34,6 @@ export default async function Holiday({ params }: CompanyParamsType) {
       year={year}
       month={month}
       holidays={holidays}
-      initialBanner={initialBanner ?? undefined}
       recipients={recipients}
     />
   );

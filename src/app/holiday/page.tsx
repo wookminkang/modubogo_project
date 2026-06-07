@@ -91,7 +91,7 @@ export default async function HolidayRepliesListPage() {
   const sentCount = rows.filter((r) => r.send).length;
 
   return (
-    <ReportShell title={`${month}월 진료일정 알림톡 현황`}>
+    <ReportShell title={`${month}월 병원별 진료일정 목록`}>
       {rows.length === 0 ? (
         <p className="py-20 text-center text-sm text-gray-400">
           아직 발송하거나 회신한 병원이 없어요.

@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import dayjs from "@/lib/dayjs";
-import { supabase } from "@/lib/supabase";
 import { sendHolidayAlimtalk } from "@/lib/bizgo";
 import Toast from "@/components/Toast";
 import ConfirmToast from "@/components/ConfirmToast";
@@ -16,42 +15,21 @@ interface Holiday {
 }
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
-const DEFAULT_BANNER = "/images/talk_sample_img.jpg";
-const BUCKET = "holiday-banners";
 const pad = (n: number) => String(n).padStart(2, "0");
-
-// 스토리지 키는 ASCII만 허용 → 한글 상호명을 ASCII 해시로 변환
-function companyKey(name: string) {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) {
-    h = (Math.imul(h, 31) + name.charCodeAt(i)) | 0;
-  }
-  return "c" + (h >>> 0).toString(36);
-}
 
 export default function HolidayClient({
   hospitalName,
   year,
   month,
   holidays,
-  initialBanner,
   recipients,
 }: {
   hospitalName: string;
   year: number;
   month: number;
   holidays: Holiday[];
-  initialBanner?: string;
   recipients?: string[];
 }) {
-  // 자세히보기 화면에 노출되는 배너 (업로드 이미지)
-  const [bannerUrl, setBannerUrl] = useState(initialBanner || DEFAULT_BANNER);
-  const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const [fileName, setFileName] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState("");
-
   // 알림톡 전송 상태
   const [sendStep, setSendStep] = useState<
     "idle" | "confirm" | "sending" | "result"
@@ -88,57 +66,6 @@ export default function HolidayClient({
     setSendStep("result");
   };
 
-  // 파일 선택 → 로컬 미리보기만 (저장은 '저장하기' 버튼에서)
-  const handleSelectFile = (file: File) => {
-    setError("");
-    setSaved(false);
-    setPendingFile(file);
-    setFileName(file.name);
-    setBannerUrl(URL.createObjectURL(file));
-  };
-
-  // 저장하기 → Supabase Storage 업로드 + holiday_banners 저장
-  const handleSave = async () => {
-    if (!pendingFile) return;
-    setSaving(true);
-    setError("");
-    try {
-      const ext =
-        (pendingFile.name.split(".").pop() || "jpg")
-          .toLowerCase()
-          .replace(/[^a-z0-9]/g, "") || "jpg";
-      const path = `${companyKey(hospitalName)}/${monthKey}-${Date.now()}.${ext}`;
-
-      const { error: upErr } = await supabase.storage
-        .from(BUCKET)
-        .upload(path, pendingFile, {
-          upsert: true,
-          contentType: pendingFile.type,
-        });
-      if (upErr) throw upErr;
-
-      const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
-      const publicUrl = data.publicUrl;
-
-      const { error: dbErr } = await supabase
-        .from("holiday_banners")
-        .upsert(
-          { company: hospitalName, month: monthKey, banner_url: publicUrl },
-          { onConflict: "company,month" },
-        );
-      if (dbErr) throw dbErr;
-
-      setBannerUrl(publicUrl);
-      setPendingFile(null);
-      setSaved(true);
-    } catch (err) {
-      console.error("배너 저장 실패:", err);
-      setError("저장 실패 — 잠시 후 다시 시도해주세요.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
   // 달력 그리드 구성
   const holidayMap = new Map(holidays.map((h) => [h.date, h.name]));
   const first = dayjs(`${year}-${pad(month)}-01`);
@@ -161,7 +88,7 @@ export default function HolidayClient({
             뒤로가기
           </Link>
 
-          {/* 헤더 + 저장하기 버튼 */}
+          {/* 헤더 + 알림톡 전송 버튼 */}
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-[#0e299c] break-keep">
@@ -173,29 +100,15 @@ export default function HolidayClient({
               </p>
             </div>
 
-            <div className="flex shrink-0 flex-col items-start gap-1 md:items-end">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={!pendingFile || saving}
-                  className="cursor-pointer rounded-xl bg-[#0e299c] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#0a1f78] disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  {saving ? "저장 중..." : "저장하기"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSendStep("confirm")}
-                  disabled={sendStep === "sending"}
-                  className="cursor-pointer rounded-xl bg-[#FEE500] px-4 py-2.5 text-sm font-bold text-[#3C1E1E] transition-all hover:brightness-95 active:scale-[0.99] disabled:opacity-50"
-                >
-                  {sendStep === "sending" ? "전송 중..." : "알림톡 전송하기"}
-                </button>
-              </div>
-              {saved && (
-                <span className="text-xs text-[#0e299c]">저장됐어요 ✓</span>
-              )}
-              {error && <span className="text-xs text-red-400">{error}</span>}
+            <div className="flex shrink-0 items-center gap-2 md:justify-end">
+              <button
+                type="button"
+                onClick={() => setSendStep("confirm")}
+                disabled={sendStep === "sending"}
+                className="cursor-pointer rounded-xl bg-[#FEE500] px-4 py-2.5 text-sm font-bold text-[#3C1E1E] transition-all hover:brightness-95 active:scale-[0.99] disabled:opacity-50"
+              >
+                {sendStep === "sending" ? "전송 중..." : "알림톡 전송하기"}
+              </button>
             </div>
           </div>
 
@@ -270,16 +183,13 @@ export default function HolidayClient({
 
             </div>
 
-            {/* 오른쪽: 배너 업로드 + 알림톡/자세히보기 미리보기 (나란히) */}
+            {/* 오른쪽: 알림톡/자세히보기 미리보기 (나란히) */}
             <div className="min-w-0 flex-1 md:border-l md:border-gray-100 md:pl-10">
               <AlimtalkPanel
                 hospitalName={hospitalName}
                 year={year}
                 month={month}
                 holidays={holidays}
-                bannerUrl={bannerUrl}
-                fileName={fileName}
-                onSelectFile={handleSelectFile}
               />
             </div>
           </div>

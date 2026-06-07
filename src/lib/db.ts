@@ -281,23 +281,6 @@ export async function getDashboardRawDataFromDB() {
   return data ?? [];
 }
 
-/**
- * 회사+월의 진료일정 배너 URL 조회.
- * holiday_banners 테이블이 아직 없으면 에러를 무시하고 null 반환.
- */
-export async function getHolidayBannerUrl(
-  company: string,
-  month: string
-): Promise<string | null> {
-  const { data } = await supabase
-    .from("holiday_banners")
-    .select("banner_url")
-    .eq("company", company)
-    .eq("month", month)
-    .maybeSingle();
-  return (data?.banner_url as string | undefined) ?? null;
-}
-
 export interface HolidayScheduleRow {
   date: string;
   holiday_name: string;
