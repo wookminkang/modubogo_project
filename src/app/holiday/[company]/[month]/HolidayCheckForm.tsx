@@ -144,6 +144,12 @@ function TimeSelect({
 // 상단 배너는 고정 (알림톡 샘플 배너)
 const FIXED_BANNER = "/images/talk_sample_img.jpg";
 
+// 카카오톡 인앱 브라우저 여부 (UA에 KAKAOTALK 포함)
+function isKakaoInApp(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /KAKAOTALK/i.test(navigator.userAgent);
+}
+
 // 항목 입력 완료 여부 (확인 완료 버튼 활성화 조건)
 function isItemComplete(it: Item): boolean {
   if (!it.status) return false; // 진료 여부 미선택
@@ -218,6 +224,12 @@ export default function HolidayCheckForm({
         items.map((it) => ({ ...it, status: it.status as Status })),
       );
       setDone(true);
+      // 카카오톡 인앱 브라우저면 완료 화면을 잠깐 보여준 뒤 자동 종료
+      if (isKakaoInApp()) {
+        setTimeout(() => {
+          window.location.href = "kakaotalk://inappbrowser/close";
+        }, 1500);
+      }
     } catch (e) {
       console.error("일정 제출 실패:", e);
       setError("제출 실패 — 잠시 후 다시 시도해주세요.");
