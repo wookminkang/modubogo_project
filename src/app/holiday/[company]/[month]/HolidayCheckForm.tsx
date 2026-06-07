@@ -98,7 +98,10 @@ function TimeSelect({
             <p className="mb-2 text-center text-xs font-semibold text-gray-400">
               시
             </p>
-            <div className="flex max-h-[45vh] flex-col gap-1 overflow-y-auto rounded-xl bg-gray-50 p-1.5">
+            <div
+              data-vaul-no-drag
+              className="flex max-h-[45vh] flex-col gap-1 overflow-y-auto rounded-xl bg-gray-50 p-1.5"
+            >
               {hours.map((h) => (
                 <button
                   key={h}
@@ -116,7 +119,10 @@ function TimeSelect({
             <p className="mb-2 text-center text-xs font-semibold text-gray-400">
               분
             </p>
-            <div className="flex max-h-[45vh] flex-col gap-1 overflow-y-auto rounded-xl bg-gray-50 p-1.5">
+            <div
+              data-vaul-no-drag
+              className="flex max-h-[45vh] flex-col gap-1 overflow-y-auto rounded-xl bg-gray-50 p-1.5"
+            >
               {minutes.map((m) => (
                 <button
                   key={m}
