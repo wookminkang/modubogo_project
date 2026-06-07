@@ -3,8 +3,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { Search, ChevronRight, ShieldCheck } from "lucide-react";
+import { Search, ChevronRight, ShieldCheck, LogOut } from "lucide-react";
 import dayjs from "@/lib/dayjs";
+import { logoutAdmin } from "@/lib/admin-actions";
 import ReportShell from "./ReportShell";
 
 type HospitalType =
@@ -100,6 +101,15 @@ export default function CompanyList({
       >
         + 새 보고서
       </Link>
+      <form action={logoutAdmin}>
+        <button
+          type="submit"
+          className="inline-flex items-center gap-1.5 bg-white text-gray-500 text-xs md:text-sm font-medium px-3 md:px-4 py-2 md:py-2.5 rounded-xl border border-gray-200 hover:border-gray-300 transition-colors whitespace-nowrap cursor-pointer"
+        >
+          <LogOut size={15} />
+          로그아웃
+        </button>
+      </form>
     </>
   );
 
