@@ -43,17 +43,19 @@ const buildTimes = (startH: number, endH: number): string[] => {
   return out;
 };
 
-// 진료시간: 08:00 ~ 22:00 (저녁 진료 병원 대응)
-const TIME_OPTIONS = buildTimes(8, 22);
+// 진료 시작: 08:00 ~ 13:00 (그 이후 시작하는 경우는 거의 없음)
+const START_OPTIONS = buildTimes(8, 13);
+// 진료 종료: 12:00 ~ 22:00 (저녁 진료 병원 대응)
+const END_OPTIONS = buildTimes(12, 22);
 // 점심시간: 11:00 ~ 15:00 (점심대만)
 const LUNCH_OPTIONS = buildTimes(11, 15);
 
-// 시·분 2컬럼 타임피커: 시를 고르면 분을 고르는 직관적 방식
+// 버튼 그리드 타임피커: 시·분을 한눈에 보고 바로 탭 (스크롤 없음)
 function TimeSelect({
   value,
   onChange,
   placeholder,
-  options = TIME_OPTIONS,
+  options = START_OPTIONS,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -71,11 +73,11 @@ function TimeSelect({
     setOpen(false);
   };
 
-  const colBtn = (active: boolean) =>
-    `w-full shrink-0 rounded-lg px-2 py-3 text-center text-sm transition-colors cursor-pointer ${
+  const gridBtn = (active: boolean) =>
+    `rounded-xl py-3 text-center text-sm font-medium transition-colors cursor-pointer ${
       active
-        ? "bg-[#0e299c] font-semibold text-white"
-        : "text-gray-700 hover:bg-gray-100"
+        ? "bg-[#0e299c] text-white"
+        : "bg-gray-50 text-gray-700 hover:bg-gray-100"
     }`;
 
   return (
@@ -88,26 +90,21 @@ function TimeSelect({
         {value || placeholder}
         <Clock size={15} className="shrink-0 text-gray-400" />
       </DrawerTrigger>
-      <DrawerContent className="overscroll-contain">
+      <DrawerContent>
         <DrawerHeader>
           <DrawerTitle className="text-base">{placeholder} 선택</DrawerTitle>
         </DrawerHeader>
-        <div className="flex gap-3 px-4 pb-8">
+        <div className="flex flex-col gap-5 px-4 pb-8">
           {/* 시 */}
-          <div className="min-w-0 flex-1">
-            <p className="mb-2 text-center text-xs font-semibold text-gray-400">
-              시
-            </p>
-            <div
-              data-vaul-no-drag
-              className="flex max-h-[45vh] flex-col gap-1 overflow-y-auto overscroll-contain rounded-xl bg-gray-50 p-1.5"
-            >
+          <div>
+            <p className="mb-2 text-xs font-semibold text-gray-400">시</p>
+            <div className="grid grid-cols-4 gap-2">
               {hours.map((h) => (
                 <button
                   key={h}
                   type="button"
                   onClick={() => selectHour(h)}
-                  className={colBtn(h === hh)}
+                  className={gridBtn(h === hh)}
                 >
                   {Number(h)}시
                 </button>
@@ -115,20 +112,15 @@ function TimeSelect({
             </div>
           </div>
           {/* 분 */}
-          <div className="min-w-0 flex-1">
-            <p className="mb-2 text-center text-xs font-semibold text-gray-400">
-              분
-            </p>
-            <div
-              data-vaul-no-drag
-              className="flex max-h-[45vh] flex-col gap-1 overflow-y-auto overscroll-contain rounded-xl bg-gray-50 p-1.5"
-            >
+          <div>
+            <p className="mb-2 text-xs font-semibold text-gray-400">분</p>
+            <div className="grid grid-cols-4 gap-2">
               {minutes.map((m) => (
                 <button
                   key={m}
                   type="button"
                   onClick={() => selectMin(m)}
-                  className={colBtn(m === mm)}
+                  className={gridBtn(m === mm)}
                 >
                   {m}분
                 </button>
@@ -331,12 +323,14 @@ export default function HolidayCheckForm({
                           value={it.short_start}
                           onChange={(v) => update(i, { short_start: v })}
                           placeholder="시작 시간"
+                          options={START_OPTIONS}
                         />
                         <span className="text-gray-400">~</span>
                         <TimeSelect
                           value={it.short_end}
                           onChange={(v) => update(i, { short_end: v })}
                           placeholder="종료 시간"
+                          options={END_OPTIONS}
                         />
                       </div>
                       {/* 점심시간 */}
