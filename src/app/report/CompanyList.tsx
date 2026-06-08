@@ -3,9 +3,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { Search, ChevronRight, ShieldCheck, LogOut } from "lucide-react";
 import dayjs from "@/lib/dayjs";
 import { logoutAdmin } from "@/lib/admin-actions";
+import { companiesSummaryQuery } from "@/lib/queries";
 import ReportShell from "./ReportShell";
 
 type HospitalType =
@@ -17,15 +19,6 @@ type HospitalType =
   | "한방병원"
   | "정신과"
   | "양방";
-
-interface Company {
-  company: string;
-  latestMonth: string;
-  reportCount: number;
-  status?: string;
-  hospitalType?: string | null;
-  region?: string | null;
-}
 
 const TABS: HospitalType[] = [
   "전체",
@@ -39,12 +32,11 @@ const TABS: HospitalType[] = [
 ];
 
 export default function CompanyList({
-  companies,
   isSuper = false,
 }: {
-  companies: Company[];
   isSuper?: boolean;
 }) {
+  const { data: companies } = useSuspenseQuery(companiesSummaryQuery());
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [activeTab, setActiveTab] = useState<HospitalType>("전체");

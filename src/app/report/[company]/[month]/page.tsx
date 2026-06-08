@@ -1,7 +1,9 @@
 import dayjs from "@/lib/dayjs";
 import Script from "next/script";
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import { unstable_cache } from "next/cache";
 import { cookies } from "next/headers";
 import {
   getReportFromDB,
@@ -24,8 +26,10 @@ import ContractTable from "@/components/ContractTable";
 import Image from "next/image";
 import CopyLinkButton from "@/components/CopyLinkButton";
 import AdBanner from "./AdBanner";
-import { getBizmoney, getNaverAdCosts } from "@/lib/naverAd";
-import { getDableReport, getDableMonthlySpend } from "@/lib/dableAd";
+import { getNaverAdCosts } from "@/lib/naverAd";
+import ExternalBalances, {
+  ExternalBalancesSkeleton,
+} from "./ExternalBalances";
 
 interface ReportPageProps {
   params: Promise<{ company: string; month: string }>;
@@ -62,37 +66,24 @@ export default async function ReportPage({
   );
   const year = month.slice(0, 4);
   const yearReports = allReports.filter((r) => r.month.startsWith(year));
+  const currentMonthStr = dayjs().format("YYYY-MM");
 
-  // 현재 달 + 연도 내 모든 달의 네이버 비용을 병렬로 가져옴
-  const [
-    bizmoney,
-    naverAdCosts,
-    dableReport,
-    dableMonthlySpend,
-    ...yearNaverCostResults
-  ] = await Promise.all([
+  // 네이버 비용은 차트·총광고비에 얽혀 있어 본문과 함께 렌더한다(값 점프 방지).
+  // 과거 달은 값이 변하지 않으므로 회사+월 단위로 캐싱(과거 1일 / 현재달 10분)해 재방문 속도 개선.
+  // 비즈머니·데이블 잔액은 본문과 무관한 표시 위젯이라 <ExternalBalances/> 로 분리해 스트리밍한다.
+  const cachedNaverCosts = (m: string) =>
     naverCreds
-      ? getBizmoney(naverCreds).catch(() => null)
-      : Promise.resolve(null),
-    naverCreds
-      ? getNaverAdCosts(month, settings!).catch(() => null)
-      : Promise.resolve(null),
-    hasDableSettings
-      ? getDableReport(settings!.dable_account, settings!.dable_api_key).catch(
-          () => null,
-        )
-      : Promise.resolve(null),
-    hasDableSettings
-      ? getDableMonthlySpend(
-          settings!.dable_account,
-          settings!.dable_api_key,
-          month,
-        ).catch(() => null)
-      : Promise.resolve(null),
+      ? unstable_cache(
+          () => getNaverAdCosts(m, settings!),
+          ["naver-costs", decoded, m],
+          { revalidate: m >= currentMonthStr ? 600 : 86400 },
+        )().catch(() => null)
+      : Promise.resolve(null);
+
+  const [naverAdCosts, ...yearNaverCostResults] = await Promise.all([
+    cachedNaverCosts(month),
     ...yearReports.map((r) =>
-      naverCreds && r.month !== month
-        ? getNaverAdCosts(r.month, settings!).catch(() => null)
-        : Promise.resolve(null),
+      r.month !== month ? cachedNaverCosts(r.month) : Promise.resolve(null),
     ),
   ]);
 
@@ -106,19 +97,6 @@ export default async function ReportPage({
     if (r.month !== month && yearNaverCostResults[i]) {
       naverCostByMonth[r.month] = yearNaverCostResults[i]!;
     }
-  });
-
-  console.log(`[NaverAd] ${decoded} / ${month}`, {
-    powerlink: naverAdCosts?.powerlink ?? null,
-    place: naverAdCosts?.place ?? null,
-    powerContents: naverAdCosts?.powerContents ?? null,
-    bizmoney: bizmoney ?? null,
-  });
-  console.log(`[Dable] ${decoded} / ${month}`, {
-    hasDableSettings,
-    dable_account: settings?.dable_account ?? null,
-    dable_api_key: settings?.dable_api_key ? "***설정됨***" : null,
-    dableReport,
   });
 
   if (!report) notFound();
@@ -400,198 +378,10 @@ export default async function ReportPage({
                 {dayjs(month).format("YYYY.MM")}월
               </div>
 
-              {/* 비즈머니 잔액 */}
-              {bizmoney !== null && (
-                <div className="flex items-center justify-between bg-[#03C75A]/10 rounded-xl px-3 py-2.5 mb-2">
-                  <div className="flex items-center gap-2">
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <rect width="24" height="24" rx="4" fill="#03C75A" />
-                      <text
-                        x="12"
-                        y="17"
-                        textAnchor="middle"
-                        fontSize="13"
-                        fontWeight="bold"
-                        fill="white"
-                        fontFamily="sans-serif"
-                      >
-                        N
-                      </text>
-                    </svg>
-                    <span className="text-xs font-medium text-[#03C75A]">
-                      비즈머니 잔액
-                    </span>
-                  </div>
-                  <span className="text-sm font-bold text-[#03C75A]">
-                    {Math.floor(Number(bizmoney)).toLocaleString()}원
-                  </span>
-                </div>
-              )}
-
-              {/* 데이블 광고 잔액 + 오늘/월 소진 */}
-              {(dableReport !== null || dableMonthlySpend !== null) && (
-                <div className="flex flex-col gap-1.5 mb-4">
-                  {/* 잔액: rate limit 여부에 따라 분기 */}
-                  {dableReport !== null &&
-                    (dableReport.rateLimited ? (
-                      <div className="flex items-center justify-between bg-[#FF6B35]/10 rounded-xl px-3 py-2.5">
-                        <div className="flex items-center gap-2">
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <rect
-                              width="24"
-                              height="24"
-                              rx="4"
-                              fill="#FF6B35"
-                            />
-                            <text
-                              x="12"
-                              y="17"
-                              textAnchor="middle"
-                              fontSize="11"
-                              fontWeight="bold"
-                              fill="white"
-                              fontFamily="sans-serif"
-                            >
-                              D
-                            </text>
-                          </svg>
-                          <span className="text-xs font-medium text-[#FF6B35]">
-                            데이블 광고 잔액
-                          </span>
-                        </div>
-                        <span className="text-xs text-[#FF6B35]">
-                          10분 후 업데이트
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-between bg-[#FF6B35]/10 rounded-xl px-3 py-2.5">
-                        <div className="flex items-center gap-2">
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <rect
-                              width="24"
-                              height="24"
-                              rx="4"
-                              fill="#FF6B35"
-                            />
-                            <text
-                              x="12"
-                              y="17"
-                              textAnchor="middle"
-                              fontSize="11"
-                              fontWeight="bold"
-                              fill="white"
-                              fontFamily="sans-serif"
-                            >
-                              D
-                            </text>
-                          </svg>
-                          <span className="text-xs font-medium text-[#FF6B35]">
-                            데이블 광고 잔액
-                          </span>
-                        </div>
-                        <span className="text-sm font-bold text-[#FF6B35]">
-                          {Math.floor(dableReport.balance).toLocaleString()}원
-                        </span>
-                      </div>
-                    ))}
-                  {/* 오늘/월 소진: daily_report에서 항상 표시 */}
-                  {dableMonthlySpend !== null && (
-                    <>
-                      <div className="flex items-center justify-between bg-[#FF6B35]/10 rounded-xl px-3 py-2.5">
-                        <div className="flex items-center gap-2">
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <rect
-                              width="24"
-                              height="24"
-                              rx="4"
-                              fill="#FF6B35"
-                            />
-                            <text
-                              x="12"
-                              y="17"
-                              textAnchor="middle"
-                              fontSize="11"
-                              fontWeight="bold"
-                              fill="white"
-                              fontFamily="sans-serif"
-                            >
-                              D
-                            </text>
-                          </svg>
-                          <span className="text-xs font-medium text-[#FF6B35]">
-                            데이블 오늘 소진
-                          </span>
-                        </div>
-                        <span className="text-sm font-bold text-[#FF6B35]">
-                          {Math.floor(dableMonthlySpend.today).toLocaleString()}
-                          원
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between bg-[#FF6B35]/10 rounded-xl px-3 py-2.5">
-                        <div className="flex items-center gap-2">
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <rect
-                              width="24"
-                              height="24"
-                              rx="4"
-                              fill="#FF6B35"
-                            />
-                            <text
-                              x="12"
-                              y="17"
-                              textAnchor="middle"
-                              fontSize="11"
-                              fontWeight="bold"
-                              fill="white"
-                              fontFamily="sans-serif"
-                            >
-                              D
-                            </text>
-                          </svg>
-                          <span className="text-xs font-medium text-[#FF6B35]">
-                            데이블 월 소진
-                          </span>
-                        </div>
-                        <span className="text-sm font-bold text-[#FF6B35]">
-                          {Math.floor(
-                            dableMonthlySpend.monthly,
-                          ).toLocaleString()}
-                          원
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </div>
+              {(hasNaverSettings || hasDableSettings) && (
+                <Suspense fallback={<ExternalBalancesSkeleton />}>
+                  <ExternalBalances settings={settings} month={month} />
+                </Suspense>
               )}
 
               {/* 총 광고비 + 외주업체 */}

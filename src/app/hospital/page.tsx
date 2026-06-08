@@ -1,32 +1,20 @@
 import { Suspense } from "react";
-import {
-  QueryClient,
-  HydrationBoundary,
-  dehydrate,
-} from "@tanstack/react-query";
-import { getHospitalList } from "@/lib/db";
+import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import { HospitalList } from "@/app/hospital/_components/HospitalList";
 import { getQueryClient } from "@/hooks/get-query-client";
+import { hospitalsQuery } from "@/lib/queries";
+import { ListSkeleton } from "@/components/ListSkeleton";
 
 export default async function HospitalListPage() {
   const queryClient = getQueryClient();
 
-  await queryClient.prefetchQuery({
-    queryKey: ["hospitalList"],
-    queryFn: getHospitalList,
-  });
+  await queryClient.prefetchQuery(hospitalsQuery());
 
   return (
-    <>
-      <Suspense
-        fallback={
-          <p className="text-blue-500 mt-4">주방에서 요리를 준비 중입니다</p>
-        }
-      >
-        <HydrationBoundary state={dehydrate(queryClient)}>
-          <HospitalList />
-        </HydrationBoundary>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <Suspense fallback={<ListSkeleton rows={4} />}>
+        <HospitalList />
       </Suspense>
-    </>
+    </HydrationBoundary>
   );
 }

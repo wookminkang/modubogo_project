@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { unstable_cache } from "next/cache";
+import { Suspense } from "react";
 import dayjs from "@/lib/dayjs";
 import {
   getReportsByCompanyFromDB,
@@ -15,7 +15,7 @@ import KakaoNotifyButton from "@/components/KakaoNotifyButton";
 import NaverAdSettingsButton from "@/components/NaverAdSettingsButton";
 import AlimtalkSettingsButton from "@/components/AlimtalkSettingsButton";
 import DableSettingsButton from "@/components/DableSettingsButton";
-import { getNaverAdCosts } from "@/lib/naverAd";
+import ReportTotal, { ReportTotalSkeleton } from "./ReportTotal";
 
 /**
  * 회사 상세: 왼쪽 정보 패널(상호명/썸네일/지역/설정/새 보고서) + 오른쪽 월별 보고서 리스트.
@@ -33,26 +33,9 @@ export default async function CompanyReports({ company }: { company: string }) {
 
   if (reports.length === 0) notFound();
 
-  // 네이버 API 설정이 있으면 각 월의 비용을 병렬로 가져옴.
-  // 과거 달은 값이 변하지 않으므로 회사+월 단위로 캐싱(과거 1일 / 현재달 10분)해 렌더 속도 개선.
-  const naverCostMap: Record<string, number> = {};
-  if (settings?.naver_ad_api_key) {
-    const currentMonth = dayjs().format("YYYY-MM");
-    const results = await Promise.all(
-      reports.map((r) =>
-        unstable_cache(() => getNaverAdCosts(r.month, settings), ["naver-costs", company, r.month], {
-          revalidate: r.month >= currentMonth ? 600 : 86400,
-        })().catch(() => null),
-      ),
-    );
-    for (let i = 0; i < reports.length; i++) {
-      const costs = results[i];
-      if (costs) {
-        naverCostMap[reports[i].month] =
-          costs.powerlink + costs.place + costs.powerContents;
-      }
-    }
-  }
+  // 네이버 API 설정이 있으면 각 월의 비용을 행 단위 Suspense 로 스트리밍한다(ReportTotal).
+  // 목록 자체는 즉시 렌더되고, 느린 네이버 합산만 나중에 채워진다.
+  const hasNaver = !!settings?.naver_ad_api_key;
 
   const region = settings?.region as string | undefined;
   const latestMonth = reports.reduce(
@@ -119,9 +102,7 @@ export default async function CompanyReports({ company }: { company: string }) {
       <main className="flex-1 min-w-0 md:border-l md:border-gray-100 md:pl-10">
         <ul className="flex flex-col">
           {reports.map((report) => {
-            const total =
-              getTotalAmount(report.categories) +
-              (naverCostMap[report.month] ?? 0);
+            const dbTotal = getTotalAmount(report.categories);
             return (
               <li
                 key={report.id}
@@ -145,9 +126,20 @@ export default async function CompanyReports({ company }: { company: string }) {
                     )}
                   </div>
                   <p className="mt-1.5 flex items-baseline gap-1.5 text-sm font-medium text-gray-500">
-                    <span className="text-2xl font-extrabold text-[#0e299c]">
-                      ₩{total.toLocaleString()}원
-                    </span>
+                    {hasNaver ? (
+                      <Suspense fallback={<ReportTotalSkeleton />}>
+                        <ReportTotal
+                          company={company}
+                          month={report.month}
+                          dbTotal={dbTotal}
+                          settings={settings!}
+                        />
+                      </Suspense>
+                    ) : (
+                      <span className="text-2xl font-extrabold text-[#0e299c]">
+                        ₩{dbTotal.toLocaleString()}원
+                      </span>
+                    )}
                   </p>
                 </Link>
                 <div className="flex items-center gap-1 shrink-0">
