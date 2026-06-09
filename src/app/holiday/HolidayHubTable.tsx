@@ -36,10 +36,13 @@ export default function HolidayHubTable({
   rows,
   total,
   monthKey,
+  query = "",
 }: {
   rows: HubRow[];
   total: number;
   monthKey: string;
+  /** 디바운스된 상호명 검색어 (HolidayHub의 sticky 헤더에서 내려옴) */
+  query?: string;
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -49,8 +52,16 @@ export default function HolidayHubTable({
   const [resultMsg, setResultMsg] = useState("");
   const headerRef = useRef<HTMLInputElement>(null);
 
-  const allChecked = rows.length > 0 && selected.size === rows.length;
-  const someChecked = selected.size > 0 && !allChecked;
+  const filteredRows = rows.filter((r) =>
+    r.company.toLowerCase().includes(query.toLowerCase())
+  );
+
+  // 전체 선택/indeterminate 는 현재 보이는(필터된) 행 기준
+  const allChecked =
+    filteredRows.length > 0 &&
+    filteredRows.every((r) => selected.has(r.company));
+  const someChecked =
+    filteredRows.some((r) => selected.has(r.company)) && !allChecked;
 
   // 헤더 체크박스 indeterminate 상태
   useEffect(() => {
@@ -67,9 +78,16 @@ export default function HolidayHubTable({
   };
 
   const toggleAll = () => {
-    setSelected((prev) =>
-      prev.size === rows.length ? new Set() : new Set(rows.map((r) => r.company))
-    );
+    setSelected((prev) => {
+      const next = new Set(prev);
+      const everySelected = filteredRows.every((r) => next.has(r.company));
+      if (everySelected) {
+        filteredRows.forEach((r) => next.delete(r.company));
+      } else {
+        filteredRows.forEach((r) => next.add(r.company));
+      }
+      return next;
+    });
   };
 
   const handleSend = async () => {
@@ -103,7 +121,9 @@ export default function HolidayHubTable({
         <span className="text-xs text-gray-500">
           {selected.size > 0
             ? `${selected.size}곳 선택됨`
-            : `전체 ${rows.length}곳`}
+            : query
+              ? `검색 결과 ${filteredRows.length}곳`
+              : `전체 ${rows.length}곳`}
         </span>
         <button
           type="button"
@@ -140,7 +160,17 @@ export default function HolidayHubTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map((row) => {
+            {filteredRows.length === 0 ? (
+              <TableRow className="hover:bg-transparent">
+                <TableCell
+                  colSpan={7}
+                  className="py-10 text-center text-sm text-gray-400"
+                >
+                  {query ? "검색 결과가 없습니다." : "병원이 없습니다."}
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredRows.map((row) => {
               const complete = total > 0 && row.responded >= total;
               const send = row.send;
               const failed = send?.status === "failed";
@@ -290,7 +320,8 @@ export default function HolidayHubTable({
                   </TableCell>
                 </TableRow>
               );
-            })}
+              })
+            )}
           </TableBody>
         </Table>
       </div>

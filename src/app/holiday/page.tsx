@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import dayjs from "@/lib/dayjs";
 import { isAdmin } from "@/lib/admin";
@@ -8,11 +7,11 @@ import {
   getHolidayReplyCompanies,
   getHolidaySends,
 } from "@/lib/db";
-import ReportShell from "@/app/report/ReportShell";
 import MonthNav from "@/components/MonthNav";
 import ScrollNav from "@/components/ScrollNav";
 import { pad } from "@/lib/utils";
-import HolidayHubTable, { type HubRow } from "./HolidayHubTable";
+import HolidayHub from "./HolidayHub";
+import { type HubRow } from "./HolidayHubTable";
 
 export const dynamic = "force-dynamic";
 
@@ -122,57 +121,47 @@ export default async function HolidayRepliesListPage({
       ? allRows
       : allRows.filter((r) => statusOf(r) === activeStatus);
 
-  // 상태 필터 탭 정의
-  const filters: { key: StatusKey; label: string; count: number }[] = [
-    { key: "all", label: "전체", count: counts.all },
-    { key: "unsent", label: "미발송", count: counts.unsent },
-    { key: "awaiting", label: "발송·미회신", count: counts.awaiting },
-    { key: "done", label: "회신완료", count: counts.done },
-  ];
+  // 상태 필터 탭 정의 (href는 서버에서 미리 계산해 클라이언트로 전달)
   const tabHref = (key: StatusKey) =>
     `/holiday?month=${monthKey}${key === "all" ? "" : `&status=${key}`}`;
+  const filters: {
+    key: StatusKey;
+    label: string;
+    count: number;
+    href: string;
+  }[] = [
+    { key: "all", label: "전체", count: counts.all, href: tabHref("all") },
+    {
+      key: "unsent",
+      label: "미발송",
+      count: counts.unsent,
+      href: tabHref("unsent"),
+    },
+    {
+      key: "awaiting",
+      label: "발송·미회신",
+      count: counts.awaiting,
+      href: tabHref("awaiting"),
+    },
+    {
+      key: "done",
+      label: "회신완료",
+      count: counts.done,
+      href: tabHref("done"),
+    },
+  ];
 
   return (
-    <ReportShell
+    <HolidayHub
       title={`${month}월 병원별 진료일정 목록`}
       actions={<MonthNav basePath="/holiday" month={monthKey} />}
+      monthKey={monthKey}
+      rows={rows}
+      total={total}
+      filters={filters}
+      activeStatus={activeStatus}
     >
-      <>
-        {/* 상태 필터 탭 (요약 카운트 겸용) */}
-        <div className="flex flex-wrap gap-1.5 pb-4">
-          {filters.map((f) => {
-            const active = f.key === activeStatus;
-            return (
-              <Link
-                key={f.key}
-                href={tabHref(f.key)}
-                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
-                  active
-                    ? "border-[#0e299c] bg-[#0e299c] text-white"
-                    : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
-                }`}
-              >
-                {f.label}
-                <span className={active ? "text-white/80" : "text-gray-400"}>
-                  {f.count}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-
-        {rows.length === 0 ? (
-          <p className="py-20 text-center text-sm text-gray-400">
-            {activeStatus === "all"
-              ? "표시할 병원이 없어요."
-              : "해당 상태의 병원이 없어요."}
-          </p>
-        ) : (
-          <HolidayHubTable rows={rows} total={total} monthKey={monthKey} />
-        )}
-
-        <ScrollNav />
-      </>
-    </ReportShell>
+      <ScrollNav />
+    </HolidayHub>
   );
 }
