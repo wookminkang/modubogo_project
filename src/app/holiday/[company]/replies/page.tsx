@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, ArrowRight, ChevronDown } from "lucide-react";
 import dayjs from "@/lib/dayjs";
-import { isAdmin } from "@/lib/admin";
+import { getAdminUser } from "@/lib/admin";
 import { getPublicHolidays } from "@/lib/publicHoliday";
 import { getHolidaySchedules, getHolidaySubmissions } from "@/lib/db";
 import MonthNav from "@/components/MonthNav";
@@ -145,10 +145,10 @@ function HolidayCard({
  * 기본은 다음 달(알림톡 전송 화면과 동일), ?month=YYYY-MM 로 다른 달 조회.
  */
 export default async function HolidayRepliesPage({ params, searchParams }: Props) {
-  if (!(await isAdmin())) redirect("/admin/login");
-
-  const { company } = await params;
-  const { month: monthParam } = await searchParams;
+  const [{ company }, { month: monthParam }] = await Promise.all([
+    params,
+    searchParams,
+  ]);
   const hospitalName = decodeURIComponent(company);
   // params.company 는 이미 인코딩된 값이라, 링크는 디코딩된 이름으로 다시 인코딩한다
   const enc = encodeURIComponent(hospitalName);
@@ -158,11 +158,15 @@ export default async function HolidayRepliesPage({ params, searchParams }: Props
   const month = base.month() + 1;
   const monthKey = `${year}-${pad(month)}`;
 
-  const [holidays, schedules, submissions] = await Promise.all([
+  // 인증을 데이터 조회와 병렬로 실행해 Supabase 왕복 1회를 줄인다.
+  // (비관리자는 redirect로 즉시 차단되므로 조회 결과는 버려진다)
+  const [me, holidays, schedules, submissions] = await Promise.all([
+    getAdminUser(),
     getPublicHolidays(year, month),
     getHolidaySchedules(hospitalName, monthKey),
     getHolidaySubmissions(hospitalName, monthKey),
   ]);
+  if (!me) redirect("/admin/login");
 
   const scheduleMap = new Map(schedules.map((s) => [s.date, s]));
   const respondedCount = holidays.filter((h) => scheduleMap.has(h.date)).length;
