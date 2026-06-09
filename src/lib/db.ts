@@ -203,6 +203,24 @@ export async function getCompanySettings(company: string) {
   return data ?? null;
 }
 
+/**
+ * 전 병원의 알림톡 설정 수신번호를 한 번에 조회한다.
+ * 회사명 → 비어있지 않은 recipient1~3 배열. (진료일정 허브의 번호 설정 상태 표시용)
+ */
+export async function getHolidayRecipients(): Promise<Map<string, string[]>> {
+  const { data } = await supabase
+    .from("company_settings")
+    .select("company, recipient1, recipient2, recipient3");
+  const map = new Map<string, string[]>();
+  for (const r of data ?? []) {
+    const nums = [r.recipient1, r.recipient2, r.recipient3]
+      .map((n) => (typeof n === "string" ? n.trim() : ""))
+      .filter(Boolean);
+    if (nums.length > 0) map.set(r.company, nums);
+  }
+  return map;
+}
+
 export async function upsertCompanySettings(data: {
   company: string;
   naver_ad_api_key?: string;

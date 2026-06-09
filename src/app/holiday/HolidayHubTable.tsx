@@ -26,6 +26,7 @@ export interface HubRow {
   customCount: number; // 임의(비공휴일) 휴무 수
   lastSubmittedAt: string | null;
   send: HolidaySendCompany | null;
+  configuredRecipients: string[]; // 설정에 등록된 알림톡 수신번호 (비어있으면 미설정)
 }
 
 /**
@@ -247,7 +248,7 @@ export default function HolidayHubTable({
                       : "—"}
                   </TableCell>
 
-                  {/* 수신번호 */}
+                  {/* 수신번호 — 발송된 번호가 있으면 그 번호, 없으면 설정 상태 */}
                   <TableCell className="text-gray-500">
                     {send && send.recipients.length > 0 ? (
                       <span className="inline-flex items-center gap-1">
@@ -257,8 +258,23 @@ export default function HolidayHubTable({
                           <span className="text-gray-400">{moreRecipients}</span>
                         )}
                       </span>
+                    ) : row.configuredRecipients.length > 0 ? (
+                      <span className="inline-flex items-center gap-1">
+                        <Phone size={12} className="text-gray-300" />
+                        {row.configuredRecipients[0]}
+                        {row.configuredRecipients.length > 1 && (
+                          <span className="text-gray-400">
+                            {` 외 ${row.configuredRecipients.length - 1}`}
+                          </span>
+                        )}
+                      </span>
                     ) : (
-                      "—"
+                      <Badge
+                        variant="outline"
+                        className="border-amber-200 bg-amber-50 text-amber-600"
+                      >
+                        번호 미설정
+                      </Badge>
                     )}
                   </TableCell>
 

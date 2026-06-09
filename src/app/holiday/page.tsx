@@ -6,6 +6,7 @@ import {
   getCompaniesSummaryFromDB,
   getHolidayReplyCompanies,
   getHolidaySends,
+  getHolidayRecipients,
 } from "@/lib/db";
 import MonthNav from "@/components/MonthNav";
 import ScrollNav from "@/components/ScrollNav";
@@ -43,12 +44,15 @@ export default async function HolidayRepliesListPage({
   const month = base.month() + 1;
   const monthKey = `${year}-${pad(month)}`;
 
-  const [holidays, companies, replies, sends] = await Promise.all([
-    getPublicHolidays(year, month),
-    getCompaniesSummaryFromDB(),
-    getHolidayReplyCompanies(monthKey),
-    getHolidaySends(monthKey),
-  ]);
+  const [holidays, companies, replies, sends, recipientMap] = await Promise.all(
+    [
+      getPublicHolidays(year, month),
+      getCompaniesSummaryFromDB(),
+      getHolidayReplyCompanies(monthKey),
+      getHolidaySends(monthKey),
+      getHolidayRecipients(),
+    ]
+  );
   const total = holidays.length;
   const holidayDateSet = new Set(holidays.map((h) => h.date));
 
@@ -75,6 +79,7 @@ export default async function HolidayRepliesListPage({
       customCount,
       lastSubmittedAt: r?.lastSubmittedAt ?? null,
       send: sendMap.get(company) ?? null,
+      configuredRecipients: recipientMap.get(company) ?? [],
     });
   }
 
