@@ -111,8 +111,8 @@ export async function sendAlimtalk({
 }
 
 /**
- * 공휴일 진료일정 확인 알림톡 발송 (템플릿: holidayCheck)
- * 변수: #{병원명}, #{월}(yyyy-mm), #{공휴일}(공휴일 목록)
+ * 공휴일 진료일정 확인 알림톡 발송 (템플릿: holidayCheck2)
+ * 변수: #{월}(예: 7월), #{공휴일}(일정 목록, 각 줄 "- ...")
  * 버튼: '진료일정 회신하기' → /holiday/#{상호명}/#{날짜} (/holiday/[company]/[month])
  */
 export async function sendHolidayAlimtalk({
@@ -149,23 +149,23 @@ export async function sendHolidayAlimtalk({
     throw new Error("알림톡 수신자가 설정되지 않았습니다.");
   }
 
-  // ⚠️ 이 text는 bizgo에 등록된 holidayCheck 템플릿 내용과 일치해야 합니다.
+  // ⚠️ 이 text는 bizgo에 등록된 holidayCheck2 템플릿 내용과 정확히 일치해야 합니다.
+  // (2026-06 템플릿 개정: #{병원명} 제거, 안내 문구 변경, #{공휴일}의 dash는 schedule 값에 포함)
   const replaceWords: Record<string, string> = {
-    병원명: company,
     월: `${monthNum}월`, // 자연스러운 표기 (예: 7월). 로그는 monthLabel(yyyy-mm) 사용
-    공휴일: schedule,
+    공휴일: schedule, // 각 줄 "- ..." 형식 (호출부에서 구성)
     // 버튼 URL 변수 (템플릿 버튼: https://modubogo.com/holiday/#{상호명}/#{날짜})
     상호명: encodeURIComponent(company), // 한글 URL → 인코딩
     날짜: monthLabel, // yyyy-mm
   };
   const templateText =
-    "안녕하세요. (주)알리다고입니다.\n\n" +
-    "병원정보 관리 서비스의 원활한 운영을 위해 #{병원명}의 #{월} 진료일정 확인이 필요하여 안내드립니다.\n\n\n" +
-    "■ 확인 필요 일정\n- #{공휴일}\n\n" +
-    "고객님께서 회신해주신 진료일정은 네이버 플레이스, 카카오맵 등 병원 정보 플랫폼의 운영시간 및 휴무일 정보 관리에 활용될 예정입니다.\n\n" +
-    "▶ 진료일정 이미지는 알리다고 공통 디자인으로 제작 및 배포될 예정입니다. 광고주별 개별 맞춤 디자인 제작은 어려운 점 양해 부탁드립니다.\n\n" +
-    "▶ 정확한 정보 반영을 위해 #{월} 진료일정을 회신해 주시기 바랍니다.\n\n" +
-    "감사합니다.";
+    "안녕하세요. (주)알리다고입니다.\n" +
+    "알리다고 관리 서비스를 이용 중이신 경우, #{월} 진료일정 확인을 부탁드립니다.\n\n" +
+    "■ 확인 필요 일정\n#{공휴일}\n\n" +
+    "회신해주신 일정은 네이버 플레이스, 카카오맵 등 병원 정보 플랫폼의 운영시간 및 휴무일 정보 관리에 반영될 예정입니다.\n\n" +
+    "공휴일 외 추가 휴무, 단축진료, 연장진료 일정이 있으신 경우 함께 전달해 주시면 반영하여 관리해드리겠습니다.\n\n" +
+    "진료일정 관련 문의사항이 있으신 경우 카카오톡 또는 전화로 연락 주시면 안내 도와드리겠습니다.\n\n" +
+    "감사합니다.\n(주)알리다고 드림";
   const text = Object.entries(replaceWords).reduce(
     (t, [k, v]) => t.replaceAll(`#{${k}}`, v),
     templateText,
@@ -181,7 +181,7 @@ export async function sendHolidayAlimtalk({
               alimtalk: {
                 msgType: "AI",
                 senderKey,
-                templateCode: "holidayCheck",
+                templateCode: "holidayCheck2",
                 text,
                 attachment: {
                   button: [

@@ -42,13 +42,13 @@ export default function HolidayClient({
   const handleSend = async () => {
     setSendStep("sending");
     try {
-      // 템플릿이 "- #{공휴일}" 로 첫 dash를 제공하므로, 변수는 dash 없이 "\n- " 로 연결
+      // 템플릿의 #{공휴일} 변수에 들어갈 일정 목록 (템플릿에 dash가 없으므로 각 줄 앞에 "- ")
       const schedule =
         holidays.length > 0
           ? holidays
-              .map((h) => `${dayjs(h.date).format("M월 D일(ddd)")} ${h.name}`)
-              .join("\n- ")
-          : `${month}월 공휴일이 없습니다.`;
+              .map((h) => `- ${dayjs(h.date).format("M월 D일(ddd)")} ${h.name}`)
+              .join("\n")
+          : `- ${month}월 공휴일이 없습니다.`;
       const detailUrl = `https://modubogo.com/holiday/${encodeURIComponent(hospitalName)}/${monthKey}`;
 
       await sendHolidayAlimtalk({
