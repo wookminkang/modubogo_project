@@ -40,7 +40,7 @@ export default function Home() {
           </p>
 
           {/* CTA 버튼 */}
-          <div className="flex flex-col gap-3 w-full mt-2">
+          <div className="flex flex-col gap-3 w-full mt-3">
             <Link
               href="/docs"
               className="w-full h-12 bg-white text-[#0e299c] text-sm font-bold rounded-2xl flex items-center justify-center hover:bg-blue-50 transition-colors"
