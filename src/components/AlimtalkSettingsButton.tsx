@@ -14,21 +14,36 @@ interface Props {
   };
 }
 
+// 숫자만 추출해 한국 휴대폰 형식(010-1234-5678)으로 하이픈을 삽입한다.
+function formatPhone(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  if (digits.length < 4) return digits;
+  if (digits.length < 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  if (digits.length < 11)
+    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+}
+
 export default function AlimtalkSettingsButton({ company, defaultValues }: Props) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState("");
+  const [phones, setPhones] = useState({
+    recipient1: formatPhone(defaultValues?.recipient1 ?? ""),
+    recipient2: formatPhone(defaultValues?.recipient2 ?? ""),
+    recipient3: formatPhone(defaultValues?.recipient3 ?? ""),
+  });
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSaving(true);
-    const fd = new FormData(e.currentTarget);
     try {
+      // 저장/전송 시에는 하이픈을 제거하고 숫자만 보낸다.
       await saveAlimtalkSettings({
         company,
-        recipient1: fd.get("recipient1") as string,
-        recipient2: fd.get("recipient2") as string,
-        recipient3: fd.get("recipient3") as string,
+        recipient1: phones.recipient1.replace(/\D/g, ""),
+        recipient2: phones.recipient2.replace(/\D/g, ""),
+        recipient3: phones.recipient3.replace(/\D/g, ""),
       });
       setToast("알림톡 수신자가 저장되었어요 ✅");
       setOpen(false);
@@ -77,8 +92,12 @@ export default function AlimtalkSettingsButton({ company, defaultValues }: Props
                 <label className="text-xs text-gray-500 mb-1 block">수신자 번호 1</label>
                 <input
                   name="recipient1"
-                  defaultValue={defaultValues?.recipient1 ?? ""}
-                  placeholder="01012345678"
+                  inputMode="numeric"
+                  value={phones.recipient1}
+                  onChange={(e) =>
+                    setPhones((p) => ({ ...p, recipient1: formatPhone(e.target.value) }))
+                  }
+                  placeholder="010-1234-5678"
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#0e299c]"
                 />
               </div>
@@ -86,8 +105,12 @@ export default function AlimtalkSettingsButton({ company, defaultValues }: Props
                 <label className="text-xs text-gray-500 mb-1 block">수신자 번호 2 <span className="text-gray-300">(선택)</span></label>
                 <input
                   name="recipient2"
-                  defaultValue={defaultValues?.recipient2 ?? ""}
-                  placeholder="01012345678"
+                  inputMode="numeric"
+                  value={phones.recipient2}
+                  onChange={(e) =>
+                    setPhones((p) => ({ ...p, recipient2: formatPhone(e.target.value) }))
+                  }
+                  placeholder="010-1234-5678"
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#0e299c]"
                 />
               </div>
@@ -95,8 +118,12 @@ export default function AlimtalkSettingsButton({ company, defaultValues }: Props
                 <label className="text-xs text-gray-500 mb-1 block">수신자 번호 3 <span className="text-gray-300">(선택)</span></label>
                 <input
                   name="recipient3"
-                  defaultValue={defaultValues?.recipient3 ?? ""}
-                  placeholder="01012345678"
+                  inputMode="numeric"
+                  value={phones.recipient3}
+                  onChange={(e) =>
+                    setPhones((p) => ({ ...p, recipient3: formatPhone(e.target.value) }))
+                  }
+                  placeholder="010-1234-5678"
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#0e299c]"
                 />
               </div>
