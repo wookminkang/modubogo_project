@@ -49,7 +49,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
 
       {/* 푸터 */}
       <footer className="border-t border-gray-100 bg-gray-50 px-6 py-6 text-center">
-        <p className="text-gray-700 text-xs font-semibold mb-1.5">모두보고</p>
+        <p className="text-gray-700 text-xs font-semibold mb-1.5">(주)알리다고</p>
         <p className="text-gray-400 text-xs leading-relaxed">
           대표 전형진 · 사업자등록번호 342-08-03101<br />
           경기도 용인시 기흥구 동백중앙로 191, 8층 에프 826호
@@ -58,7 +58,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           TEL 02-3402-1070 · MOBILE 010-8782-1285<br />
           oper2068@kakao.com · oper2068@announcego.com
         </p>
-        <p className="text-gray-300 text-xs mt-2">© 2026 모두보고. All rights reserved.</p>
+        <p className="text-gray-300 text-xs mt-2">© 2026 (주)알리다고. All rights reserved.</p>
       </footer>
     </div>
   );
