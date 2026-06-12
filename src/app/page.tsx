@@ -59,7 +59,7 @@ export default function Home() {
 
       {/* 푸터 */}
       <footer className="relative px-6 py-5 text-center border-t border-white/20 bg-white/5">
-        <p className="text-white text-xs font-semibold mb-1.5">모두보고</p>
+        <p className="text-white text-xs font-semibold mb-1.5">(주)알리다고</p>
         <p className="text-blue-100 text-xs leading-relaxed">
           대표 전형진 · 사업자등록번호 342-08-03101
           <br />
@@ -71,7 +71,7 @@ export default function Home() {
           oper2068@kakao.com · oper2068@announcego.com
         </p>
         <p className="text-blue-200/60 text-xs mt-2">
-          © 2026 모두보고. All rights reserved.
+          © 2026 (주)알리다고. All rights reserved.
         </p>
       </footer>
     </div>
