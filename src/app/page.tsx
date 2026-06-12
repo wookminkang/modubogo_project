@@ -61,7 +61,7 @@ export default function Home() {
       <footer className="relative px-6 py-5 text-center border-t border-white/20 bg-white/5">
         <p className="text-white text-xs font-semibold mb-1.5">(주)알리다고</p>
         <p className="text-blue-100 text-xs leading-relaxed">
-          대표 전형진 · 사업자등록번호 342-08-03101
+          대표 전형진 · 사업자등록번호 640-87-03558
           <br />
           경기도 용인시 기흥구 동백중앙로 191, 8층 에프 826호
         </p>

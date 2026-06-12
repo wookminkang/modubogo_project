@@ -51,7 +51,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
       <footer className="border-t border-gray-100 bg-gray-50 px-6 py-6 text-center">
         <p className="text-gray-700 text-xs font-semibold mb-1.5">(주)알리다고</p>
         <p className="text-gray-400 text-xs leading-relaxed">
-          대표 전형진 · 사업자등록번호 342-08-03101<br />
+          대표 전형진 · 사업자등록번호 640-87-03558<br />
           경기도 용인시 기흥구 동백중앙로 191, 8층 에프 826호
         </p>
         <p className="text-gray-400 text-xs leading-relaxed mt-1.5">
