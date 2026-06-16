@@ -17,10 +17,23 @@ import {
   getAlimtalkLogs,
   getDashboardRawDataFromDB,
   getHospitalList,
+  getHospitalListPaged,
 } from "@/lib/db";
 
 export async function fetchHospitals() {
   return getHospitalList();
+}
+
+/**
+ * 무한 스크롤용 병원 목록 페이지 조회.
+ * 가져온 항목 수가 limit 미만이면 마지막 페이지로 보고 nextOffset 을 null 로 둔다.
+ */
+export async function fetchHospitalsPage(offset: number, limit: number) {
+  const items = await getHospitalListPaged(offset, limit);
+  return {
+    items,
+    nextOffset: items.length < limit ? null : offset + limit,
+  };
 }
 
 export async function fetchCompaniesSummary() {

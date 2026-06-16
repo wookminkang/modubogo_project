@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { QueryProvider } from "@/providers/QueryProvider";
 import ChannelTalk from "@/components/ChannelTalk";
+
+import "@seed-design/css/all.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -9,21 +11,18 @@ export const metadata: Metadata = {
   icons: { icon: "/images/modubogo_favicon.png" },
 };
 
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-gray-300">
+    <html
+      lang="ko"
+      className="h-full antialiased"
+      data-seed-color-mode="dark-only"
+    >
+      <body className="min-h-full flex flex-col">
         <QueryProvider>
           <main className="flex-1 w-full min-h-screen">{children}</main>
         </QueryProvider>

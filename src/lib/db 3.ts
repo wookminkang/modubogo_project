@@ -194,33 +194,6 @@ export async function getHospitalList() {
   return (data ?? []) as { company: string }[];
 }
 
-/**
- * 병원 목록을 offset 기반으로 페이지 단위 조회한다. (무한 스크롤용)
- * Supabase `.range()` 는 양끝 포함이므로 offset ~ offset+limit-1 까지 가져온다.
- */
-export async function getHospitalListPaged(offset: number, limit: number) {
-  const { data } = await supabase
-    .from("company_settings")
-    .select("company, region")
-    .order("company", { ascending: true })
-    .range(offset, offset + limit - 1);
-  return (data ?? []) as { company: string; region: string | null }[];
-}
-
-/**
- * 병원 기본 정보(병원명 + 지역)를 등록/수정한다.
- * company 가 PK 이므로 onConflict 로 upsert. region 만 갱신하며 다른 컬럼은 건드리지 않는다.
- */
-export async function upsertHospitalInfo(data: { company: string; region?: string | null }) {
-  const { error } = await supabase
-    .from("company_settings")
-    .upsert(
-      { company: data.company, region: data.region || null },
-      { onConflict: "company" },
-    );
-  if (error) throw error;
-}
-
 export async function getCompanySettings(company: string) {
   const { data } = await supabase
     .from("company_settings")
@@ -228,24 +201,6 @@ export async function getCompanySettings(company: string) {
     .eq("company", company)
     .single();
   return data ?? null;
-}
-
-/**
- * 전 병원의 알림톡 설정 수신번호를 한 번에 조회한다.
- * 회사명 → 비어있지 않은 recipient1~3 배열. (진료일정 허브의 번호 설정 상태 표시용)
- */
-export async function getHolidayRecipients(): Promise<Map<string, string[]>> {
-  const { data } = await supabase
-    .from("company_settings")
-    .select("company, recipient1, recipient2, recipient3");
-  const map = new Map<string, string[]>();
-  for (const r of data ?? []) {
-    const nums = [r.recipient1, r.recipient2, r.recipient3]
-      .map((n) => (typeof n === "string" ? n.trim() : ""))
-      .filter(Boolean);
-    if (nums.length > 0) map.set(r.company, nums);
-  }
-  return map;
 }
 
 export async function upsertCompanySettings(data: {
@@ -326,6 +281,23 @@ export async function getDashboardRawDataFromDB() {
   return data ?? [];
 }
 
+/**
+ * 회사+월의 진료일정 배너 URL 조회.
+ * holiday_banners 테이블이 아직 없으면 에러를 무시하고 null 반환.
+ */
+export async function getHolidayBannerUrl(
+  company: string,
+  month: string
+): Promise<string | null> {
+  const { data } = await supabase
+    .from("holiday_banners")
+    .select("banner_url")
+    .eq("company", company)
+    .eq("month", month)
+    .maybeSingle();
+  return (data?.banner_url as string | undefined) ?? null;
+}
+
 export interface HolidayScheduleRow {
   date: string;
   holiday_name: string;
@@ -382,116 +354,4 @@ export async function getHolidaySubmissions(
     .eq("month", monthPrefix)
     .order("submitted_at", { ascending: true });
   return (data as HolidaySubmissionRow[] | null) ?? [];
-}
-
-export interface HolidayReplyCompany {
-  company: string;
-  responded: number; // 응답한 날짜 수(공휴일+임의 휴무 전체)
-  respondedDates: string[]; // 응답한 날짜 목록 (공휴일/임의 구분은 호출부에서 공휴일 교집합으로 계산)
-  lastSubmittedAt: string | null; // 최근 회신 시각
-}
-
-/**
- * 특정 월에 회신(진료일정 제출)한 회사 목록.
- * holiday_schedules(회사별 응답 공휴일 수) + holiday_submissions(최근 회신 시각)을 합산.
- * 최근 회신순 정렬.
- */
-export async function getHolidayReplyCompanies(
-  monthPrefix: string
-): Promise<HolidayReplyCompany[]> {
-  const [{ data: sched }, { data: subs }] = await Promise.all([
-    supabase
-      .from("holiday_schedules")
-      .select("company, date")
-      .gte("date", `${monthPrefix}-01`)
-      .lte("date", `${monthPrefix}-31`),
-    supabase
-      .from("holiday_submissions")
-      .select("company, submitted_at")
-      .eq("month", monthPrefix)
-      .order("submitted_at", { ascending: false }),
-  ]);
-
-  const respondedMap = new Map<string, Set<string>>();
-  for (const r of (sched as { company: string; date: string }[] | null) ?? []) {
-    if (!respondedMap.has(r.company)) respondedMap.set(r.company, new Set());
-    respondedMap.get(r.company)!.add(r.date);
-  }
-
-  const lastMap = new Map<string, string>();
-  for (const s of (subs as { company: string; submitted_at: string }[] | null) ??
-    []) {
-    if (!lastMap.has(s.company)) lastMap.set(s.company, s.submitted_at); // 최신순이라 first=최신
-  }
-
-  const companies = new Set<string>([
-    ...respondedMap.keys(),
-    ...lastMap.keys(),
-  ]);
-
-  return Array.from(companies)
-    .map((company) => ({
-      company,
-      responded: respondedMap.get(company)?.size ?? 0,
-      respondedDates: Array.from(respondedMap.get(company) ?? []),
-      lastSubmittedAt: lastMap.get(company) ?? null,
-    }))
-    .sort((a, b) => {
-      if (a.lastSubmittedAt && b.lastSubmittedAt)
-        return b.lastSubmittedAt.localeCompare(a.lastSubmittedAt);
-      if (a.lastSubmittedAt) return -1;
-      if (b.lastSubmittedAt) return 1;
-      return a.company.localeCompare(b.company, "ko");
-    });
-}
-
-export interface HolidaySendCompany {
-  company: string;
-  lastSentAt: string; // 가장 최근 발송 시각
-  recipients: string[]; // 가장 최근 발송의 수신 번호
-  status: "success" | "failed"; // 가장 최근 발송 결과
-  sendCount: number; // 해당 월 총 발송 횟수
-}
-
-/**
- * 특정 월에 "진료일정 알림톡"을 발송한 회사 목록.
- * alimtalk_logs 는 보고서 알림톡과 공용 테이블이라, report_url 에 '/holiday/' 가
- * 포함된 건만 진료일정 발송으로 간주한다 (별도 type 컬럼 없이 구분).
- * 회사별로 가장 최근 발송 1건을 대표값으로, 총 발송 횟수를 함께 반환. 최근 발송순 정렬.
- */
-export async function getHolidaySends(
-  monthPrefix: string
-): Promise<HolidaySendCompany[]> {
-  const { data } = await supabase
-    .from("alimtalk_logs")
-    .select("company, recipients, status, sent_at, report_url")
-    .eq("month", monthPrefix)
-    .ilike("report_url", "%/holiday/%")
-    .order("sent_at", { ascending: false });
-
-  type Row = {
-    company: string;
-    recipients: string[] | null;
-    status: "success" | "failed";
-    sent_at: string;
-  };
-
-  const map = new Map<string, HolidaySendCompany>();
-  for (const r of (data as Row[] | null) ?? []) {
-    const existing = map.get(r.company);
-    if (!existing) {
-      // 최신순 정렬이라 첫 등장이 가장 최근 발송
-      map.set(r.company, {
-        company: r.company,
-        lastSentAt: r.sent_at,
-        recipients: r.recipients ?? [],
-        status: r.status,
-        sendCount: 1,
-      });
-    } else {
-      existing.sendCount += 1;
-    }
-  }
-
-  return Array.from(map.values());
 }

@@ -1,9 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight, Database } from "lucide-react";
+import type { ReactNode } from "react";
 import { saveDableSettings } from "@/lib/company-actions";
 import Toast from "./Toast";
+import { ActionButton } from "seed-design/ui/action-button";
+import {
+  BottomSheetRoot,
+  BottomSheetTrigger,
+  BottomSheetContent,
+  BottomSheetBody,
+  BottomSheetFooter,
+} from "seed-design/ui/bottom-sheet";
+import { TextField, TextFieldInput } from "seed-design/ui/text-field";
 
 interface Props {
   company: string;
@@ -11,17 +20,18 @@ interface Props {
     dable_api_key?: string;
     dable_account?: string;
   };
+  /** 트리거 엘리먼트 교체용. 미지정 시 기본 풀버튼. */
+  trigger?: ReactNode;
 }
 
-export default function DableSettingsButton({ company, defaultValues }: Props) {
+export default function DableSettingsButton({ company, defaultValues, trigger }: Props) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState("");
   const [apiKey, setApiKey] = useState(defaultValues?.dable_api_key ?? "");
   const [account, setAccount] = useState(defaultValues?.dable_account ?? "");
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit() {
     setSaving(true);
     try {
       await saveDableSettings({ company, dable_api_key: apiKey, dable_account: account });
@@ -35,93 +45,50 @@ export default function DableSettingsButton({ company, defaultValues }: Props) {
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="flex w-full items-center gap-3 bg-white border border-gray-200 px-4 py-3 rounded-xl hover:bg-gray-50 transition-all cursor-pointer"
-      >
-        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#0e299c] shrink-0">
-          <Database size={15} className="text-white" />
-        </span>
-        <span className="flex-1 text-left text-sm font-medium text-gray-700">
-          데이블 설정
-        </span>
-        <ChevronRight size={16} className="text-gray-300 shrink-0" />
-      </button>
+      <BottomSheetRoot open={open} onOpenChange={setOpen}>
+        <BottomSheetTrigger asChild>
+          {trigger ?? (
+            <ActionButton variant="neutralWeak" size="medium" style={{ width: "100%" }}>
+              데이블 설정
+            </ActionButton>
+          )}
+        </BottomSheetTrigger>
 
-      {open && (
-        <>
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => {
-              setOpen(false);
-            }}
-          />
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50 animate-in fade-in slide-in-from-bottom-3 duration-200">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="inline-flex items-center justify-center w-7 h-7 bg-[#0e299c] rounded-full shrink-0">
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                </svg>
-              </span>
-              <div>
-                <p className="text-sm font-bold text-gray-900">데이블 설정</p>
-                <p className="text-xs text-gray-500 mt-0.5">{company}</p>
-              </div>
+        <BottomSheetContent title="데이블 설정" description={company}>
+          <BottomSheetBody>
+            <div className="flex flex-col gap-3 pb-2">
+              <TextField
+                label="데이블 API 키"
+                value={apiKey}
+                onValueChange={({ value }) => setApiKey(value)}
+              >
+                <TextFieldInput placeholder="API 키를 입력하세요" />
+              </TextField>
+
+              <TextField
+                label="데이블 계정"
+                value={account}
+                onValueChange={({ value }) => setAccount(value)}
+              >
+                <TextFieldInput placeholder="계정을 입력하세요" />
+              </TextField>
             </div>
+          </BottomSheetBody>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
-              <div>
-                <label className="text-xs text-gray-500 mb-1 block">
-                  데이블 API 키
-                </label>
-                <input
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="API 키를 입력하세요"
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#0e299c]"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-500 mb-1 block">
-                  데이블 계정
-                </label>
-                <input
-                  value={account}
-                  onChange={(e) => setAccount(e.target.value)}
-                  placeholder="계정을 입력하세요"
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#0e299c]"
-                />
-              </div>
-              <div className="flex gap-2 mt-1">
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 active:scale-95 transition-all"
-                >
-                  취소
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-[#0e299c] text-white hover:brightness-95 active:scale-95 transition-all disabled:opacity-50"
-                >
-                  {saving ? "저장 중..." : "저장"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </>
-      )}
+          <BottomSheetFooter className="flex gap-2">
+            <ActionButton
+              variant="neutralWeak"
+              flexGrow
+              onClick={() => setOpen(false)}
+            >
+              취소
+            </ActionButton>
+            <ActionButton variant="brandSolid" flexGrow loading={saving} onClick={handleSubmit}>
+              저장
+            </ActionButton>
+          </BottomSheetFooter>
+        </BottomSheetContent>
+      </BottomSheetRoot>
 
       {toast && <Toast message={toast} onDone={() => setToast("")} />}
     </>

@@ -1,9 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight } from "lucide-react";
+import type { ReactNode } from "react";
 import { saveNaverAdSettings } from "@/lib/company-actions";
 import Toast from "./Toast";
+import { ActionButton } from "seed-design/ui/action-button";
+import {
+  BottomSheetRoot,
+  BottomSheetTrigger,
+  BottomSheetContent,
+  BottomSheetBody,
+  BottomSheetFooter,
+} from "seed-design/ui/bottom-sheet";
+import { TextField, TextFieldInput } from "seed-design/ui/text-field";
 
 interface Props {
   company: string;
@@ -12,23 +21,28 @@ interface Props {
     naver_ad_secret_key?: string;
     naver_ad_customer_id?: string;
   };
+  /** 트리거 엘리먼트 교체용. 미지정 시 기본 풀버튼. */
+  trigger?: ReactNode;
 }
 
-export default function NaverAdSettingsButton({ company, defaultValues }: Props) {
+export default function NaverAdSettingsButton({ company, defaultValues, trigger }: Props) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState("");
+  const [form, setForm] = useState({
+    api_key: defaultValues?.naver_ad_api_key ?? "",
+    secret_key: defaultValues?.naver_ad_secret_key ?? "",
+    customer_id: defaultValues?.naver_ad_customer_id ?? "",
+  });
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function handleSubmit() {
     setSaving(true);
-    const fd = new FormData(e.currentTarget);
     try {
       await saveNaverAdSettings({
         company,
-        naver_ad_api_key: fd.get("api_key") as string,
-        naver_ad_secret_key: fd.get("secret_key") as string,
-        naver_ad_customer_id: fd.get("customer_id") as string,
+        naver_ad_api_key: form.api_key,
+        naver_ad_secret_key: form.secret_key,
+        naver_ad_customer_id: form.customer_id,
       });
       setToast("네이버 광고 설정이 저장되었어요 ✅");
       setOpen(false);
@@ -40,87 +54,61 @@ export default function NaverAdSettingsButton({ company, defaultValues }: Props)
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        title="네이버 광고 API 설정"
-        className="flex w-full items-center gap-3 bg-white border border-gray-200 px-4 py-3 rounded-xl hover:bg-gray-50 transition-all cursor-pointer"
-      >
-        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#03C75A] shrink-0">
-          <svg width="16" height="16" viewBox="0 0 24 24">
-            <text x="12" y="17" textAnchor="middle" fontSize="14" fontWeight="bold" fill="white" fontFamily="sans-serif">N</text>
-          </svg>
-        </span>
-        <span className="flex-1 text-left text-sm font-medium text-gray-700">
-          API 설정
-        </span>
-        <ChevronRight size={16} className="text-gray-300 shrink-0" />
-      </button>
+      <BottomSheetRoot open={open} onOpenChange={setOpen}>
+        <BottomSheetTrigger asChild>
+          {trigger ?? (
+            <ActionButton variant="neutralWeak" size="medium" style={{ width: "100%" }}>
+              네이버 API 설정
+            </ActionButton>
+          )}
+        </BottomSheetTrigger>
 
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => { setOpen(false); setToast("API 설정을 취소했어요"); }} />
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50 animate-in fade-in slide-in-from-bottom-3 duration-200">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="inline-flex items-center justify-center w-7 h-7 bg-[#03C75A] rounded-full shrink-0">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                </svg>
-              </span>
-              <div>
-                <p className="text-sm font-bold text-gray-900">네이버 광고 API 설정</p>
-                <p className="text-xs text-gray-500 mt-0.5">{company}</p>
-              </div>
+        <BottomSheetContent title="네이버 광고 API 설정" description={company}>
+          <BottomSheetBody>
+            <div className="flex flex-col gap-3 pb-2">
+              <TextField
+                label="액세스 라이선스 키"
+                value={form.api_key}
+                onValueChange={({ value }) => setForm((f) => ({ ...f, api_key: value }))}
+              >
+                <TextFieldInput placeholder="01000000..." />
+              </TextField>
+
+              <TextField
+                label="비밀키"
+                value={form.secret_key}
+                onValueChange={({ value }) => setForm((f) => ({ ...f, secret_key: value }))}
+              >
+                <TextFieldInput placeholder="AQAAA..." />
+              </TextField>
+
+              <TextField
+                label="고객 ID"
+                value={form.customer_id}
+                onValueChange={({ value }) => setForm((f) => ({ ...f, customer_id: value }))}
+              >
+                <TextFieldInput inputMode="numeric" placeholder="2550976" />
+              </TextField>
             </div>
+          </BottomSheetBody>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
-              <div>
-                <label className="text-xs text-gray-500 mb-1 block">액세스 라이선스 키</label>
-                <input
-                  name="api_key"
-                  defaultValue={defaultValues?.naver_ad_api_key ?? ""}
-                  placeholder="01000000..."
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#0e299c]"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-500 mb-1 block">비밀키</label>
-                <input
-                  name="secret_key"
-                  defaultValue={defaultValues?.naver_ad_secret_key ?? ""}
-                  placeholder="AQAAA..."
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#0e299c]"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-500 mb-1 block">고객 ID</label>
-                <input
-                  name="customer_id"
-                  defaultValue={defaultValues?.naver_ad_customer_id ?? ""}
-                  placeholder="2550976"
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#0e299c]"
-                />
-              </div>
-              <div className="flex gap-2 mt-1">
-                <button
-                  type="button"
-                  onClick={() => { setOpen(false); setToast("API 설정을 취소했어요"); }}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 active:scale-95 transition-all"
-                >
-                  취소
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-[#03C75A] text-white hover:brightness-95 active:scale-95 transition-all disabled:opacity-50"
-                >
-                  {saving ? "저장 중..." : "저장"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </>
-      )}
+          <BottomSheetFooter className="flex gap-2">
+            <ActionButton
+              variant="neutralWeak"
+              flexGrow
+              onClick={() => {
+                setOpen(false);
+                setToast("API 설정을 취소했어요");
+              }}
+            >
+              취소
+            </ActionButton>
+            <ActionButton variant="brandSolid" flexGrow loading={saving} onClick={handleSubmit}>
+              저장
+            </ActionButton>
+          </BottomSheetFooter>
+        </BottomSheetContent>
+      </BottomSheetRoot>
 
       {toast && <Toast message={toast} onDone={() => setToast("")} />}
     </>
