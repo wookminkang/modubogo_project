@@ -15,7 +15,7 @@ export function TimeStep({
   onChange: (patch: Partial<Item>) => void;
 }) {
   return (
-    <div className="flex flex-col gap-5 p-5 pt-10">
+    <div className="flex flex-col gap-5 py-5 pt-10">
       <div className="flex flex-col gap-2">
         <Text as="p" textStyle="t6Regular" color="fg.neutralSubtle">
           진료 시작·종료 시간과 점심시간을 알려주세요.

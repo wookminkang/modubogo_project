@@ -50,7 +50,7 @@ export function CustomStep({
   };
 
   return (
-    <div className="flex flex-col gap-5 p-5 pt-10">
+    <div className="flex flex-col gap-5 py-5 pt-10">
       <div className="flex flex-col gap-2">
         <Text as="h1" textStyle="t10Bold">
           쉬는 날이
@@ -108,7 +108,11 @@ export function CustomStep({
           }}
         >
           <BottomSheetTrigger asChild>
-            <ActionButton variant="neutralWeak" size="large" className="w-full">
+            <ActionButton
+              variant="neutralWeak"
+              size="medium"
+              className="w-full"
+            >
               휴무일 추가
             </ActionButton>
           </BottomSheetTrigger>

@@ -59,7 +59,7 @@ export function ConfirmStep({
   error: string;
 }) {
   return (
-    <div className="flex flex-col gap-5 p-5 pt-10">
+    <div className="flex flex-col gap-5 py-5 pt-10">
       <div className="flex flex-col gap-2">
         <Text as="h1" textStyle="t10Bold">
           입력하신 내용을

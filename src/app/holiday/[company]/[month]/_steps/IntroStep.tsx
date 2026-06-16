@@ -28,7 +28,7 @@ export function IntroStep({
   holidayItems: Item[];
 }) {
   return (
-    <div className="flex flex-col gap-5 p-5 pt-10">
+    <div className="flex flex-col gap-5 py-5 pt-10">
       {/* 타이틀 */}
       <div className="flex flex-col gap-2">
         <Text
@@ -92,7 +92,7 @@ export function IntroStep({
       <div className="flex flex-col gap-2 py-2">
         {GUIDE_STEPS.map((s, idx) => (
           <Fragment key={idx}>
-            <div className="flex items-center gap-3 rounded-2xl p-4">
+            <div className="flex items-center gap-3 rounded-2xl py-3 p-2">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[var(--seed-color-bg-neutral-weak)] text-sm font-bold text-[var(--seed-color-fg-neutral)]">
                 {idx + 1}
               </span>
@@ -100,7 +100,7 @@ export function IntroStep({
                 <Text as="p" textStyle="t5Bold">
                   {s.title}
                 </Text>
-                <Text as="p" textStyle="t6Regular" color="fg.neutralSubtle">
+                <Text as="p" textStyle="t4Regular" color="fg.neutralSubtle">
                   {s.desc}
                 </Text>
               </div>
@@ -141,7 +141,7 @@ export function IntroStep({
               {holidayItems.map((it) => (
                 <div key={it.date} className="flex items-center gap-1.5">
                   <span className="h-[5px] w-[5px] shrink-0 rounded-full bg-[#e25151]" />
-                  <Text as="p" textStyle="t7Regular">
+                  <Text as="p" textStyle="t5Regular">
                     {dayjs(it.date).format("M.D")} {it.holiday_name}
                   </Text>
                 </div>
