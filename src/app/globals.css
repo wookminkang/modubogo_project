@@ -1,147 +1,49 @@
+@layer theme, base, seed-base, components, seed-components, utilities;
+@import "@seed-design/css/base.layered.css";
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
-
-@font-face {
-  font-family: "Pretendard Variable";
-  src: url("/fonts/PretendardVariable.woff2") format("woff2-variations");
-  font-weight: 45 920;
-  font-style: normal;
-  font-display: swap;
-}
-
-@custom-variant dark (&:is(.dark *));
-
-/* 가로 스크롤 영역의 스크롤바 숨김 (모바일 탭 등) */
-@utility scrollbar-hide {
-  scrollbar-width: none;
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
+/* SEED 디자인 토큰을 Tailwind 유틸 클래스로 (text-fg-*, bg-bg-*, t5-regular, gap-x3 등) */
+@import "@seed-design/tailwind4-theme";
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: "Pretendard Variable", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* SEED brand 토큰(기본 당근 주황)을 우리 브랜드 블루(#0E299C)로 덮어쓰기.
+   → fg.brand / bg.brand-solid / Badge brand / ActionButton brandSolid 전부 우리 블루로 통일.
+   주의: 앱은 layout.tsx 에서 data-seed-color-mode="dark-only" 로 설정하므로
+   특정 모드 셀렉터(light-only 등)로 쓰면 매칭이 안 된다. 모드와 무관하게 적용되도록
+   :root 에 !important 로 덮어써서 어느 컬러모드든 우리 블루가 적용되게 한다. */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --seed-color-fg-brand: #0e299c !important;
+  --seed-color-fg-brand-contrast: #ffffff !important;
+  --seed-color-bg-brand-solid: #0e299c !important;
+  --seed-color-bg-brand-solid-pressed: #0a1f78 !important;
+  --seed-color-bg-brand-weak: #eaeef8 !important;
+  --seed-color-bg-brand-weak-pressed: #dce4f3 !important;
+  --seed-color-stroke-brand-solid: #0e299c !important;
+  --seed-color-stroke-brand-weak: #b8c3e6 !important;
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+/* 앱 배경·기본 글씨색을 SEED 테마 토큰에 연결 (light-only 테마를 따름) */
+body {
+  background: var(--seed-color-bg-layer-default);
+  color: var(--seed-color-fg-neutral);
+  font-family: var(--font-geist-sans), sans-serif;
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-    font-family: "Pretendard Variable", -apple-system, BlinkMacSystemFont, sans-serif;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
-  }
+/* SEED BottomSheet 는 Stackflow 환경 가정으로 z-index 가 2(=calc(2+layer))로 매우 낮다.
+   우리 앱의 z-40/z-50 오버레이·ChannelTalk(~1e7) 위젯이 그 위로 올라오므로,
+   positioner 의 --sheet-z-index 변수를 끌어올려 시트가 항상 최상단에 오게 한다.
+   (backdrop·content 는 이 변수를 상속받아 함께 올라간다.) */
+.seed-bottom-sheet__positioner {
+  --sheet-z-index: 100000000 !important;
+}
+
+/* SEED Tabs 의 content 는 transform: translate3d 로 GPU 합성 힌트를 준다.
+   하지만 transform 은 position:fixed 자손의 containing block 을 만들어버려서,
+   탭 안에 있는 BottomSheet(fixed)가 뷰포트가 아닌 '탭 영역'에 갇힌다.
+   캐러셀을 쓰지 않으므로 이 합성 힌트를 제거해 시트가 전체 화면으로 뜨게 한다. */
+.seed-tabs__content {
+  transform: none !important;
 }
