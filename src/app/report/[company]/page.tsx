@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { resolveCompanyParam } from "@/lib/db";
 import CompanyReports from "./CompanyReports";
 
 interface CompanyReportListPageProps {
@@ -10,7 +11,7 @@ export default async function CompanyReportListPage({
   params,
 }: CompanyReportListPageProps) {
   const { company } = await params;
-  const decoded = decodeURIComponent(company);
+  const decoded = await resolveCompanyParam(company);
 
   return (
     <div className="flex-1 overflow-x-clip bg-[#F0F4FA] py-6 px-4">

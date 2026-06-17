@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getReportFromDB, getCategoryColorsFromDB, getCompanySettings } from "@/lib/db";
+import { getReportFromDB, getCategoryColorsFromDB, getCompanySettings, resolveCompanyParam } from "@/lib/db";
 import { isAdmin } from "@/lib/admin";
 import EditForm from "./EditForm";
 
@@ -13,7 +13,7 @@ export default async function ReportEditPage({ params }: Props) {
   const admin = await isAdmin();
   if (!admin) redirect('/admin/login');
 
-  const decoded = decodeURIComponent(company);
+  const decoded = await resolveCompanyParam(company);
   const [report, dbColors, settings] = await Promise.all([
     getReportFromDB(decoded, month),
     getCategoryColorsFromDB(),

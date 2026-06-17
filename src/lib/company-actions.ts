@@ -6,6 +6,7 @@ import {
   upsertCompanySettings,
   upsertHospitalInfo,
   updateCompanyHospitalType,
+  ensureCompanyNanoid,
 } from "./db";
 
 /** 새 병원 등록. 동일 병원명이 이미 있으면 막는다. */
@@ -21,6 +22,8 @@ export async function createHospital(data: {
   if (existing) throw new Error("이미 등록된 병원이에요.");
 
   await upsertHospitalInfo({ company, region: data.region?.trim() || null });
+  // URL 식별자(nanoid) 발급 (컬럼 없으면 무시됨)
+  await ensureCompanyNanoid(company);
   // 유형(카테고리)이 선택됐으면 회사 단위로 저장 (컬럼 없으면 폴백 처리됨)
   if (data.hospitalType) {
     await updateCompanyHospitalType(company, data.hospitalType);

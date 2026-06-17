@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { getReportFromDB } from '@/lib/db';
+import { getReportFromDB, resolveCompanyParam } from '@/lib/db';
 
 export async function verifyReportPassword(
   reportId: number,
@@ -11,7 +11,7 @@ export async function verifyReportPassword(
   formData: FormData
 ) {
   const input = (formData.get('password') as string) ?? '';
-  const decoded = decodeURIComponent(company);
+  const decoded = await resolveCompanyParam(company);
   const report = await getReportFromDB(decoded, month);
 
   if (report?.password && report.password === input) {

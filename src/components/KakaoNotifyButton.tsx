@@ -9,18 +9,26 @@ interface Props {
   company: string;
   month: string;
   recipients?: string[];
+  /** 짧은 URL 식별자. 있으면 상호명 대신 URL에 사용한다. */
+  nanoid?: string | null;
 }
 
 type Step = "idle" | "confirm" | "sending" | "result";
 
-export default function KakaoNotifyButton({ company, month, recipients }: Props) {
+export default function KakaoNotifyButton({
+  company,
+  month,
+  recipients,
+  nanoid,
+}: Props) {
   const [step, setStep] = useState<Step>("idle");
   const [resultMsg, setResultMsg] = useState("");
 
   const handleYes = async () => {
     setStep("sending");
     try {
-      const reportUrl = `https://modubogo.com/report/${encodeURIComponent(company)}/${month}`;
+      const slug = nanoid ?? encodeURIComponent(company);
+      const reportUrl = `https://modubogo.com/report/${slug}/${month}`;
       await sendAlimtalk({
         templateCode: "modubogo_02",
         recipients,

@@ -1,7 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { ArrowLeft, Building2 } from "lucide-react";
-import { getCompanySettings, getCompanyHospitalType } from "@/lib/db";
+import {
+  getCompanySettings,
+  getCompanyHospitalType,
+  resolveCompanyParam,
+} from "@/lib/db";
 import { ContentPlaceholder } from "seed-design/ui/content-placeholder";
 import { Text } from "seed-design/ui/text";
 import { ActionButton } from "seed-design/ui/action-button";
@@ -14,23 +18,23 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  return { title: `${decodeURIComponent(slug)} · 모두보고` };
+  return { title: `${await resolveCompanyParam(slug)} · 모두보고` };
 }
 
 export default async function HospitalDetailPage({ params }: Props) {
   const { slug } = await params;
-  const company = decodeURIComponent(slug);
+  const company = await resolveCompanyParam(slug);
   const [settings, hospitalType] = await Promise.all([
     getCompanySettings(company),
     getCompanyHospitalType(company),
   ]);
   const region = settings?.region ?? null;
+  const reportSlug =
+    (settings?.nanoid as string | null | undefined) ?? encodeURIComponent(company);
 
   const reportCta = (
     <ActionButton asChild variant="brandSolid" size="medium" className="w-full">
-      <Link href={`/report/${encodeURIComponent(company)}`}>
-        이 병원 보고서 보기
-      </Link>
+      <Link href={`/report/${reportSlug}`}>이 병원 보고서 보기</Link>
     </ActionButton>
   );
 

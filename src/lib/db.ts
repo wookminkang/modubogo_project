@@ -1,4 +1,65 @@
 import { supabase } from "./supabase";
+import { generateCompanyNanoid } from "./nanoid";
+
+// ── 회사 URL 식별자(nanoid) ─────────────────────────────────
+// URL 단축용. company_settings.nanoid 컬럼이 없으면 모든 함수가 무해하게
+// null/0 을 반환하므로(폴백) 컬럼 추가 전에도 앱이 깨지지 않는다.
+
+/** nanoid → 회사명 (없으면 null). 라우트에서 파라미터 해석에 사용. */
+export async function getCompanyByNanoid(id: string): Promise<string | null> {
+  const { data } = await supabase
+    .from("company_settings")
+    .select("company")
+    .eq("nanoid", id)
+    .limit(1);
+  return (data?.[0]?.company as string | undefined) ?? null;
+}
+
+/** URL 파라미터(nanoid 또는 회사명) → 회사명. 라우트 페이지에서 사용. */
+export async function resolveCompanyParam(param: string): Promise<string> {
+  const raw = decodeURIComponent(param);
+  const byNanoid = await getCompanyByNanoid(raw);
+  return byNanoid ?? raw; // nanoid 매칭되면 회사명, 아니면 그대로(이름 URL 폴백)
+}
+
+/** 회사명 → nanoid. 없으면 생성해 저장(컬럼 없으면 null). 링크 생성에 사용. */
+export async function ensureCompanyNanoid(
+  company: string,
+): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("company_settings")
+    .select("nanoid")
+    .eq("company", company)
+    .limit(1);
+  if (error) return null; // 컬럼 미존재 등
+  const existing = (data?.[0] as { nanoid?: string | null } | undefined)?.nanoid;
+  if (existing) return existing;
+
+  const id = generateCompanyNanoid();
+  const { error: e2 } = await supabase
+    .from("company_settings")
+    .update({ nanoid: id })
+    .eq("company", company);
+  return e2 ? null : id;
+}
+
+/** nanoid 없는 기존 회사 전부에 nanoid 발급 (백필). 처리한 개수 반환. */
+export async function backfillCompanyNanoids(): Promise<number> {
+  const { data, error } = await supabase
+    .from("company_settings")
+    .select("company, nanoid");
+  if (error || !data) return 0;
+  let count = 0;
+  for (const row of data as { company: string; nanoid: string | null }[]) {
+    if (row.nanoid) continue;
+    const { error: e } = await supabase
+      .from("company_settings")
+      .update({ nanoid: generateCompanyNanoid() })
+      .eq("company", row.company);
+    if (!e) count++;
+  }
+  return count;
+}
 
 type RawCategory = { category: string; channel: string; agency: string; period: string; amount: string; sort_order: number };
 type RawValidity = { category: string; subject: string; expiry_date: string; sort_order: number };
@@ -63,12 +124,18 @@ export async function getCompaniesSummaryFromDB() {
   // 지역 정보는 company_settings.region 에서 가져온다.
   // (컬럼이 아직 없으면 select 가 에러를 반환하므로 방어적으로 처리)
   const regionMap = new Map<string, string>();
+  const nanoidMap = new Map<string, string>();
   const { data: settings } = await supabase
     .from("company_settings")
-    .select("company, region");
+    .select("company, region, nanoid");
   if (settings) {
-    for (const s of settings as { company: string; region: string | null }[]) {
+    for (const s of settings as {
+      company: string;
+      region: string | null;
+      nanoid: string | null;
+    }[]) {
       if (s.region) regionMap.set(s.company, s.region);
+      if (s.nanoid) nanoidMap.set(s.company, s.nanoid);
     }
   }
 
@@ -87,7 +154,12 @@ export async function getCompaniesSummaryFromDB() {
     }
   }
   return Array.from(map.entries())
-    .map(([company, data]) => ({ company, ...data, region: regionMap.get(company) ?? null }))
+    .map(([company, data]) => ({
+      company,
+      ...data,
+      region: regionMap.get(company) ?? null,
+      nanoid: nanoidMap.get(company) ?? null,
+    }))
     .sort((a, b) => a.company.localeCompare(b.company, "ko"));
 }
 
@@ -201,10 +273,14 @@ export async function getHospitalList() {
 export async function getHospitalListPaged(offset: number, limit: number) {
   const { data } = await supabase
     .from("company_settings")
-    .select("company, region")
+    .select("company, region, nanoid")
     .order("company", { ascending: true })
     .range(offset, offset + limit - 1);
-  const rows = (data ?? []) as { company: string; region: string | null }[];
+  const rows = (data ?? []) as {
+    company: string;
+    region: string | null;
+    nanoid: string | null;
+  }[];
   if (rows.length === 0) return [];
   const companies = rows.map((r) => r.company);
 
@@ -234,9 +310,15 @@ export async function getHospitalListPaged(offset: number, limit: number) {
   return rows.map((r) => ({
     company: r.company,
     region: r.region,
+    nanoid: r.nanoid,
     hospitalType:
       settingsTypeMap.get(r.company) ?? reportTypeMap.get(r.company) ?? null,
-  })) as { company: string; region: string | null; hospitalType: string | null }[];
+  })) as {
+    company: string;
+    region: string | null;
+    nanoid: string | null;
+    hospitalType: string | null;
+  }[];
 }
 
 /**

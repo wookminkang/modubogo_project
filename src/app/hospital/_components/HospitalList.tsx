@@ -132,10 +132,10 @@ export function HospitalList() {
       ) : (
         // 모바일 1열 / PC 4열 그리드
         <div className="grid grid-cols-1 gap-4 px-5 pt-2 pb-6 md:grid-cols-4">
-          {hospitals.map(({ company, region, hospitalType }) => (
+          {hospitals.map(({ company, region, hospitalType, nanoid }) => (
             <Link
               key={company}
-              href={`/hospital/${encodeURIComponent(company)}`}
+              href={`/hospital/${nanoid ?? encodeURIComponent(company)}`}
               className="flex flex-col gap-2.5 rounded-2xl border border-[var(--seed-color-stroke-neutral-muted)] p-4 transition-colors hover:bg-[var(--seed-color-bg-neutral-weak)]"
             >
               <div className="flex items-center gap-2.5">

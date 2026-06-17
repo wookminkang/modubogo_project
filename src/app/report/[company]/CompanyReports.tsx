@@ -38,6 +38,9 @@ export default async function CompanyReports({ company }: { company: string }) {
   const hasNaver = !!settings?.naver_ad_api_key;
 
   const region = settings?.region as string | undefined;
+  const nanoid = (settings?.nanoid as string | null | undefined) ?? null;
+  // URL 식별자: nanoid 있으면 짧은 ID, 없으면 상호명(폴백)
+  const slug = nanoid ?? encodeURIComponent(company);
   const latestMonth = reports.reduce(
     (acc, r) => (r.month > acc ? r.month : acc),
     reports[0].month,
@@ -109,7 +112,7 @@ export default async function CompanyReports({ company }: { company: string }) {
                 className="flex items-center justify-between gap-3 py-4 border-b border-gray-100"
               >
                 <Link
-                  href={`/report/${encodeURIComponent(company)}/${report.month}`}
+                  href={`/report/${slug}/${report.month}`}
                   className="flex-1 min-w-0"
                 >
                   <div className="flex items-center gap-2">
@@ -146,6 +149,7 @@ export default async function CompanyReports({ company }: { company: string }) {
                   <KakaoNotifyButton
                     company={company}
                     month={report.month}
+                    nanoid={nanoid}
                     recipients={
                       [
                         settings?.recipient1,

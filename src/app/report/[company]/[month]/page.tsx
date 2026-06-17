@@ -10,6 +10,7 @@ import {
   getReportsByCompanyFromDB,
   getCompanySettings,
   getCategoryColorsFromDB,
+  resolveCompanyParam,
 } from "@/lib/db";
 import { isAdmin } from "@/lib/admin";
 import { logoutAdmin } from "@/lib/admin-actions";
@@ -42,7 +43,7 @@ export default async function ReportPage({
 }: ReportPageProps) {
   const { company, month } = await params;
   const { auth_error } = await searchParams;
-  const decoded = decodeURIComponent(company);
+  const decoded = await resolveCompanyParam(company);
 
   const [report, allReports, admin, settings, dbColors] = await Promise.all([
     getReportFromDB(decoded, month),

@@ -141,10 +141,10 @@ export default function CompanyList({
         </p>
       ) : (
         <ul className="flex flex-col">
-          {filtered.map(({ company, latestMonth, reportCount, region }) => (
+          {filtered.map(({ company, latestMonth, reportCount, region, nanoid }) => (
             <li key={company}>
               <Link
-                href={`/report/${encodeURIComponent(company)}`}
+                href={`/report/${nanoid ?? encodeURIComponent(company)}`}
                 className="group flex items-center gap-3 md:gap-6 py-5 border-b border-gray-100 hover:bg-gray-50/60 transition-colors px-2 rounded-lg"
               >
                 {/* 썸네일 (공통 기본 이미지) */}
