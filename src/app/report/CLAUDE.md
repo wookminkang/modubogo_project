@@ -16,7 +16,7 @@
 | `/report/[company]/[month]` | `[company]/[month]/page.tsx` | **보고서 상세 (공개 뷰)** — 차트·계약·심의 | 비밀번호 옵션 |
 | `/report/[company]/[month]/edit` | `edit/EditForm.tsx` | 보고서 수정 (status="완료") + 삭제 | Admin |
 
-- `[company]/layout.tsx`: `ReportHeader` + `ReportFooter` 래핑.
+- `report/layout.tsx`: 앱 공통 `Header` + `Footer`(`@/components`) 래핑. (헤더 nav: 병원목록/보고서/진료일정)
 - `[company]/[month]/loading.tsx`: 로딩 스켈레톤.
 
 ## 폼 구조 (new / edit 공통)

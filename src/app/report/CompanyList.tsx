@@ -18,7 +18,9 @@ type HospitalType =
   | "한의원(입원실)"
   | "한방병원"
   | "정신과"
-  | "양방";
+  | "양방"
+  | "일반"
+  | "탈퇴";
 
 const TABS: HospitalType[] = [
   "전체",
@@ -29,6 +31,8 @@ const TABS: HospitalType[] = [
   "한방병원",
   "정신과",
   "양방",
+  "일반",
+  "탈퇴",
 ];
 
 export default function CompanyList({

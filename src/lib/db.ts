@@ -204,7 +204,39 @@ export async function getHospitalListPaged(offset: number, limit: number) {
     .select("company, region")
     .order("company", { ascending: true })
     .range(offset, offset + limit - 1);
-  return (data ?? []) as { company: string; region: string | null }[];
+  const rows = (data ?? []) as { company: string; region: string | null }[];
+  if (rows.length === 0) return [];
+  const companies = rows.map((r) => r.company);
+
+  // 1) 회사 단위 유형 (company_settings.hospital_type) — 컬럼이 없으면 에러→무시되고 보고서로 폴백
+  const settingsTypeMap = new Map<string, string>();
+  const { data: settingTypes } = await supabase
+    .from("company_settings")
+    .select("company, hospital_type")
+    .in("company", companies);
+  (settingTypes ?? []).forEach((s: { company: string; hospital_type?: string | null }) => {
+    if (s.hospital_type) settingsTypeMap.set(s.company, s.hospital_type);
+  });
+
+  // 2) 보고서 기준 유형 (폴백) — reports.hospital_type 최신 보고서
+  const reportTypeMap = new Map<string, string>();
+  const { data: typeRows } = await supabase
+    .from("reports")
+    .select("company, hospital_type, month")
+    .in("company", companies)
+    .order("month", { ascending: false });
+  (typeRows ?? []).forEach((t) => {
+    if (t.hospital_type && !reportTypeMap.has(t.company)) {
+      reportTypeMap.set(t.company, t.hospital_type);
+    }
+  });
+
+  return rows.map((r) => ({
+    company: r.company,
+    region: r.region,
+    hospitalType:
+      settingsTypeMap.get(r.company) ?? reportTypeMap.get(r.company) ?? null,
+  })) as { company: string; region: string | null; hospitalType: string | null }[];
 }
 
 /**
@@ -228,6 +260,54 @@ export async function getCompanySettings(company: string) {
     .eq("company", company)
     .single();
   return data ?? null;
+}
+
+/**
+ * 병원의 유형(카테고리). 회사 단위(company_settings.hospital_type) 우선,
+ * 없으면 보고서(reports.hospital_type 최신) 기준으로 폴백.
+ */
+export async function getCompanyHospitalType(
+  company: string,
+): Promise<string | null> {
+  const { data: s } = await supabase
+    .from("company_settings")
+    .select("hospital_type")
+    .eq("company", company)
+    .limit(1);
+  const fromSettings = (s?.[0] as { hospital_type?: string | null } | undefined)
+    ?.hospital_type;
+  if (fromSettings) return fromSettings;
+
+  const { data } = await supabase
+    .from("reports")
+    .select("hospital_type")
+    .eq("company", company)
+    .order("month", { ascending: false })
+    .limit(1);
+  return (data?.[0]?.hospital_type as string | undefined) ?? null;
+}
+
+/**
+ * 병원 유형(카테고리)을 저장한다.
+ * 회사 단위 컬럼(company_settings.hospital_type)에 저장하고,
+ * 컬럼이 아직 없으면(에러) 해당 병원의 보고서(reports.hospital_type)로 폴백 저장한다.
+ */
+export async function updateCompanyHospitalType(
+  company: string,
+  hospitalType: string,
+) {
+  const { error } = await supabase
+    .from("company_settings")
+    .update({ hospital_type: hospitalType })
+    .eq("company", company);
+  if (!error) return;
+
+  // company_settings.hospital_type 컬럼이 없을 때 폴백: 보고서 일괄 갱신
+  const { error: e2 } = await supabase
+    .from("reports")
+    .update({ hospital_type: hospitalType })
+    .eq("company", company);
+  if (e2) throw e2;
 }
 
 /**

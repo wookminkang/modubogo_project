@@ -178,6 +178,8 @@ export default function EditForm({
                           "한방병원",
                           "정신과",
                           "양방",
+                          "일반",
+                          "탈퇴",
                         ] as const
                       ).map((type) => (
                         <button

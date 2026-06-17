@@ -1,5 +1,5 @@
-import ReportHeader from "@/components/ReportHeader";
-import ReportFooter from "@/components/ReportFooter";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { isAdmin } from "@/lib/admin";
 
 export default async function ReportLayout({
@@ -10,9 +10,9 @@ export default async function ReportLayout({
   const admin = await isAdmin();
   return (
     <div className="flex min-h-screen flex-col">
-      <ReportHeader showNav={admin} />
+      <Header showNav={admin} />
       <main className="flex flex-1 flex-col pt-14">{children}</main>
-      <ReportFooter />
+      <Footer />
     </div>
   );
 }

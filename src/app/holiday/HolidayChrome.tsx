@@ -1,8 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import ReportHeader from "@/components/ReportHeader";
-import ReportFooter from "@/components/ReportFooter";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 // 원장 회신 페이지(/holiday/[company]/[month])는 카카오 알림톡으로 진입하는
 // 공개 화면이라 헤더/푸터를 숨기고 풀스크린으로 보여준다.
@@ -25,9 +25,9 @@ export function HolidayChrome({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <ReportHeader showNav={admin} />
+      <Header showNav={admin} />
       <main className="flex flex-1 flex-col pt-14">{children}</main>
-      <ReportFooter />
+      <Footer />
     </div>
   );
 }

@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { isAdmin } from "@/lib/admin";
 
 export const metadata: Metadata = {
   title: "병원 목록 · 모두보고",
@@ -6,24 +9,23 @@ export const metadata: Metadata = {
 
 /**
  * hospital 라우트 공통 레이아웃.
- * 목록(`/hospital`)과 상세(`/hospital/[slug]`)가 동일한 카드 컨테이너·푸터를 공유한다.
- * 페이지 고유 헤더/본문은 각 page.tsx 에서 children 으로 들어온다.
+ * 앱 공통 Header/Footer 로 감싸고, 본문(목록/상세)은 max-w-[1200px] 로 정렬한다.
  */
-export default function HospitalLayout({
+export default async function HospitalLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const admin = await isAdmin();
   return (
-    <div className="flex-1">
-      <div className="mx-auto flex min-h-full w-full max-w-md flex-col">
-        {children}
-
-        {/* 공통 푸터 영역 */}
-        <footer className="border-t border-gray-100 px-5 py-4 text-center text-xs text-gray-400">
-          © 2026 모두보고 · 광고 운영 보고서
-        </footer>
-      </div>
+    <div className="flex min-h-screen flex-col">
+      <Header showNav={admin} />
+      <main className="flex flex-1 flex-col pt-14">
+        <div className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col">
+          {children}
+        </div>
+      </main>
+      <Footer />
     </div>
   );
 }

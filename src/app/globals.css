@@ -23,6 +23,9 @@
   --seed-color-bg-brand-weak-pressed: #dce4f3 !important;
   --seed-color-stroke-brand-solid: #0e299c !important;
   --seed-color-stroke-brand-weak: #b8c3e6 !important;
+
+  --color-bg-layer-default: #171717 !important;
+  --color-fd-muted: #212121 !important;
 }
 
 /* 앱 배경·기본 글씨색을 SEED 테마 토큰에 연결 (light-only 테마를 따름) */
