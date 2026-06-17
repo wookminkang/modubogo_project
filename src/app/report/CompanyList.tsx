@@ -10,31 +10,6 @@ import { logoutAdmin } from "@/lib/admin-actions";
 import { companiesSummaryQuery } from "@/lib/queries";
 import ReportShell from "./ReportShell";
 
-type HospitalType =
-  | "전체"
-  | "메인 관리"
-  | "한의원"
-  | "한의원(네트워크)"
-  | "한의원(입원실)"
-  | "한방병원"
-  | "정신과"
-  | "양방"
-  | "일반"
-  | "탈퇴";
-
-const TABS: HospitalType[] = [
-  "전체",
-  "메인 관리",
-  "한의원",
-  "한의원(네트워크)",
-  "한의원(입원실)",
-  "한방병원",
-  "정신과",
-  "양방",
-  "일반",
-  "탈퇴",
-];
-
 export default function CompanyList({
   isSuper = false,
 }: {
@@ -43,20 +18,15 @@ export default function CompanyList({
   const { data: companies } = useSuspenseQuery(companiesSummaryQuery());
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<HospitalType>("전체");
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(query), 300);
     return () => clearTimeout(timer);
   }, [query]);
 
-  const filtered = companies.filter((c) => {
-    const matchesTab = activeTab === "전체" || c.hospitalType === activeTab;
-    const matchesQuery = c.company
-      .toLowerCase()
-      .includes(debouncedQuery.toLowerCase());
-    return matchesTab && matchesQuery;
-  });
+  const filtered = companies.filter((c) =>
+    c.company.toLowerCase().includes(debouncedQuery.toLowerCase()),
+  );
 
   const search = (
     <>
@@ -109,32 +79,8 @@ export default function CompanyList({
     </>
   );
 
-  // 모바일: 가로 스크롤 알약 / 데스크탑: 세로 사이드바 목록
-  const sidebar = (
-    <nav className="flex flex-row md:flex-col gap-2 md:gap-1 overflow-x-auto md:overflow-visible pb-1 md:pb-0 scrollbar-hide">
-      {TABS.map((tab) => (
-        <button
-          key={tab}
-          onClick={() => setActiveTab(tab)}
-          className={`shrink-0 md:w-full text-left whitespace-nowrap rounded-full md:rounded-lg px-4 py-2 md:py-3 text-sm font-semibold transition-colors cursor-pointer ${
-            activeTab === tab
-              ? "bg-[#0e299c] text-white"
-              : "bg-[#F0F4FA] md:bg-transparent text-gray-500 hover:bg-[#F0F4FA]"
-          }`}
-        >
-          {tab}
-        </button>
-      ))}
-    </nav>
-  );
-
   return (
-    <ReportShell
-      title="보고서 목록"
-      search={search}
-      actions={actions}
-      sidebar={sidebar}
-    >
+    <ReportShell title="보고서 목록" search={search} actions={actions}>
       {filtered.length === 0 ? (
         <p className="text-center text-gray-400 text-sm py-20">
           {debouncedQuery ? "검색 결과가 없습니다." : "등록된 보고서가 없습니다."}

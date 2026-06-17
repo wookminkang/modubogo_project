@@ -12,9 +12,6 @@ import { notFound, redirect } from "next/navigation";
 import { isAdmin } from "@/lib/admin";
 import DeleteReportButton from "@/components/DeleteReportButton";
 import KakaoNotifyButton from "@/components/KakaoNotifyButton";
-import NaverAdSettingsButton from "@/components/NaverAdSettingsButton";
-import AlimtalkSettingsButton from "@/components/AlimtalkSettingsButton";
-import DableSettingsButton from "@/components/DableSettingsButton";
 import ReportTotal, { ReportTotalSkeleton } from "./ReportTotal";
 
 /**
@@ -83,22 +80,6 @@ export default async function CompanyReports({ company }: { company: string }) {
         >
           + 새 보고서
         </Link>
-
-        {/* 설정 버튼 (세로) */}
-        <div className="flex flex-col gap-2">
-          <AlimtalkSettingsButton
-            company={company}
-            defaultValues={settings ?? {}}
-          />
-          <NaverAdSettingsButton
-            company={company}
-            defaultValues={settings ?? {}}
-          />
-          <DableSettingsButton
-            company={company}
-            defaultValues={settings ?? {}}
-          />
-        </div>
       </aside>
 
       {/* 오른쪽: 월별 보고서 리스트 */}
