@@ -9,11 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { ActionButton } from "seed-design/ui/action-button";
 import { MonthPicker } from "@/components/ui/month-picker";
 import { DatePicker } from "@/components/ui/date-picker";
 import { OrderStepper } from "@/components/ui/order-stepper";
 import { AmountInput } from "@/components/ui/amount-input";
-import { Trash2 } from "lucide-react";
+import { Trash2, ArrowLeft } from "lucide-react";
+import { Text } from "seed-design/ui/text";
 import Link from "next/link";
 
 interface CategoryField {
@@ -136,34 +138,37 @@ export default function EditForm({
   }
 
   const inputClass =
-    "h-11 rounded-xl border-gray-200 text-gray-900 focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/20";
+    "h-11 rounded-xl border-[var(--seed-color-stroke-neutral-muted)] text-[var(--seed-color-fg-neutral)] focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/20";
   const rowInputClass =
-    "flex-1 h-9 rounded-lg border-gray-200 text-gray-900 text-sm focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/20";
+    "flex-1 h-9 rounded-lg border-[var(--seed-color-stroke-neutral-muted)] text-[var(--seed-color-fg-neutral)] text-sm focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/20";
 
   return (
-    <div className="min-h-screen bg-[#F0F4FA]">
-      <div className="px-4 py-6 flex flex-col gap-4">
-        <div>
+    <div className="min-h-screen bg-[var(--seed-color-bg-layer-default)]">
+      <div className="mx-auto flex max-w-[640px] flex-col gap-4 px-4 py-6">
+        <div className="flex flex-col gap-3">
           <Link
             href={`/report/${encodeURIComponent(company)}/${month}`}
-            className="text-sm text-gray-400 mb-1 block"
+            className="inline-flex items-center gap-1.5 transition-opacity hover:opacity-70"
           >
-            ← 보고서 상세
+            <ArrowLeft size={18} />
+            <Text as="span" textStyle="t5Bold" color="fg.neutralMuted">
+              보고서 상세
+            </Text>
           </Link>
-          <h1 className="text-2xl font-bold text-[#0e299c]">
+          <Text as="h1" textStyle="t10Bold">
             {company} · {month} 수정
-          </h1>
+          </Text>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           {/* 기본 정보 */}
-          <Card>
+          <Card className="ring-[var(--seed-color-stroke-neutral-muted)]">
             <CardHeader>
-              <CardTitle className="text-[#0e299c]">기본 정보</CardTitle>
+              <CardTitle className="text-[var(--seed-color-fg-neutral)]">기본 정보</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <Label className="text-gray-500 font-normal">병원 유형</Label>
+                <Label className="text-[var(--seed-color-fg-neutral-muted)] font-normal">병원 유형</Label>
                 <Controller
                   control={control}
                   name="hospital_type"
@@ -189,7 +194,7 @@ export default function EditForm({
                           className={`px-3 py-2 rounded-full text-sm font-medium transition-colors border ${
                             field.value === type
                               ? "bg-[#0e299c] text-white border-[#0e299c]"
-                              : "bg-white text-gray-400 border-gray-200 hover:text-gray-600"
+                              : "bg-[var(--seed-color-bg-neutral-weak)] text-[var(--seed-color-fg-neutral-muted)] border-[var(--seed-color-stroke-neutral-muted)] hover:text-[var(--seed-color-fg-neutral)]"
                           }`}
                         >
                           {type}
@@ -200,7 +205,7 @@ export default function EditForm({
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="company" className="text-gray-500 font-normal">
+                <Label htmlFor="company" className="text-[var(--seed-color-fg-neutral-muted)] font-normal">
                   상호명
                 </Label>
                 <Input
@@ -210,8 +215,8 @@ export default function EditForm({
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="region" className="text-gray-500 font-normal">
-                  지역 <span className="text-gray-300">(선택)</span>
+                <Label htmlFor="region" className="text-[var(--seed-color-fg-neutral-muted)] font-normal">
+                  지역 <span className="text-[var(--seed-color-fg-neutral-muted)]">(선택)</span>
                 </Label>
                 <Input
                   id="region"
@@ -221,7 +226,7 @@ export default function EditForm({
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-gray-500 font-normal">보고 월</Label>
+                <Label className="text-[var(--seed-color-fg-neutral-muted)] font-normal">보고 월</Label>
                 <Controller
                   control={control}
                   name="month"
@@ -235,25 +240,25 @@ export default function EditForm({
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="reporter" className="text-gray-500 font-normal">
+                <Label htmlFor="reporter" className="text-[var(--seed-color-fg-neutral-muted)] font-normal">
                   보고자
                 </Label>
                 <Input
                   id="reporter"
                   {...register("reporter", { required: true })}
-                  className={`${inputClass} bg-gray-50 text-gray-400`}
+                  className={`${inputClass} bg-[var(--seed-color-bg-neutral-weak)] text-[var(--seed-color-fg-neutral-muted)]`}
                   readOnly
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="email" className="text-gray-500 font-normal">
+                <Label htmlFor="email" className="text-[var(--seed-color-fg-neutral-muted)] font-normal">
                   이메일
                 </Label>
                 <Input
                   id="email"
                   {...register("email")}
                   type="email"
-                  className={`${inputClass} bg-gray-50 text-gray-400`}
+                  className={`${inputClass} bg-[var(--seed-color-bg-neutral-weak)] text-[var(--seed-color-fg-neutral-muted)]`}
                   readOnly
                 />
               </div>
@@ -263,22 +268,22 @@ export default function EditForm({
           </Card>
 
           {/* 집행 항목 */}
-          <Card>
+          <Card className="ring-[var(--seed-color-stroke-neutral-muted)]">
             <CardHeader>
-              <CardTitle className="text-[#0e299c]">집행 항목</CardTitle>
+              <CardTitle className="text-[var(--seed-color-fg-neutral)]">집행 항목</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               {fields.map((field, index) => (
                 <div
                   key={field.id}
-                  className="border border-gray-100 rounded-xl overflow-hidden"
+                  className="border border-[var(--seed-color-stroke-neutral-muted)] rounded-xl overflow-hidden"
                 >
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--seed-color-stroke-neutral-muted)]">
                     <div className="flex items-center gap-2">
                       <span className="w-5 h-5 flex items-center justify-center bg-[#0e299c] text-white text-xs font-bold rounded-full">
                         {index + 1}
                       </span>
-                      <span className="text-sm font-semibold text-gray-700">
+                      <span className="text-sm font-semibold text-[var(--seed-color-fg-neutral)]">
                         항목 {index + 1}
                       </span>
                     </div>
@@ -288,7 +293,7 @@ export default function EditForm({
                         variant="ghost"
                         size="xs"
                         onClick={() => remove(index)}
-                        className="text-red-400 hover:text-red-500 hover:bg-red-50 gap-1"
+                        className="text-[var(--seed-color-fg-critical)] hover:bg-[var(--seed-color-bg-critical-weak)] gap-1"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                         삭제
@@ -297,7 +302,7 @@ export default function EditForm({
                   </div>
                   <div className="divide-y divide-gray-50">
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         구분
                       </span>
                       <select
@@ -311,7 +316,7 @@ export default function EditForm({
                       </select>
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         채널
                       </span>
                       <Input
@@ -321,7 +326,7 @@ export default function EditForm({
                       />
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         집행사
                       </span>
                       <Input
@@ -331,7 +336,7 @@ export default function EditForm({
                       />
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         순서
                       </span>
                       <div className="flex items-center gap-2 flex-1 flex-wrap">
@@ -345,13 +350,13 @@ export default function EditForm({
                             />
                           )}
                         />
-                        <span className="text-xs text-[#0e299c]">
+                        <span className="text-xs text-[var(--seed-color-fg-neutral-muted)]">
                           숫자가 낮을수록 먼저 집행됩니다.
                         </span>
                       </div>
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         계약기간(월)
                       </span>
                       <Controller
@@ -363,27 +368,27 @@ export default function EditForm({
                             : parseInt(field.value) || 1;
                           const num = Math.max(1, raw);
                           return (
-                            <div className="flex items-center gap-1 bg-[#0e299c]/10 px-2 py-1 rounded-lg">
+                            <div className="flex items-center gap-1 bg-[var(--seed-color-bg-neutral-weak)] px-2 py-1 rounded-lg">
                               <button
                                 type="button"
                                 onClick={() =>
                                   field.onChange(String(Math.max(1, num - 1)))
                                 }
-                                className="w-6 h-6 flex items-center justify-center text-[#0e299c] hover:bg-[#0e299c]/20 rounded font-bold text-base"
+                                className="w-6 h-6 flex items-center justify-center text-[var(--seed-color-fg-neutral)] hover:bg-[var(--seed-color-bg-neutral-weak-pressed)] rounded font-bold text-base"
                               >
                                 −
                               </button>
-                              <span className="w-8 text-center text-sm text-[#0e299c] font-bold">
+                              <span className="w-8 text-center text-sm text-[var(--seed-color-fg-neutral)] font-bold">
                                 {num}
                               </span>
                               <button
                                 type="button"
                                 onClick={() => field.onChange(String(num + 1))}
-                                className="w-6 h-6 flex items-center justify-center text-[#0e299c] hover:bg-[#0e299c]/20 rounded font-bold text-base"
+                                className="w-6 h-6 flex items-center justify-center text-[var(--seed-color-fg-neutral)] hover:bg-[var(--seed-color-bg-neutral-weak-pressed)] rounded font-bold text-base"
                               >
                                 +
                               </button>
-                              <span className="text-xs text-[#0e299c] font-medium pr-1">
+                              <span className="text-xs text-[var(--seed-color-fg-neutral-muted)] font-medium pr-1">
                                 개월
                               </span>
                             </div>
@@ -392,7 +397,7 @@ export default function EditForm({
                       />
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         집행금액 (원)
                       </span>
                       <Controller
@@ -423,7 +428,7 @@ export default function EditForm({
                     sort_order: String(fields.length),
                   })
                 }
-                className="w-full border border-dashed border-gray-300 rounded-xl py-3 text-sm text-gray-400 hover:border-[#0e299c] hover:text-[#0e299c] transition-colors"
+                className="w-full border border-dashed border-[var(--seed-color-stroke-neutral-muted)] rounded-xl py-3 text-sm text-[var(--seed-color-fg-neutral-muted)] hover:border-[#0e299c] hover:text-[#0e299c] transition-colors"
               >
                 + 항목 추가
               </button>
@@ -431,22 +436,22 @@ export default function EditForm({
           </Card>
 
           {/* 광고 계약·리포트 */}
-          <Card>
+          <Card className="ring-[var(--seed-color-stroke-neutral-muted)]">
             <CardHeader>
-              <CardTitle className="text-[#0e299c]">광고 계약·리포트</CardTitle>
+              <CardTitle className="text-[var(--seed-color-fg-neutral)]">광고 계약·리포트</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               {cFields.map((field, index) => (
                 <div
                   key={field.id}
-                  className="border border-gray-100 rounded-xl overflow-hidden"
+                  className="border border-[var(--seed-color-stroke-neutral-muted)] rounded-xl overflow-hidden"
                 >
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--seed-color-stroke-neutral-muted)]">
                     <div className="flex items-center gap-2">
                       <span className="w-5 h-5 flex items-center justify-center bg-[#0e299c] text-white text-xs font-bold rounded-full">
                         {index + 1}
                       </span>
-                      <span className="text-sm font-semibold text-gray-700">
+                      <span className="text-sm font-semibold text-[var(--seed-color-fg-neutral)]">
                         항목 {index + 1}
                       </span>
                     </div>
@@ -456,7 +461,7 @@ export default function EditForm({
                         variant="ghost"
                         size="xs"
                         onClick={() => cRemove(index)}
-                        className="text-red-400 hover:text-red-500 hover:bg-red-50 gap-1"
+                        className="text-[var(--seed-color-fg-critical)] hover:bg-[var(--seed-color-bg-critical-weak)] gap-1"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                         삭제
@@ -465,7 +470,7 @@ export default function EditForm({
                   </div>
                   <div className="divide-y divide-gray-50">
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         구분
                       </span>
                       <select
@@ -479,7 +484,7 @@ export default function EditForm({
                       </select>
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         계약명
                       </span>
                       <Input
@@ -489,7 +494,7 @@ export default function EditForm({
                       />
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         키워드
                       </span>
                       <Input
@@ -499,7 +504,7 @@ export default function EditForm({
                       />
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         링크
                       </span>
                       <Input
@@ -509,7 +514,7 @@ export default function EditForm({
                       />
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         순서
                       </span>
                       <div className="flex items-center gap-2 flex-1 flex-wrap">
@@ -523,7 +528,7 @@ export default function EditForm({
                             />
                           )}
                         />
-                        <span className="text-xs text-[#0e299c]">
+                        <span className="text-xs text-[var(--seed-color-fg-neutral-muted)]">
                           숫자가 낮을수록 먼저 집행됩니다.
                         </span>
                       </div>
@@ -542,7 +547,7 @@ export default function EditForm({
                     sort_order: String(cFields.length),
                   })
                 }
-                className="w-full border border-dashed border-gray-300 rounded-xl py-3 text-sm text-gray-400 hover:border-[#0e299c] hover:text-[#0e299c] transition-colors"
+                className="w-full border border-dashed border-[var(--seed-color-stroke-neutral-muted)] rounded-xl py-3 text-sm text-[var(--seed-color-fg-neutral-muted)] hover:border-[#0e299c] hover:text-[#0e299c] transition-colors"
               >
                 + 항목 추가
               </button>
@@ -550,9 +555,9 @@ export default function EditForm({
           </Card>
 
           {/* 광고 심의 및 운영 현황 */}
-          <Card>
+          <Card className="ring-[var(--seed-color-stroke-neutral-muted)]">
             <CardHeader>
-              <CardTitle className="text-[#0e299c]">
+              <CardTitle className="text-[var(--seed-color-fg-neutral)]">
                 광고 심의 및 운영 현황
               </CardTitle>
             </CardHeader>
@@ -560,14 +565,14 @@ export default function EditForm({
               {vFields.map((field, index) => (
                 <div
                   key={field.id}
-                  className="border border-gray-100 rounded-xl overflow-hidden"
+                  className="border border-[var(--seed-color-stroke-neutral-muted)] rounded-xl overflow-hidden"
                 >
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--seed-color-stroke-neutral-muted)]">
                     <div className="flex items-center gap-2">
                       <span className="w-5 h-5 flex items-center justify-center bg-[#0e299c] text-white text-xs font-bold rounded-full">
                         {index + 1}
                       </span>
-                      <span className="text-sm font-semibold text-gray-700">
+                      <span className="text-sm font-semibold text-[var(--seed-color-fg-neutral)]">
                         항목 {index + 1}
                       </span>
                     </div>
@@ -577,7 +582,7 @@ export default function EditForm({
                         variant="ghost"
                         size="xs"
                         onClick={() => vRemove(index)}
-                        className="text-red-400 hover:text-red-500 hover:bg-red-50 gap-1"
+                        className="text-[var(--seed-color-fg-critical)] hover:bg-[var(--seed-color-bg-critical-weak)] gap-1"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                         삭제
@@ -586,7 +591,7 @@ export default function EditForm({
                   </div>
                   <div className="divide-y divide-gray-50">
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         구분
                       </span>
                       <select
@@ -600,7 +605,7 @@ export default function EditForm({
                       </select>
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         주제
                       </span>
                       <Input
@@ -610,7 +615,7 @@ export default function EditForm({
                       />
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         순서
                       </span>
                       <div className="flex items-center gap-2 flex-1 flex-wrap">
@@ -624,13 +629,13 @@ export default function EditForm({
                             />
                           )}
                         />
-                        <span className="text-xs text-[#0e299c]">
+                        <span className="text-xs text-[var(--seed-color-fg-neutral-muted)]">
                           숫자가 낮을수록 먼저 집행됩니다.
                         </span>
                       </div>
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-500 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         유효기간
                       </span>
                       <Controller
@@ -657,30 +662,38 @@ export default function EditForm({
                     sort_order: String(vFields.length),
                   })
                 }
-                className="w-full border border-dashed border-gray-300 rounded-xl py-3 text-sm text-gray-400 hover:border-[#0e299c] hover:text-[#0e299c] transition-colors"
+                className="w-full border border-dashed border-[var(--seed-color-stroke-neutral-muted)] rounded-xl py-3 text-sm text-[var(--seed-color-fg-neutral-muted)] hover:border-[#0e299c] hover:text-[#0e299c] transition-colors"
               >
                 + 유효기간 추가
               </button>
             </CardContent>
           </Card>
 
-          <Button
-            type="submit"
-            disabled={saving}
-            className="w-full bg-[#0e299c] hover:bg-[#0b2180] text-white font-semibold h-14 rounded-2xl text-sm"
-          >
-            {saving ? "저장 중..." : "수정 완료"}
-          </Button>
-
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={deleting}
-            onClick={handleDelete}
-            className="w-full text-red-400 hover:text-red-500 hover:bg-red-50 h-12 rounded-2xl text-sm"
-          >
-            {deleting ? "삭제 중..." : "보고서 삭제"}
-          </Button>
+          <div className="flex w-full flex-row gap-2">
+            <div className="flex-[3]">
+              <ActionButton
+                type="button"
+                variant="neutralWeak"
+                size="large"
+                className="w-full"
+                loading={deleting}
+                onClick={handleDelete}
+              >
+                삭제
+              </ActionButton>
+            </div>
+            <div className="flex-[7]">
+              <ActionButton
+                type="submit"
+                variant="brandSolid"
+                size="large"
+                className="w-full"
+                loading={saving}
+              >
+                수정
+              </ActionButton>
+            </div>
+          </div>
         </form>
       </div>
     </div>
