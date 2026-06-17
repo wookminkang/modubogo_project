@@ -257,18 +257,8 @@ export default function EditForm({
                   readOnly
                 />
               </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="password" className="text-gray-500 font-normal">
-                  열람 비밀번호 <span className="text-gray-300">(선택)</span>
-                </Label>
-                <Input
-                  id="password"
-                  {...register("password")}
-                  type="password"
-                  placeholder="설정 시 보고서 열람에 비밀번호가 필요합니다"
-                  className={inputClass}
-                />
-              </div>
+              {/* 열람 비밀번호 — 현재 미사용. 기존 값은 유지하되 입력 UI는 숨김 */}
+              <input type="hidden" {...register("password")} />
             </CardContent>
           </Card>
 
