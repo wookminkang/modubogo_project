@@ -93,7 +93,7 @@ function HospitalCombobox({
       <div className="relative">
         <Search
           size={16}
-          className="absolute top-1/2 left-3.5 -translate-y-1/2 text-gray-400"
+          className="absolute top-1/2 left-3.5 -translate-y-1/2 text-[var(--seed-color-fg-neutral-muted)]"
         />
         <input
           value={open ? query : value}
@@ -106,14 +106,14 @@ function HospitalCombobox({
             setOpen(true);
           }}
           placeholder={value || "병원명으로 검색·선택"}
-          className="h-11 w-full rounded-xl border border-white/10 bg-white/5 pr-4 pl-10 text-sm text-gray-100 outline-none placeholder:text-gray-500 focus:border-[#0e299c] focus:ring-2 focus:ring-[#0e299c]/30"
+          className="h-11 w-full rounded-xl border border-[var(--seed-color-stroke-neutral-muted)] bg-[var(--seed-color-bg-neutral-weak)] pr-4 pl-10 text-sm text-[var(--seed-color-fg-neutral)] outline-none placeholder:text-gray-500 focus:border-[#0e299c] focus:ring-2 focus:ring-[#0e299c]/30"
         />
       </div>
 
       {open && (
-        <div className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-white/10 bg-[#2a2a2a] py-1 shadow-lg shadow-black/40">
+        <div className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-[var(--seed-color-stroke-neutral-muted)] bg-[var(--seed-color-bg-layer-floating)] py-1 shadow-lg shadow-black/40">
           {filtered.length === 0 ? (
-            <p className="px-4 py-3 text-sm text-gray-400">
+            <p className="px-4 py-3 text-sm text-[var(--seed-color-fg-neutral-muted)]">
               검색 결과가 없어요.
             </p>
           ) : (
@@ -127,15 +127,15 @@ function HospitalCombobox({
                   setQuery("");
                   setOpen(false);
                 }}
-                className={`flex w-full items-center justify-between gap-2 px-4 py-2.5 text-left text-sm hover:bg-white/5 ${
+                className={`flex w-full items-center justify-between gap-2 px-4 py-2.5 text-left text-sm hover:bg-[var(--seed-color-bg-neutral-weak)] ${
                   value === h.company
-                    ? "font-semibold text-white"
-                    : "text-gray-200"
+                    ? "font-semibold text-[var(--seed-color-fg-neutral)]"
+                    : "text-[var(--seed-color-fg-neutral)]"
                 }`}
               >
                 <span className="truncate">{h.company}</span>
                 {h.region && (
-                  <span className="shrink-0 text-xs text-gray-400">
+                  <span className="shrink-0 text-xs text-[var(--seed-color-fg-neutral-muted)]">
                     {h.region}
                   </span>
                 )}
@@ -255,9 +255,9 @@ export default function ReportNewPage({
   };
 
   const inputClass =
-    "h-11 rounded-xl border-white/10 bg-white/5 text-gray-100 placeholder:text-gray-500 focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/30";
+    "h-11 rounded-xl border-[var(--seed-color-stroke-neutral-muted)] bg-[var(--seed-color-bg-neutral-weak)] text-[var(--seed-color-fg-neutral)] placeholder:text-gray-500 focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/30";
   const rowInputClass =
-    "flex-1 h-9 rounded-lg border-white/10 bg-white/5 text-gray-100 text-sm placeholder:text-gray-500 focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/30";
+    "flex-1 h-9 rounded-lg border-[var(--seed-color-stroke-neutral-muted)] bg-[var(--seed-color-bg-neutral-weak)] text-[var(--seed-color-fg-neutral)] text-sm placeholder:text-gray-500 focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/30";
 
   if (saved) {
     return <ResultSuccess message="저장되었어요." redirectTo={redirectTo} />;
@@ -304,13 +304,13 @@ export default function ReportNewPage({
             <div className="flex flex-col gap-4">
               {/* 병원 선택 — 등록된 병원에 대해서만 작성 가능 */}
               <div className="flex flex-col gap-1.5">
-                <Label className="text-gray-400 font-normal">병원 선택</Label>
+                <Label className="text-[var(--seed-color-fg-neutral-muted)] font-normal">병원 선택</Label>
                 {hospitals.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-white/15 px-4 py-4 text-sm text-gray-400">
+                  <div className="rounded-xl border border-dashed border-[var(--seed-color-stroke-neutral-muted)] px-4 py-4 text-sm text-[var(--seed-color-fg-neutral-muted)]">
                     등록된 병원이 없습니다.{" "}
                     <Link
                       href="/hospital/new"
-                      className="font-semibold text-gray-100 underline"
+                      className="font-semibold text-[var(--seed-color-fg-neutral)] underline"
                     >
                       병원 먼저 등록하기
                     </Link>
@@ -338,21 +338,21 @@ export default function ReportNewPage({
               {/* 선택한 병원 정보 (유형·지역 자동) */}
               {selectedCompany && (
                 <div className="flex flex-wrap items-center gap-2 rounded-xl bg-[#0e299c]/5 px-4 py-3 text-sm">
-                  <span className="font-semibold text-gray-100">
+                  <span className="font-semibold text-[var(--seed-color-fg-neutral)]">
                     {selectedCompany}
                   </span>
                   {selectedType && (
-                    <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-gray-300">
+                    <span className="rounded-full bg-[var(--seed-color-bg-neutral-weak)] px-2.5 py-1 text-xs font-medium text-[var(--seed-color-fg-neutral)]">
                       {selectedType}
                     </span>
                   )}
-                  <span className="text-gray-400">
+                  <span className="text-[var(--seed-color-fg-neutral-muted)]">
                     · 지역 {selectedRegion || "미설정"}
                   </span>
                 </div>
               )}
               <div className="flex flex-col gap-1.5">
-                <Label className="text-gray-400 font-normal">보고 월</Label>
+                <Label className="text-[var(--seed-color-fg-neutral-muted)] font-normal">보고 월</Label>
                 <Controller
                   control={control}
                   name="month"
@@ -366,25 +366,25 @@ export default function ReportNewPage({
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="reporter" className="text-gray-400 font-normal">
+                <Label htmlFor="reporter" className="text-[var(--seed-color-fg-neutral-muted)] font-normal">
                   보고자
                 </Label>
                 <Input
                   id="reporter"
                   {...register("reporter", { required: true })}
-                  className={`${inputClass} bg-gray-50 text-gray-400`}
+                  className={`${inputClass} bg-[var(--seed-color-bg-neutral-weak)] text-[var(--seed-color-fg-neutral-muted)]`}
                   readOnly
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="email" className="text-gray-400 font-normal">
+                <Label htmlFor="email" className="text-[var(--seed-color-fg-neutral-muted)] font-normal">
                   이메일
                 </Label>
                 <Input
                   id="email"
                   {...register("email")}
                   type="email"
-                  className={`${inputClass} bg-gray-50 text-gray-400`}
+                  className={`${inputClass} bg-[var(--seed-color-bg-neutral-weak)] text-[var(--seed-color-fg-neutral-muted)]`}
                   readOnly
                 />
               </div>
@@ -404,14 +404,14 @@ export default function ReportNewPage({
               {fields.map((field, index) => (
                 <div
                   key={field.id}
-                  className="bg-white/5 rounded-xl overflow-hidden"
+                  className="bg-[var(--seed-color-bg-neutral-weak)] rounded-xl overflow-hidden"
                 >
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--seed-color-stroke-neutral-muted)]">
                     <div className="flex items-center gap-2">
                       <span className="w-5 h-5 flex items-center justify-center bg-[#0e299c] text-white text-xs font-bold rounded-full">
                         {index + 1}
                       </span>
-                      <span className="text-sm font-semibold text-gray-200">
+                      <span className="text-sm font-semibold text-[var(--seed-color-fg-neutral)]">
                         항목 {index + 1}
                       </span>
                     </div>
@@ -430,7 +430,7 @@ export default function ReportNewPage({
                   </div>
                   <div className="divide-y divide-white/10">
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-400 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         구분
                       </span>
                       <select
@@ -446,7 +446,7 @@ export default function ReportNewPage({
                       </select>
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-400 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         채널
                       </span>
                       <Input
@@ -456,7 +456,7 @@ export default function ReportNewPage({
                       />
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-400 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         집행사
                       </span>
                       <Input
@@ -466,7 +466,7 @@ export default function ReportNewPage({
                       />
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-400 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         순서
                       </span>
                       <div className="flex items-center gap-2 flex-1 flex-wrap">
@@ -480,13 +480,13 @@ export default function ReportNewPage({
                             />
                           )}
                         />
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-[var(--seed-color-fg-neutral-muted)]">
                           숫자가 낮을수록 먼저 집행됩니다.
                         </span>
                       </div>
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-400 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         계약기간(월)
                       </span>
                       <Controller
@@ -504,21 +504,21 @@ export default function ReportNewPage({
                                 onClick={() =>
                                   field.onChange(String(Math.max(1, num - 1)))
                                 }
-                                className="w-6 h-6 flex items-center justify-center text-gray-100 hover:bg-[#0e299c]/20 rounded font-bold text-base"
+                                className="w-6 h-6 flex items-center justify-center text-[var(--seed-color-fg-neutral)] hover:bg-[#0e299c]/20 rounded font-bold text-base"
                               >
                                 −
                               </button>
-                              <span className="w-8 text-center text-sm text-gray-100 font-bold">
+                              <span className="w-8 text-center text-sm text-[var(--seed-color-fg-neutral)] font-bold">
                                 {num}
                               </span>
                               <button
                                 type="button"
                                 onClick={() => field.onChange(String(num + 1))}
-                                className="w-6 h-6 flex items-center justify-center text-gray-100 hover:bg-[#0e299c]/20 rounded font-bold text-base"
+                                className="w-6 h-6 flex items-center justify-center text-[var(--seed-color-fg-neutral)] hover:bg-[#0e299c]/20 rounded font-bold text-base"
                               >
                                 +
                               </button>
-                              <span className="text-xs text-gray-100 font-medium pr-1">
+                              <span className="text-xs text-[var(--seed-color-fg-neutral)] font-medium pr-1">
                                 개월
                               </span>
                             </div>
@@ -527,7 +527,7 @@ export default function ReportNewPage({
                       />
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-400 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         집행금액 (원)
                       </span>
                       <Controller
@@ -558,7 +558,7 @@ export default function ReportNewPage({
                     sort_order: String(fields.length),
                   })
                 }
-                className="w-full border border-dashed border-white/15 rounded-xl py-3 text-sm text-gray-400 hover:border-[#0e299c] hover:text-gray-100 transition-colors"
+                className="w-full border border-dashed border-[var(--seed-color-stroke-neutral-muted)] rounded-xl py-3 text-sm text-[var(--seed-color-fg-neutral-muted)] hover:border-[#0e299c] hover:text-[var(--seed-color-fg-neutral)] transition-colors"
               >
                 + 항목 추가
               </button>
@@ -576,14 +576,14 @@ export default function ReportNewPage({
               {cFields.map((field, index) => (
                 <div
                   key={field.id}
-                  className="bg-white/5 rounded-xl overflow-hidden"
+                  className="bg-[var(--seed-color-bg-neutral-weak)] rounded-xl overflow-hidden"
                 >
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--seed-color-stroke-neutral-muted)]">
                     <div className="flex items-center gap-2">
                       <span className="w-5 h-5 flex items-center justify-center bg-[#0e299c] text-white text-xs font-bold rounded-full">
                         {index + 1}
                       </span>
-                      <span className="text-sm font-semibold text-gray-200">
+                      <span className="text-sm font-semibold text-[var(--seed-color-fg-neutral)]">
                         항목 {index + 1}
                       </span>
                     </div>
@@ -602,7 +602,7 @@ export default function ReportNewPage({
                   </div>
                   <div className="divide-y divide-white/10">
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-400 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         구분
                       </span>
                       <select
@@ -618,7 +618,7 @@ export default function ReportNewPage({
                       </select>
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-400 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         계약명
                       </span>
                       <Input
@@ -628,7 +628,7 @@ export default function ReportNewPage({
                       />
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-400 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         키워드
                       </span>
                       <Input
@@ -638,7 +638,7 @@ export default function ReportNewPage({
                       />
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-400 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         링크
                       </span>
                       <Input
@@ -648,7 +648,7 @@ export default function ReportNewPage({
                       />
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-400 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         순서
                       </span>
                       <div className="flex items-center gap-2 flex-1 flex-wrap">
@@ -662,7 +662,7 @@ export default function ReportNewPage({
                             />
                           )}
                         />
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-[var(--seed-color-fg-neutral-muted)]">
                           숫자가 낮을수록 먼저 집행됩니다.
                         </span>
                       </div>
@@ -681,7 +681,7 @@ export default function ReportNewPage({
                     sort_order: String(cFields.length),
                   })
                 }
-                className="w-full border border-dashed border-white/15 rounded-xl py-3 text-sm text-gray-400 hover:border-[#0e299c] hover:text-gray-100 transition-colors"
+                className="w-full border border-dashed border-[var(--seed-color-stroke-neutral-muted)] rounded-xl py-3 text-sm text-[var(--seed-color-fg-neutral-muted)] hover:border-[#0e299c] hover:text-[var(--seed-color-fg-neutral)] transition-colors"
               >
                 + 항목 추가
               </button>
@@ -699,14 +699,14 @@ export default function ReportNewPage({
               {vFields.map((field, index) => (
                 <div
                   key={field.id}
-                  className="bg-white/5 rounded-xl overflow-hidden"
+                  className="bg-[var(--seed-color-bg-neutral-weak)] rounded-xl overflow-hidden"
                 >
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--seed-color-stroke-neutral-muted)]">
                     <div className="flex items-center gap-2">
                       <span className="w-5 h-5 flex items-center justify-center bg-[#0e299c] text-white text-xs font-bold rounded-full">
                         {index + 1}
                       </span>
-                      <span className="text-sm font-semibold text-gray-200">
+                      <span className="text-sm font-semibold text-[var(--seed-color-fg-neutral)]">
                         항목 {index + 1}
                       </span>
                     </div>
@@ -725,7 +725,7 @@ export default function ReportNewPage({
                   </div>
                   <div className="divide-y divide-white/10">
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-400 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         구분
                       </span>
                       <select
@@ -741,7 +741,7 @@ export default function ReportNewPage({
                       </select>
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-400 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         주제
                       </span>
                       <Input
@@ -751,7 +751,7 @@ export default function ReportNewPage({
                       />
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-400 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         순서
                       </span>
                       <div className="flex items-center gap-2 flex-1 flex-wrap">
@@ -765,13 +765,13 @@ export default function ReportNewPage({
                             />
                           )}
                         />
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-[var(--seed-color-fg-neutral-muted)]">
                           숫자가 낮을수록 먼저 집행됩니다.
                         </span>
                       </div>
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-gray-400 shrink-0">
+                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         유효기간
                       </span>
                       <Controller
@@ -798,7 +798,7 @@ export default function ReportNewPage({
                     sort_order: String(vFields.length),
                   })
                 }
-                className="w-full border border-dashed border-white/15 rounded-xl py-3 text-sm text-gray-400 hover:border-[#0e299c] hover:text-gray-100 transition-colors"
+                className="w-full border border-dashed border-[var(--seed-color-stroke-neutral-muted)] rounded-xl py-3 text-sm text-[var(--seed-color-fg-neutral-muted)] hover:border-[#0e299c] hover:text-[var(--seed-color-fg-neutral)] transition-colors"
               >
                 + 유효기간 추가
               </button>
