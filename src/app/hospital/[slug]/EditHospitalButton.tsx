@@ -53,7 +53,7 @@ export default function EditHospitalButton({
     setSaving(true);
     try {
       await updateHospitalRegion({ company, region: region.trim() });
-      // 유형이 선택되어 있고 기존과 다르면 갱신 (유형은 보고서가 있어야 저장됨)
+      // 유형이 선택되어 있고 기존과 다르면 갱신
       if (category && category !== (defaultCategory ?? "")) {
         await updateHospitalCategory({ company, hospitalType: category });
       }
@@ -75,20 +75,12 @@ export default function EditHospitalButton({
           </ActionButton>
         </BottomSheetTrigger>
 
-        <BottomSheetContent title="병원 정보 수정" description={company}>
+        <BottomSheetContent
+          title={company}
+          description="지역과 유형을 수정할 수 있어요"
+        >
           <BottomSheetBody>
             <div className="flex flex-col gap-4 pb-2">
-              {/* 병원명은 보고서가 참조하는 키라 수정 불가 */}
-              <div>
-                <Text textStyle="t4Bold">병원명</Text>
-                <Text textStyle="t5Regular" color="fg.neutralSubtle" className="mt-1">
-                  {company}
-                </Text>
-                <Text as="p" textStyle="t2Regular" color="fg.neutralSubtle" className="mt-1">
-                  병원명은 변경할 수 없어요.
-                </Text>
-              </div>
-
               <TextField
                 label="지역"
                 value={region}
@@ -119,25 +111,34 @@ export default function EditHospitalButton({
                     );
                   })}
                 </div>
-                <Text
-                  as="p"
-                  textStyle="t2Regular"
-                  color="fg.neutralSubtle"
-                  className="mt-1.5"
-                >
-                  유형은 보고서가 있어야 저장돼요.
-                </Text>
               </div>
             </div>
           </BottomSheetBody>
 
-          <BottomSheetFooter className="flex gap-2">
-            <ActionButton variant="neutralWeak" flexGrow onClick={() => setOpen(false)}>
-              취소
-            </ActionButton>
-            <ActionButton variant="brandSolid" flexGrow loading={saving} onClick={handleSubmit}>
-              저장
-            </ActionButton>
+          <BottomSheetFooter>
+            <div className="flex w-full flex-row gap-2">
+              <div className="flex-[3]">
+                <ActionButton
+                  variant="neutralWeak"
+                  size="large"
+                  className="w-full"
+                  onClick={() => setOpen(false)}
+                >
+                  취소
+                </ActionButton>
+              </div>
+              <div className="flex-[7]">
+                <ActionButton
+                  variant="brandSolid"
+                  size="large"
+                  className="w-full"
+                  loading={saving}
+                  onClick={handleSubmit}
+                >
+                  저장
+                </ActionButton>
+              </div>
+            </div>
           </BottomSheetFooter>
         </BottomSheetContent>
       </BottomSheetRoot>
