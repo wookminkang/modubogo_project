@@ -276,7 +276,7 @@ export default function EditForm({
               {fields.map((field, index) => (
                 <div
                   key={field.id}
-                  className="border border-[var(--seed-color-stroke-neutral-muted)] rounded-xl overflow-hidden"
+                  className="bg-[var(--seed-color-bg-neutral-weak)] rounded-xl overflow-hidden"
                 >
                   <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--seed-color-stroke-neutral-muted)]">
                     <div className="flex items-center gap-2">
@@ -300,7 +300,7 @@ export default function EditForm({
                       </Button>
                     )}
                   </div>
-                  <div className="divide-y divide-gray-50">
+                  <div className="divide-y divide-[var(--seed-color-stroke-neutral-muted)]">
                     <div className="flex items-center px-4 py-2.5 gap-3">
                       <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         구분
@@ -444,7 +444,7 @@ export default function EditForm({
               {cFields.map((field, index) => (
                 <div
                   key={field.id}
-                  className="border border-[var(--seed-color-stroke-neutral-muted)] rounded-xl overflow-hidden"
+                  className="bg-[var(--seed-color-bg-neutral-weak)] rounded-xl overflow-hidden"
                 >
                   <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--seed-color-stroke-neutral-muted)]">
                     <div className="flex items-center gap-2">
@@ -468,7 +468,7 @@ export default function EditForm({
                       </Button>
                     )}
                   </div>
-                  <div className="divide-y divide-gray-50">
+                  <div className="divide-y divide-[var(--seed-color-stroke-neutral-muted)]">
                     <div className="flex items-center px-4 py-2.5 gap-3">
                       <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         구분
@@ -565,7 +565,7 @@ export default function EditForm({
               {vFields.map((field, index) => (
                 <div
                   key={field.id}
-                  className="border border-[var(--seed-color-stroke-neutral-muted)] rounded-xl overflow-hidden"
+                  className="bg-[var(--seed-color-bg-neutral-weak)] rounded-xl overflow-hidden"
                 >
                   <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--seed-color-stroke-neutral-muted)]">
                     <div className="flex items-center gap-2">
@@ -589,7 +589,7 @@ export default function EditForm({
                       </Button>
                     )}
                   </div>
-                  <div className="divide-y divide-gray-50">
+                  <div className="divide-y divide-[var(--seed-color-stroke-neutral-muted)]">
                     <div className="flex items-center px-4 py-2.5 gap-3">
                       <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
                         구분
