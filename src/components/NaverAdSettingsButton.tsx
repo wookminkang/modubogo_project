@@ -92,20 +92,33 @@ export default function NaverAdSettingsButton({ company, defaultValues, trigger 
             </div>
           </BottomSheetBody>
 
-          <BottomSheetFooter className="flex gap-2">
-            <ActionButton
-              variant="neutralWeak"
-              flexGrow
-              onClick={() => {
-                setOpen(false);
-                setToast("API 설정을 취소했어요");
-              }}
-            >
-              취소
-            </ActionButton>
-            <ActionButton variant="brandSolid" flexGrow loading={saving} onClick={handleSubmit}>
-              저장
-            </ActionButton>
+          <BottomSheetFooter>
+            <div className="flex w-full flex-row gap-2">
+              <div className="flex-[3]">
+                <ActionButton
+                  variant="neutralWeak"
+                  size="large"
+                  className="w-full"
+                  onClick={() => {
+                    setOpen(false);
+                    setToast("API 설정을 취소했어요");
+                  }}
+                >
+                  취소
+                </ActionButton>
+              </div>
+              <div className="flex-[7]">
+                <ActionButton
+                  variant="brandSolid"
+                  size="large"
+                  className="w-full"
+                  loading={saving}
+                  onClick={handleSubmit}
+                >
+                  저장
+                </ActionButton>
+              </div>
+            </div>
           </BottomSheetFooter>
         </BottomSheetContent>
       </BottomSheetRoot>
