@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import Header from "@/components/Header";
+import Header, { type HeaderUser } from "@/components/Header";
 import Footer from "@/components/Footer";
 
 // 원장 회신 페이지(/holiday/[company]/[month])는 카카오 알림톡으로 진입하는
@@ -10,10 +10,10 @@ import Footer from "@/components/Footer";
 const REPLY_PAGE = /^\/holiday\/[^/]+\/\d{4}-\d{2}\/?$/;
 
 export function HolidayChrome({
-  admin,
+  user,
   children,
 }: {
-  admin: boolean;
+  user: HeaderUser | null;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -25,7 +25,7 @@ export function HolidayChrome({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header showNav={admin} />
+      <Header showNav={!!user} user={user} />
       <main className="flex flex-1 flex-col pt-14">{children}</main>
       <Footer />
     </div>

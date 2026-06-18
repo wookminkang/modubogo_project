@@ -4,17 +4,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Search, ChevronRight, ShieldCheck, LogOut } from "lucide-react";
+import { Search, ChevronRight, LogOut } from "lucide-react";
 import dayjs from "@/lib/dayjs";
 import { logoutAdmin } from "@/lib/admin-actions";
 import { companiesSummaryQuery } from "@/lib/queries";
 import ReportShell from "./ReportShell";
 
-export default function CompanyList({
-  isSuper = false,
-}: {
-  isSuper?: boolean;
-}) {
+export default function CompanyList() {
   const { data: companies } = useSuspenseQuery(companiesSummaryQuery());
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -46,21 +42,6 @@ export default function CompanyList({
 
   const actions = (
     <>
-      {isSuper && (
-        <Link
-          href="/super"
-          className="inline-flex items-center gap-1.5 bg-[#0e299c]/10 text-[#0e299c] text-xs md:text-sm font-semibold px-3 md:px-4 py-2 md:py-2.5 rounded-xl hover:bg-[#0e299c]/15 transition-colors whitespace-nowrap"
-        >
-          <ShieldCheck size={15} />
-          슈퍼관리자
-        </Link>
-      )}
-      <Link
-        href="/admin/dashboard"
-        className="bg-white text-gray-600 text-xs md:text-sm font-medium px-3 md:px-4 py-2 md:py-2.5 rounded-xl border border-gray-200 hover:border-gray-300 transition-colors whitespace-nowrap"
-      >
-        대시보드
-      </Link>
       <Link
         href="/report/new"
         className="bg-[#0e299c] text-white text-xs md:text-sm font-medium px-3 md:px-4 py-2 md:py-2.5 rounded-xl hover:bg-[#0a1f78] transition-colors whitespace-nowrap"

@@ -21,7 +21,7 @@ export default async function ReportListPage() {
     <>
       <HydrationBoundary state={dehydrate(queryClient)}>
         <Suspense fallback={<ListSkeleton />}>
-          <CompanyList isSuper={me.role === "super"} />
+          <CompanyList />
         </Suspense>
       </HydrationBoundary>
       <ScrollNav />

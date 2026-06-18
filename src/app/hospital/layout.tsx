@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { isAdmin } from "@/lib/admin";
+import { getAdminUser } from "@/lib/admin";
 
 export const metadata: Metadata = {
   title: "병원 목록 · 모두보고",
@@ -16,10 +16,13 @@ export default async function HospitalLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const admin = await isAdmin();
+  const user = await getAdminUser();
   return (
     <div className="flex min-h-screen flex-col">
-      <Header showNav={admin} />
+      <Header
+        showNav={!!user}
+        user={user && { name: user.name, role: user.role }}
+      />
       <main className="flex flex-1 flex-col pt-14">
         <div className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col">
           {children}

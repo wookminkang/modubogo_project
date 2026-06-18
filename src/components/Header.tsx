@@ -10,12 +10,24 @@ const TABS = [
   { href: "/holiday", label: "진료일정" },
 ];
 
+export interface HeaderUser {
+  name: string;
+  role: "super" | "staff";
+}
+
 /**
  * 앱 공통 상단 헤더.
  * showNav=true(관리자)일 때만 카테고리 탭(병원목록/보고서/진료일정)을 노출한다.
- * 공개 페이지(원장/광고주)에는 탭을 숨긴다.
+ * user 가 있으면(로그인) 유저 정보 + 대시보드 버튼을 우측에 노출한다.
+ * 공개 페이지(원장/광고주)에는 탭/유저 정보를 숨긴다.
  */
-export default function Header({ showNav = false }: { showNav?: boolean }) {
+export default function Header({
+  showNav = false,
+  user = null,
+}: {
+  showNav?: boolean;
+  user?: HeaderUser | null;
+}) {
   const pathname = usePathname();
 
   return (
@@ -52,8 +64,22 @@ export default function Header({ showNav = false }: { showNav?: boolean }) {
               })}
             </nav>
           ) : (
-            <span className="text-sm text-gray-400">광고 운영보고 시스템</span>
+            !user && (
+              <span className="text-sm text-gray-400">광고 운영보고 시스템</span>
+            )
           )}
+
+          {user && (
+            /* 로그인 역할 배지 — 클릭 시 대시보드로 이동 */
+            <Link
+              href="/admin/dashboard"
+              title="대시보드로 이동"
+              className="inline-flex shrink-0 items-center rounded-full bg-[#0e299c]/10 px-2.5 py-1 text-xs font-bold text-[#0e299c] transition-colors hover:bg-[#0e299c]/15"
+            >
+              {user.role === "super" ? "슈퍼관리자" : "관리자"}
+            </Link>
+          )}
+
           <ThemeToggle />
         </div>
       </div>
