@@ -321,6 +321,52 @@ export async function getHospitalListPaged(offset: number, limit: number) {
   }[];
 }
 
+// ── 병원 운영 메모(히스토리) ─────────────────────────────────
+// hospital_notes 테이블이 없으면 조회는 빈 배열을 반환(폴백)하므로
+// 테이블 생성 전에도 앱이 깨지지 않는다. 쓰기는 에러를 그대로 던진다.
+
+export interface HospitalNote {
+  id: number;
+  company: string;
+  content: string;
+  author: string | null;
+  created_at: string;
+}
+
+const NOTE_COLS = "id, company, content, author, created_at";
+
+/** 병원 운영 메모 목록 (최신순). 테이블 없으면 빈 배열. */
+export async function getHospitalNotes(company: string): Promise<HospitalNote[]> {
+  const { data, error } = await supabase
+    .from("hospital_notes")
+    .select(NOTE_COLS)
+    .eq("company", company)
+    .order("created_at", { ascending: false });
+  if (error) return []; // 테이블 미생성 등
+  return (data ?? []) as HospitalNote[];
+}
+
+/** 메모 추가. 생성된 행을 반환한다. */
+export async function addHospitalNote(
+  company: string,
+  content: string,
+  author?: string | null,
+): Promise<HospitalNote> {
+  const { data, error } = await supabase
+    .from("hospital_notes")
+    .insert({ company, content, author: author ?? null })
+    .select(NOTE_COLS)
+    .single();
+  if (error) throw new Error(error.message);
+  return data as HospitalNote;
+}
+
+/** 메모 삭제. */
+export async function deleteHospitalNote(id: number): Promise<void> {
+  const { error } = await supabase.from("hospital_notes").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
 /**
  * 병원 기본 정보(병원명 + 지역)를 등록/수정한다.
  * company 가 PK 이므로 onConflict 로 upsert. region 만 갱신하며 다른 컬럼은 건드리지 않는다.

@@ -1,6 +1,5 @@
 "use client";
 
-import { StickyNote } from "lucide-react";
 import { TabsRoot, TabsList, TabsTrigger, TabsContent } from "seed-design/ui/tabs";
 import { Text } from "seed-design/ui/text";
 import { Badge } from "seed-design/ui/badge";
@@ -8,6 +7,8 @@ import { ActionButton } from "seed-design/ui/action-button";
 import AlimtalkSettingsButton from "@/components/AlimtalkSettingsButton";
 import NaverAdSettingsButton from "@/components/NaverAdSettingsButton";
 import DableSettingsButton from "@/components/DableSettingsButton";
+import HospitalNotes from "./HospitalNotes";
+import type { HospitalNote } from "@/lib/db";
 
 // getCompanySettings 의 반환은 별도 타입이 없어 느슨하게 받는다.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -16,6 +17,7 @@ type Settings = any;
 interface Props {
   company: string;
   settings: Settings;
+  initialNotes: HospitalNote[];
 }
 
 function StatusBadge({ connected, label }: { connected: boolean; label: string }) {
@@ -30,7 +32,7 @@ function StatusBadge({ connected, label }: { connected: boolean; label: string }
   );
 }
 
-export default function HospitalTabs({ company, settings }: Props) {
+export default function HospitalTabs({ company, settings, initialNotes }: Props) {
   const recipients = [settings?.recipient1, settings?.recipient2, settings?.recipient3]
     .map((n: unknown) => (typeof n === "string" ? n.trim() : ""))
     .filter(Boolean);
@@ -40,7 +42,6 @@ export default function HospitalTabs({ company, settings }: Props) {
       settings?.naver_ad_customer_id,
   );
   const dableLinked = Boolean(settings?.dable_api_key && settings?.dable_account);
-  const region = settings?.region ?? null;
 
   const settingTrigger = (
     <ActionButton variant="neutralWeak" size="small">
@@ -93,17 +94,6 @@ export default function HospitalTabs({ company, settings }: Props) {
     },
   ];
 
-  const memo = [
-    `${company} 운영 기록 메모`,
-    "",
-    `· 지역 : ${region ?? "미설정"}`,
-    `· 알림톡 수신자 : ${recipients.length}명`,
-    `· 네이버 광고 : ${naverLinked ? "연동됨" : "미설정"}`,
-    `· 데이블 : ${dableLinked ? "연동됨" : "미설정"}`,
-    "",
-    "상세 운영 히스토리(보고서 발송·수정 이력 등)는 준비 중이에요.",
-  ].join("\n");
-
   return (
     <TabsRoot defaultValue="info" className="mt-4">
       <TabsList>
@@ -138,26 +128,9 @@ export default function HospitalTabs({ company, settings }: Props) {
         </div>
       </TabsContent>
 
-      {/* 히스토리: 메모식 텍스트 */}
+      {/* 히스토리: 운영 메모장 */}
       <TabsContent value="history">
-        <div className="px-4 py-4">
-          <div className="rounded-2xl border border-[var(--seed-color-stroke-neutral-muted)] bg-[var(--seed-color-bg-layer-default)] p-4">
-            <div className="flex items-center gap-1.5">
-              <StickyNote size={15} className="text-[var(--seed-color-fg-neutral-muted)]" />
-              <Text textStyle="t4Bold" color="fg.neutralMuted">
-                운영 메모
-              </Text>
-            </div>
-            <Text
-              as="p"
-              textStyle="t4Regular"
-              color="fg.neutralSubtle"
-              className="mt-3 whitespace-pre-line leading-relaxed"
-            >
-              {memo}
-            </Text>
-          </div>
-        </div>
+        <HospitalNotes company={company} initialNotes={initialNotes} />
       </TabsContent>
     </TabsRoot>
   );

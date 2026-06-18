@@ -7,6 +7,9 @@ import {
   upsertHospitalInfo,
   updateCompanyHospitalType,
   ensureCompanyNanoid,
+  addHospitalNote,
+  deleteHospitalNote,
+  type HospitalNote,
 } from "./db";
 
 /** 새 병원 등록. 동일 병원명이 이미 있으면 막는다. */
@@ -46,6 +49,21 @@ export async function updateHospitalCategory(data: {
   await updateCompanyHospitalType(data.company, data.hospitalType);
   revalidatePath("/hospital");
   revalidatePath(`/hospital/${encodeURIComponent(data.company)}`);
+}
+
+/** 병원 운영 메모 추가. 생성된 메모를 반환한다. */
+export async function createHospitalNote(data: {
+  company: string;
+  content: string;
+}): Promise<HospitalNote> {
+  const content = data.content.trim();
+  if (!content) throw new Error("메모 내용을 입력해주세요.");
+  return addHospitalNote(data.company, content);
+}
+
+/** 병원 운영 메모 삭제. */
+export async function removeHospitalNote(id: number): Promise<void> {
+  await deleteHospitalNote(id);
 }
 
 export async function saveNaverAdSettings(data: {

@@ -4,6 +4,7 @@ import { ArrowLeft, Building2 } from "lucide-react";
 import {
   getCompanySettings,
   getCompanyHospitalType,
+  getHospitalNotes,
   resolveCompanyParam,
 } from "@/lib/db";
 import { ContentPlaceholder } from "seed-design/ui/content-placeholder";
@@ -24,9 +25,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function HospitalDetailPage({ params }: Props) {
   const { slug } = await params;
   const company = await resolveCompanyParam(slug);
-  const [settings, hospitalType] = await Promise.all([
+  const [settings, hospitalType, notes] = await Promise.all([
     getCompanySettings(company),
     getCompanyHospitalType(company),
+    getHospitalNotes(company),
   ]);
   const region = settings?.region ?? null;
   const reportSlug =
@@ -91,7 +93,11 @@ export default async function HospitalDetailPage({ params }: Props) {
 
       {/* ── 우측: 탭 (병원정보 / 히스토리) ── */}
       <div className="md:min-w-0 md:flex-1">
-        <HospitalTabs company={company} settings={settings} />
+        <HospitalTabs
+          company={company}
+          settings={settings}
+          initialNotes={notes}
+        />
 
         {/* CTA — 모바일에서는 하단 */}
         <div className="px-4 pb-5 pt-1 md:hidden">{reportCta}</div>
