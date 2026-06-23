@@ -1,5 +1,6 @@
-import { CheckCircle2, LinkIcon } from "lucide-react";
+import { LinkIcon } from "lucide-react";
 import { getIntakeByNanoid } from "@/lib/db";
+import { TEXT_FIELDS } from "@/lib/intake-fields";
 import IntakeForm from "./IntakeForm";
 
 interface Props {
@@ -24,18 +25,21 @@ export default async function IntakePage({ params }: Props) {
     );
   }
 
-  if (intake.status === "submitted") {
-    return (
-      <CenterMessage
-        icon={<CheckCircle2 size={28} className="text-white" />}
-        tone="brand"
-        title="이미 제출이 완료되었어요"
-        desc={`${intake.company ? `${intake.company} ` : ""}준비자료가 정상적으로 접수되었습니다. 감사합니다.`}
-      />
-    );
-  }
+  // 제출 여부와 무관하게 폼 컴포넌트로 전달.
+  // 제출 완료 상태면 클라이언트에서 "이미 제출됨" 화면 + 수정하기 버튼을 보여준다.
+  const initialText: Record<string, string> = {};
+  for (const f of TEXT_FIELDS)
+    initialText[f.key] = (intake[f.key] as string | null) ?? "";
 
-  return <IntakeForm nanoid={intake.nanoid} company={intake.company ?? ""} />;
+  return (
+    <IntakeForm
+      nanoid={intake.nanoid}
+      submitted={intake.status === "submitted"}
+      initialCompany={intake.company ?? ""}
+      initialText={initialText}
+      initialFiles={intake.files ?? {}}
+    />
+  );
 }
 
 function CenterMessage({

@@ -46,7 +46,8 @@ function safeName(name: string): string {
 
 /**
  * 파일 1개를 업로드하고 메타데이터를 반환한다.
- * 경로 구조: {nanoid}/{fieldKey}/{index}-{safeName}
+ * 경로 구조: {nanoid}/{fieldKey}/{timestamp}_{index}-{safeName}
+ * timestamp 를 넣어 재제출(수정) 시 기존 파일 경로와 충돌하지 않게 한다.
  * (nanoid 는 추측 불가하므로 비공개 버킷에서 사실상 토큰 역할도 겸함)
  */
 export async function uploadIntakeFile(
@@ -55,7 +56,7 @@ export async function uploadIntakeFile(
   index: number,
   file: File,
 ): Promise<IntakeFileMeta> {
-  const path = `${nanoid}/${fieldKey}/${index}-${safeName(file.name)}`;
+  const path = `${nanoid}/${fieldKey}/${Date.now()}_${index}-${safeName(file.name)}`;
   const buffer = Buffer.from(await file.arrayBuffer());
 
   const { error } = await getClient()
@@ -78,6 +79,12 @@ export async function getIntakeFileSignedUrl(
     .storage.from(INTAKE_BUCKET)
     .createSignedUrl(path, expiresInSec);
   return error ? null : (data?.signedUrl ?? null);
+}
+
+/** 지정한 경로들의 파일만 삭제 (수정 제출 시 제거된 기존 파일 정리). */
+export async function deleteIntakeFilePaths(paths: string[]): Promise<void> {
+  if (!paths.length) return;
+  await getClient().storage.from(INTAKE_BUCKET).remove(paths);
 }
 
 /** 제출 1건의 모든 파일 삭제 (제출 삭제 시 정리). 폴더 단위 제거. */

@@ -89,7 +89,7 @@ export default function IntakesView({
           <button
             onClick={handleCreate}
             disabled={pending}
-            className="flex shrink-0 items-center gap-1 rounded-xl bg-[#0e299c] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0a1f78] disabled:opacity-50"
+            className="flex shrink-0 cursor-pointer items-center gap-1 rounded-xl bg-[#0e299c] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0a1f78] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Plus size={16} />
             생성
@@ -132,7 +132,7 @@ export default function IntakesView({
                   <button
                     onClick={() => setConfirmDel(it)}
                     aria-label="삭제"
-                    className="shrink-0 rounded-lg p-1.5 text-gray-300 transition-colors hover:bg-red-50 hover:text-red-500"
+                    className="shrink-0 cursor-pointer rounded-lg p-1.5 text-gray-300 transition-colors hover:bg-red-50 hover:text-red-500"
                   >
                     <Trash2 size={17} />
                   </button>
@@ -146,7 +146,7 @@ export default function IntakesView({
                   </span>
                   <button
                     onClick={() => copyLink(it.nanoid)}
-                    className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-[#0e299c] hover:bg-[#0e299c]/10"
+                    className="flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-[#0e299c] hover:bg-[#0e299c]/10"
                   >
                     <Copy size={12} />
                     복사

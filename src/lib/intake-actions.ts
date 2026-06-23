@@ -14,7 +14,11 @@ import {
   type IntakeFiles,
   type IntakeFileMeta,
 } from "./intake-fields";
-import { uploadIntakeFile, deleteIntakeFiles } from "./intake-storage";
+import {
+  uploadIntakeFile,
+  deleteIntakeFiles,
+  deleteIntakeFilePaths,
+} from "./intake-storage";
 
 /** [관리자] 신규 준비자료 폼 생성 → 공개 링크용 nanoid 반환 */
 export async function createIntakeForm(company?: string): Promise<string> {
@@ -53,19 +57,34 @@ export async function submitIntake(
     existing.company ||
     null;
 
-  // ── 파일 항목 (Storage 업로드) ──
+  // ── 파일 항목 ──
+  // 수정 제출 시 광고주가 "유지"한 기존 파일 경로 집합
+  const keptPaths = new Set(
+    formData.getAll("keep").filter((v): v is string => typeof v === "string"),
+  );
+  const removedPaths: string[] = [];
   const files: IntakeFiles = {};
+
   for (const f of FILE_FIELDS) {
-    const entries = formData
+    // 1) 유지되는 기존 파일
+    const prev = existing.files[f.key] ?? [];
+    const retained = prev.filter((m) => keptPaths.has(m.path));
+    for (const m of prev) if (!keptPaths.has(m.path)) removedPaths.push(m.path);
+
+    // 2) 새로 업로드된 파일
+    const newEntries = formData
       .getAll(f.key)
       .filter((v): v is File => v instanceof File && v.size > 0);
-    if (!entries.length) continue;
-    const metas: IntakeFileMeta[] = [];
-    for (let i = 0; i < entries.length; i++) {
-      metas.push(await uploadIntakeFile(nanoid, f.key, i, entries[i]));
+    const metas: IntakeFileMeta[] = [...retained];
+    for (let i = 0; i < newEntries.length; i++) {
+      metas.push(await uploadIntakeFile(nanoid, f.key, i, newEntries[i]));
     }
-    files[f.key] = metas;
+    if (metas.length) files[f.key] = metas;
   }
+
+  // 제거된 기존 파일은 Storage 에서 정리 (실패해도 제출은 진행)
+  if (removedPaths.length)
+    await deleteIntakeFilePaths(removedPaths).catch(() => {});
 
   await saveIntakeSubmission(nanoid, { company, text, files });
   revalidatePath("/intakes");
