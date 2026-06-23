@@ -61,7 +61,7 @@ export default function IntakesView({
   };
 
   return (
-    <div className="min-h-screen bg-[#F0F4FA] px-4 py-6">
+    <div className="flex-1 bg-[#F0F4FA] px-4 py-6">
       {/* 헤더 */}
       <div className="mb-5">
         <h1 className="flex items-center gap-2 text-xl font-bold text-gray-900">
@@ -156,7 +156,7 @@ export default function IntakesView({
                 {/* 제출 보기 */}
                 {submitted && (
                   <Link
-                    href={`/admin/intakes/${it.nanoid}`}
+                    href={`/intakes/${it.nanoid}`}
                     className="mt-2 flex items-center justify-between rounded-lg bg-[#0e299c]/5 px-3 py-2.5 text-sm font-semibold text-[#0e299c] transition-colors hover:bg-[#0e299c]/10"
                   >
                     제출 내용 보기

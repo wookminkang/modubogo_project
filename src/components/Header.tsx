@@ -8,7 +8,7 @@ const TABS = [
   { href: "/hospital", label: "병원목록" },
   { href: "/report", label: "보고서" },
   { href: "/holiday", label: "진료일정" },
-  { href: "/admin/intakes", label: "준비자료" },
+  { href: "/intakes", label: "준비자료" },
 ];
 
 export interface HeaderUser {

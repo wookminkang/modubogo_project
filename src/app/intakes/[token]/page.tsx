@@ -22,7 +22,7 @@ export default async function IntakeDetailPage({ params }: Props) {
 
   if (!intake) {
     return (
-      <div className="min-h-screen bg-[#F0F4FA] px-4 py-6">
+      <div className="flex-1 bg-[#F0F4FA] px-4 py-6">
         <BackLink />
         <div className="mt-4 rounded-2xl bg-white py-16 text-center text-sm text-gray-400 shadow-sm">
           존재하지 않는 폼이에요.
@@ -44,7 +44,7 @@ export default async function IntakeDetailPage({ params }: Props) {
   const submitted = intake.status === "submitted";
 
   return (
-    <div className="min-h-screen bg-[#F0F4FA] px-4 py-6">
+    <div className="flex-1 bg-[#F0F4FA] px-4 py-6">
       <BackLink />
 
       <div className="mt-4 rounded-2xl bg-white p-5 shadow-sm">
@@ -152,7 +152,7 @@ export default async function IntakeDetailPage({ params }: Props) {
 function BackLink() {
   return (
     <Link
-      href="/admin/intakes"
+      href="/intakes"
       className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-600 transition-colors hover:text-[#0e299c]"
     >
       <ArrowLeft size={16} />

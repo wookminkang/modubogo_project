@@ -19,7 +19,7 @@ import { uploadIntakeFile, deleteIntakeFiles } from "./intake-storage";
 /** [관리자] 신규 준비자료 폼 생성 → 공개 링크용 nanoid 반환 */
 export async function createIntakeForm(company?: string): Promise<string> {
   const row = await createIntake(company);
-  revalidatePath("/admin/intakes");
+  revalidatePath("/intakes");
   return row.nanoid;
 }
 
@@ -27,7 +27,7 @@ export async function createIntakeForm(company?: string): Promise<string> {
 export async function deleteIntakeForm(nanoid: string): Promise<void> {
   await deleteIntakeFiles(nanoid).catch(() => {});
   await deleteIntake(nanoid);
-  revalidatePath("/admin/intakes");
+  revalidatePath("/intakes");
 }
 
 /**
@@ -68,7 +68,7 @@ export async function submitIntake(
   }
 
   await saveIntakeSubmission(nanoid, { company, text, files });
-  revalidatePath("/admin/intakes");
-  revalidatePath(`/admin/intakes/${nanoid}`);
+  revalidatePath("/intakes");
+  revalidatePath(`/intakes/${nanoid}`);
   return { ok: true };
 }
