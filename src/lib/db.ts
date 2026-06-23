@@ -703,3 +703,100 @@ export async function getHolidaySends(
 
   return Array.from(map.values());
 }
+
+// ── 신규 광고주 준비자료 제출 폼 (intake_submissions) ──────────────
+// (generateCompanyNanoid 는 파일 상단에서 이미 import)
+import type { IntakeFiles } from "./intake-fields";
+
+export interface IntakeSubmission {
+  id: string;
+  nanoid: string;
+  company: string | null;
+  status: "pending" | "submitted";
+  billing_email: string | null;
+  medical_staff: string | null;
+  inpatient_rooms: string | null;
+  equipment_list: string | null;
+  strengths: string | null;
+  required_text: string | null;
+  files: IntakeFiles;
+  created_at: string;
+  submitted_at: string | null;
+}
+
+/** 텍스트(서술형) 항목만 모은 입력 페이로드 */
+export type IntakeTextPayload = Pick<
+  IntakeSubmission,
+  | "billing_email"
+  | "medical_staff"
+  | "inpatient_rooms"
+  | "equipment_list"
+  | "strengths"
+  | "required_text"
+>;
+
+/** 신규 준비자료 폼 생성. nanoid 발급 후 pending 행 삽입. */
+export async function createIntake(company?: string): Promise<IntakeSubmission> {
+  const nanoid = generateCompanyNanoid();
+  const { data, error } = await supabase
+    .from("intake_submissions")
+    .insert({ nanoid, company: company?.trim() || null, status: "pending" })
+    .select()
+    .single();
+  if (error) throw new Error(`준비자료 폼 생성 실패: ${error.message}`);
+  return data as IntakeSubmission;
+}
+
+/** 공개 링크(nanoid) → 제출 행. 없으면 null. */
+export async function getIntakeByNanoid(
+  nanoid: string,
+): Promise<IntakeSubmission | null> {
+  const { data } = await supabase
+    .from("intake_submissions")
+    .select("*")
+    .eq("nanoid", nanoid)
+    .limit(1)
+    .maybeSingle();
+  return (data as IntakeSubmission | null) ?? null;
+}
+
+/** 관리자 목록 — 최신순 */
+export async function listIntakes(): Promise<IntakeSubmission[]> {
+  const { data, error } = await supabase
+    .from("intake_submissions")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) return [];
+  return (data as IntakeSubmission[] | null) ?? [];
+}
+
+/** 광고주 제출 저장 — 텍스트 + 파일 메타 반영, status=submitted */
+export async function saveIntakeSubmission(
+  nanoid: string,
+  payload: {
+    company: string | null;
+    text: IntakeTextPayload;
+    files: IntakeFiles;
+  },
+): Promise<void> {
+  const { error } = await supabase
+    .from("intake_submissions")
+    .update({
+      company: payload.company,
+      ...payload.text,
+      files: payload.files,
+      status: "submitted",
+      submitted_at: new Date().toISOString(),
+    })
+    .eq("nanoid", nanoid);
+  if (error) throw new Error(`제출 저장 실패: ${error.message}`);
+}
+
+/** 폼 삭제 (행만 제거 — 파일 정리는 호출부에서 deleteIntakeFiles 로) */
+export async function deleteIntake(nanoid: string): Promise<void> {
+  const { error } = await supabase
+    .from("intake_submissions")
+    .delete()
+    .eq("nanoid", nanoid);
+  if (error) throw new Error(`삭제 실패: ${error.message}`);
+}
