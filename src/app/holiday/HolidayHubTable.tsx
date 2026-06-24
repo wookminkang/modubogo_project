@@ -113,7 +113,7 @@ export default function HolidayHubTable({
   };
 
   const checkbox =
-    "h-4 w-4 shrink-0 cursor-pointer accent-[#0e299c] disabled:cursor-not-allowed";
+    "h-4 w-4 shrink-0 cursor-pointer accent-[#0e299c] [color-scheme:light] disabled:cursor-not-allowed";
 
   return (
     <>
