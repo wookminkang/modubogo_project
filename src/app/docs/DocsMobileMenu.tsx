@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { NAV } from "./nav";
@@ -35,9 +36,13 @@ export default function DocsMobileMenu() {
         >
           {/* 드로어 헤더 */}
           <div className="flex items-center justify-between px-5 h-14 border-b border-gray-100 shrink-0">
-            <span className="text-[#0e299c] font-bold text-base">
-              모두보고<span className="text-red-400">.</span>
-            </span>
+            <Image
+              src="/modubogo_logo.svg"
+              alt="모두보고"
+              width={77}
+              height={24}
+              className="h-6 w-auto"
+            />
             <button
               onClick={() => setOpen(false)}
               className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"

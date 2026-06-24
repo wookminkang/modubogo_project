@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import DocsSidebar from "./DocsSidebar";
 import DocsMobileMenu from "./DocsMobileMenu";
 
@@ -9,9 +10,14 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 md:px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <span className="text-[#0e299c] font-bold text-base">
-              모두보고<span className="text-red-400">.</span>
-            </span>
+            <Image
+              src="/modubogo_logo.svg"
+              alt="모두보고"
+              width={87}
+              height={27}
+              priority
+              className="h-[27px] w-auto"
+            />
             <span className="text-[11px] font-medium text-gray-400 border border-gray-200 px-1.5 py-0.5 rounded-md tracking-wide">
               Docs
             </span>

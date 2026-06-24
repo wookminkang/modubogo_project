@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 
@@ -36,9 +37,17 @@ export default function Header({
       <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between gap-3">
         <Link
           href={showNav ? "/report" : "#"}
-          className="shrink-0 text-base font-bold text-[#0e299c] tracking-tight"
+          className="flex shrink-0 items-center"
+          aria-label="모두보고"
         >
-          모두보고<span className="text-red-500">.</span>
+          <Image
+            src="/modubogo_logo.svg"
+            alt="모두보고"
+            width={90}
+            height={28}
+            priority
+            className="h-7 w-auto"
+          />
         </Link>
 
         <div className="flex items-center gap-4">
