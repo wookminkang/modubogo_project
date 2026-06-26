@@ -17,6 +17,20 @@ import ConfirmToast from "@/components/ConfirmToast";
 import { createIntakeForm, deleteIntakeForm } from "@/lib/intake-actions";
 import type { IntakeSubmission } from "@/lib/db";
 
+// 테마(다크/라이트) 적응 색상 — Seed 시맨틱 토큰
+//  page : layer-basement  (라이트 #f3f4f5 / 다크 #000)  페이지 배경
+//  card : layer-default   (라이트 #fff    / 다크 #16171b) 카드
+//  chip : neutral-weak    (라이트 #f3f4f5 / 다크 #2b2e35) 입력/링크칸
+//  brand-weak 는 항상 밝은 파랑(#eaeef8)이라 그 위 #0e299c 글씨가 두 테마 모두 보인다.
+const PAGE = "bg-[var(--seed-color-bg-layer-basement)]";
+const CARD = "bg-[var(--seed-color-bg-layer-default)]";
+const CHIP = "bg-[var(--seed-color-bg-neutral-weak)]";
+const FG = "text-[var(--seed-color-fg-neutral)]";
+const FG_SUB = "text-[var(--seed-color-fg-neutral-subtle)]";
+const BORDER = "border-[var(--seed-color-stroke-neutral-muted)]";
+const BRAND_CHIP =
+  "bg-[var(--seed-color-bg-brand-weak)] text-[#0e299c]";
+
 export default function IntakesView({
   intakes,
 }: {
@@ -61,21 +75,21 @@ export default function IntakesView({
   };
 
   return (
-    <div className="flex-1 bg-[#F0F4FA] px-4 py-6">
+    <div className={`flex-1 ${PAGE} px-4 py-6`}>
       {/* 헤더 */}
       <div className="mb-5">
-        <h1 className="flex items-center gap-2 text-xl font-bold text-gray-900">
-          <ClipboardList size={22} className="text-[#0e299c]" />
+        <h1 className={`flex items-center gap-2 text-xl font-bold ${FG}`}>
+          <ClipboardList size={22} className={FG} />
           광고주 준비자료 폼
         </h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className={`mt-1 text-sm ${FG_SUB}`}>
           신규 광고주에게 보낼 자료 제출 링크를 만들고 제출 현황을 확인해요.
         </p>
       </div>
 
       {/* 신규 생성 */}
-      <div className="mb-5 rounded-2xl bg-white p-4 shadow-sm">
-        <label className="mb-2 block text-sm font-semibold text-gray-700">
+      <div className={`mb-5 rounded-2xl ${CARD} p-4 shadow-sm`}>
+        <label className={`mb-2 block text-sm font-semibold ${FG}`}>
           새 폼 만들기
         </label>
         <div className="flex gap-2">
@@ -84,7 +98,7 @@ export default function IntakesView({
             onChange={(e) => setNewCompany(e.target.value)}
             placeholder="병원명 (선택 — 광고주가 입력할 수도 있어요)"
             onKeyDown={(e) => e.key === "Enter" && !pending && handleCreate()}
-            className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:border-[#0e299c]"
+            className={`min-w-0 flex-1 rounded-xl border ${BORDER} ${CHIP} px-3 py-2.5 text-sm ${FG} placeholder:text-[var(--seed-color-fg-neutral-subtle)] outline-none focus:border-[#5b7fe0] focus:ring-1 focus:ring-[#5b7fe0]`}
           />
           <button
             onClick={handleCreate}
@@ -95,14 +109,14 @@ export default function IntakesView({
             생성
           </button>
         </div>
-        <p className="mt-2 text-xs text-gray-400">
+        <p className={`mt-2 text-xs ${FG_SUB}`}>
           생성하면 제출 링크가 자동으로 복사돼요. 알림톡·문자로 보내주세요.
         </p>
       </div>
 
       {/* 목록 */}
       {intakes.length === 0 ? (
-        <div className="rounded-2xl bg-white py-16 text-center text-sm text-gray-400 shadow-sm">
+        <div className={`rounded-2xl ${CARD} py-16 text-center text-sm ${FG_SUB} shadow-sm`}>
           아직 만든 폼이 없어요.
         </div>
       ) : (
@@ -110,19 +124,16 @@ export default function IntakesView({
           {intakes.map((it) => {
             const submitted = it.status === "submitted";
             return (
-              <div
-                key={it.nanoid}
-                className="rounded-2xl bg-white p-4 shadow-sm"
-              >
+              <div key={it.nanoid} className={`rounded-2xl ${CARD} p-4 shadow-sm`}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="truncate text-base font-bold text-gray-900">
+                      <span className={`truncate text-base font-bold ${FG}`}>
                         {it.company || "병원명 미지정"}
                       </span>
                       <StatusBadge submitted={submitted} />
                     </div>
-                    <p className="mt-1 text-xs text-gray-400">
+                    <p className={`mt-1 text-xs ${FG_SUB}`}>
                       생성 {dayjs(it.created_at).format("YYYY.MM.DD")}
                       {submitted &&
                         it.submitted_at &&
@@ -132,21 +143,21 @@ export default function IntakesView({
                   <button
                     onClick={() => setConfirmDel(it)}
                     aria-label="삭제"
-                    className="shrink-0 cursor-pointer rounded-lg p-1.5 text-gray-300 transition-colors hover:bg-red-50 hover:text-red-500"
+                    className={`shrink-0 cursor-pointer rounded-lg p-1.5 ${FG_SUB} transition-colors hover:bg-[#fdecec] hover:text-[#e25151]`}
                   >
                     <Trash2 size={17} />
                   </button>
                 </div>
 
                 {/* 링크 */}
-                <div className="mt-3 flex items-center gap-1.5 rounded-lg bg-gray-50 px-3 py-2">
-                  <LinkIcon size={13} className="shrink-0 text-gray-400" />
-                  <span className="min-w-0 flex-1 truncate text-xs text-gray-500">
+                <div className={`mt-3 flex items-center gap-1.5 rounded-lg ${CHIP} px-3 py-2`}>
+                  <LinkIcon size={13} className={`shrink-0 ${FG_SUB}`} />
+                  <span className={`min-w-0 flex-1 truncate text-xs ${FG_SUB}`}>
                     /intake/{it.nanoid}
                   </span>
                   <button
                     onClick={() => copyLink(it.nanoid)}
-                    className="flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-[#0e299c] hover:bg-[#0e299c]/10"
+                    className={`flex shrink-0 cursor-pointer items-center gap-1 rounded-md ${BRAND_CHIP} px-2 py-1 text-xs font-semibold transition-opacity hover:opacity-80`}
                   >
                     <Copy size={12} />
                     복사
@@ -157,7 +168,7 @@ export default function IntakesView({
                 {submitted && (
                   <Link
                     href={`/intakes/${it.nanoid}`}
-                    className="mt-2 flex items-center justify-between rounded-lg bg-[#0e299c]/5 px-3 py-2.5 text-sm font-semibold text-[#0e299c] transition-colors hover:bg-[#0e299c]/10"
+                    className={`mt-2 flex items-center justify-between rounded-lg ${BRAND_CHIP} px-3 py-2.5 text-sm font-semibold transition-opacity hover:opacity-80`}
                   >
                     제출 내용 보기
                     <ChevronRight size={16} />
@@ -187,11 +198,11 @@ export default function IntakesView({
 
 function StatusBadge({ submitted }: { submitted: boolean }) {
   return submitted ? (
-    <span className="shrink-0 rounded-full bg-[#0e299c]/10 px-2 py-0.5 text-xs font-bold text-[#0e299c]">
+    <span className={`shrink-0 rounded-full ${BRAND_CHIP} px-2 py-0.5 text-xs font-bold`}>
       제출완료
     </span>
   ) : (
-    <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-bold text-gray-500">
+    <span className={`shrink-0 rounded-full ${CHIP} px-2 py-0.5 text-xs font-bold ${FG_SUB}`}>
       대기
     </span>
   );
