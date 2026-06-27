@@ -138,9 +138,9 @@ export default function EditForm({
   }
 
   const inputClass =
-    "h-11 rounded-xl border-[var(--seed-color-stroke-neutral-muted)] text-[var(--seed-color-fg-neutral)] focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/20";
+    "h-11 rounded-xl border-[var(--seed-color-stroke-neutral-muted)] text-[var(--seed-color-fg-neutral)] focus-visible:border-[#5b7fe0] focus-visible:ring-[#5b7fe0]/40";
   const rowInputClass =
-    "flex-1 h-9 rounded-lg border-[var(--seed-color-stroke-neutral-muted)] text-[var(--seed-color-fg-neutral)] text-sm focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/20";
+    "flex-1 h-9 rounded-lg border-[var(--seed-color-stroke-neutral-muted)] text-[var(--seed-color-fg-neutral)] text-sm focus-visible:border-[#5b7fe0] focus-visible:ring-[#5b7fe0]/40";
 
   return (
     <div className="min-h-screen bg-[var(--seed-color-bg-layer-default)]">

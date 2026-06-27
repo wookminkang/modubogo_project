@@ -31,9 +31,11 @@ export default async function IntakeDetailPage({ params }: Props) {
   if (!intake) {
     return (
       <div className={`flex-1 ${PAGE} px-4 py-6`}>
-        <BackLink />
-        <div className={`mt-4 rounded-2xl ${CARD} py-16 text-center text-sm ${FG_SUB} shadow-sm`}>
-          존재하지 않는 폼이에요.
+        <div className="mx-auto max-w-6xl">
+          <BackLink />
+          <div className={`mt-4 rounded-2xl ${CARD} py-16 text-center text-sm ${FG_SUB} shadow-sm`}>
+            존재하지 않는 폼이에요.
+          </div>
         </div>
       </div>
     );
@@ -53,6 +55,7 @@ export default async function IntakeDetailPage({ params }: Props) {
 
   return (
     <div className={`flex-1 ${PAGE} px-4 py-6`}>
+     <div className="mx-auto max-w-6xl">
       <BackLink />
 
       <div className={`mt-4 rounded-2xl ${CARD} p-5 shadow-sm`}>
@@ -145,6 +148,7 @@ export default async function IntakeDetailPage({ params }: Props) {
           </section>
         </div>
       )}
+     </div>
     </div>
   );
 }

@@ -31,7 +31,7 @@ export function DatePicker({ value, onChange, className }: DatePickerProps) {
     <Popover>
       <PopoverTrigger
         className={cn(
-          "flex h-11 w-full items-center justify-between rounded-xl border border-gray-200 bg-transparent px-3 text-sm transition-colors hover:border-[#0e299c] focus-visible:outline-none focus-visible:border-[#0e299c] focus-visible:ring-3 focus-visible:ring-[#0e299c]/20",
+          "flex h-11 w-full items-center justify-between rounded-xl border border-gray-200 bg-transparent px-3 text-sm transition-colors hover:border-[#0e299c] focus-visible:outline-none focus-visible:border-[#5b7fe0] focus-visible:ring-3 focus-visible:ring-[#5b7fe0]/40",
           !value ? "text-gray-400" : "text-[var(--seed-color-fg-neutral)]",
           className
         )}

@@ -38,31 +38,34 @@ export function MonthPicker({ value, onChange, className }: MonthPickerProps) {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         className={cn(
-          "flex h-11 w-full items-center justify-between rounded-xl border border-gray-200 bg-transparent px-3 text-sm text-gray-900 transition-colors hover:border-[#0e299c] focus-visible:outline-none focus-visible:border-[#0e299c] focus-visible:ring-3 focus-visible:ring-[#0e299c]/20",
-          !value && "text-gray-400",
+          "flex h-11 w-full items-center justify-between rounded-xl border border-[var(--seed-color-stroke-neutral-muted)] bg-transparent px-3 text-sm transition-colors hover:border-[#0e299c] focus-visible:outline-none focus-visible:border-[#5b7fe0] focus-visible:ring-3 focus-visible:ring-[#5b7fe0]/40",
+          !value ? "text-[var(--seed-color-fg-neutral-subtle)]" : "text-[var(--seed-color-fg-neutral)]",
           className
         )}
       >
         <span>{formatted}</span>
-        <CalendarDays className="size-4 text-gray-400" />
+        <CalendarDays className="size-4 text-[var(--seed-color-fg-neutral-subtle)]" />
       </PopoverTrigger>
-      <PopoverContent className="w-72 p-3 bg-white" align="start">
+      <PopoverContent
+        className="w-72 rounded-2xl border border-[var(--seed-color-stroke-neutral-muted)] bg-[var(--seed-color-bg-layer-floating)] p-3 text-[var(--seed-color-fg-neutral)] shadow-xl"
+        align="start"
+      >
         {/* 연도 네비게이션 */}
         <div className="flex items-center justify-between mb-3">
           <button
             type="button"
             onClick={() => setYear((y) => y - 1)}
-            className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-1 rounded-lg hover:bg-[var(--seed-color-bg-neutral-weak)] transition-colors"
           >
-            <ChevronLeft className="size-4 text-gray-500" />
+            <ChevronLeft className="size-4 text-[var(--seed-color-fg-neutral-subtle)]" />
           </button>
-          <span className="text-sm font-semibold text-gray-800">{year}년</span>
+          <span className="text-sm font-semibold text-[var(--seed-color-fg-neutral)]">{year}년</span>
           <button
             type="button"
             onClick={() => setYear((y) => y + 1)}
-            className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-1 rounded-lg hover:bg-[var(--seed-color-bg-neutral-weak)] transition-colors"
           >
-            <ChevronRight className="size-4 text-gray-500" />
+            <ChevronRight className="size-4 text-[var(--seed-color-fg-neutral-subtle)]" />
           </button>
         </div>
 
@@ -81,8 +84,8 @@ export function MonthPicker({ value, onChange, className }: MonthPickerProps) {
                   isSelected
                     ? "bg-[#0e299c] text-white"
                     : isToday
-                    ? "border border-[#0e299c] text-[#0e299c] hover:bg-[#0e299c]/10"
-                    : "text-gray-700 hover:bg-gray-100"
+                    ? "border border-[#0e299c] text-[var(--seed-color-fg-neutral)] hover:bg-[#0e299c]/10"
+                    : "text-[var(--seed-color-fg-neutral)] hover:bg-[var(--seed-color-bg-neutral-weak)]"
                 )}
               >
                 {label}

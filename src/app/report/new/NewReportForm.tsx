@@ -106,7 +106,7 @@ function HospitalCombobox({
             setOpen(true);
           }}
           placeholder={value || "병원명으로 검색·선택"}
-          className="h-11 w-full rounded-xl border border-[var(--seed-color-stroke-neutral-muted)] bg-[var(--seed-color-bg-neutral-weak)] pr-4 pl-10 text-sm text-[var(--seed-color-fg-neutral)] outline-none placeholder:text-gray-500 focus:border-[#0e299c] focus:ring-2 focus:ring-[#0e299c]/30"
+          className="h-11 w-full rounded-xl border border-[var(--seed-color-stroke-neutral-muted)] bg-[var(--seed-color-bg-neutral-weak)] pr-4 pl-10 text-sm text-[var(--seed-color-fg-neutral)] outline-none placeholder:text-gray-500 focus:border-[#5b7fe0] focus:ring-2 focus:ring-[#5b7fe0]/40"
         />
       </div>
 
@@ -255,9 +255,9 @@ export default function ReportNewPage({
   };
 
   const inputClass =
-    "h-11 rounded-xl border-[var(--seed-color-stroke-neutral-muted)] bg-[var(--seed-color-bg-neutral-weak)] text-[var(--seed-color-fg-neutral)] placeholder:text-gray-500 focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/30";
+    "h-11 rounded-xl border-[var(--seed-color-stroke-neutral-muted)] bg-[var(--seed-color-bg-neutral-weak)] text-[var(--seed-color-fg-neutral)] placeholder:text-gray-500 focus-visible:border-[#5b7fe0] focus-visible:ring-[#5b7fe0]/40";
   const rowInputClass =
-    "flex-1 h-9 rounded-lg border-[var(--seed-color-stroke-neutral-muted)] bg-[var(--seed-color-bg-neutral-weak)] text-[var(--seed-color-fg-neutral)] text-sm placeholder:text-gray-500 focus-visible:border-[#0e299c] focus-visible:ring-[#0e299c]/30";
+    "flex-1 h-9 rounded-lg border-[var(--seed-color-stroke-neutral-muted)] bg-[var(--seed-color-bg-neutral-weak)] text-[var(--seed-color-fg-neutral)] text-sm placeholder:text-gray-500 focus-visible:border-[#5b7fe0] focus-visible:ring-[#5b7fe0]/40";
 
   if (saved) {
     return <ResultSuccess message="저장되었어요." redirectTo={redirectTo} />;

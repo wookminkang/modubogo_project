@@ -35,7 +35,7 @@ export default function CompanyList() {
         placeholder="상호명으로 검색하세요."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="w-full bg-[#F0F4FA] rounded-full pl-11 pr-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-[#0e299c]/30"
+        className="w-full bg-[#F0F4FA] rounded-full pl-11 pr-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-[#5b7fe0]/40"
       />
     </>
   );
