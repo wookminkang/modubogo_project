@@ -38,7 +38,7 @@ export function MonthPicker({ value, onChange, className }: MonthPickerProps) {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         className={cn(
-          "flex h-11 w-full items-center justify-between rounded-xl border border-[var(--seed-color-stroke-neutral-muted)] bg-transparent px-3 text-sm transition-colors hover:border-[#0e299c] focus-visible:outline-none focus-visible:border-[#5b7fe0] focus-visible:ring-3 focus-visible:ring-[#5b7fe0]/40",
+          "flex h-11 w-full items-center justify-between rounded-xl border border-[var(--seed-color-stroke-neutral-muted)] bg-transparent px-3 text-sm transition-colors hover:border-[#0e299c] focus-visible:outline-none focus-visible:border-[#0e299c] focus-visible:ring-3 focus-visible:ring-[#0e299c]/40",
           !value ? "text-[var(--seed-color-fg-neutral-subtle)]" : "text-[var(--seed-color-fg-neutral)]",
           className
         )}

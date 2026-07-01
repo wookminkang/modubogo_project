@@ -79,8 +79,10 @@ export function TimeSelect({
           // 큰 카드형 버튼 (진료/휴진 버튼과 동일한 크기·가운데 정렬)
           <button
             type="button"
-            className={`relative flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-[var(--seed-color-bg-neutral-weak)] py-9 transition-all active:bg-[var(--seed-color-bg-neutral-weak)] ${
-              value ? "bg-[var(--seed-color-bg-neutral-weak)]" : ""
+            className={`relative flex flex-col items-center justify-center gap-1.5 rounded-2xl border py-9 transition-all ${
+              value
+                ? "border-[#0e299c] bg-[#0e299c]"
+                : "border-[var(--seed-color-stroke-neutral-muted)] active:bg-[var(--seed-color-bg-neutral-weak)]"
             }`}
           >
             {value && (
@@ -101,7 +103,10 @@ export function TimeSelect({
             <Text textStyle="t9Bold" color={value ? "fg.brandContrast" : undefined}>
               {label}
             </Text>
-            <Text textStyle="t5Regular" color="fg.neutralSubtle">
+            <Text
+              textStyle="t5Regular"
+              color={value ? "fg.brandContrast" : "fg.neutralSubtle"}
+            >
               {value || placeholder}
             </Text>
           </button>

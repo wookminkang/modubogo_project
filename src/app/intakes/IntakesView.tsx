@@ -99,7 +99,7 @@ export default function IntakesView({
             onChange={(e) => setNewCompany(e.target.value)}
             placeholder="병원명 (선택 — 광고주가 입력할 수도 있어요)"
             onKeyDown={(e) => e.key === "Enter" && !pending && handleCreate()}
-            className={`min-w-0 flex-1 rounded-xl border ${BORDER} ${CHIP} px-3 py-2.5 text-sm ${FG} placeholder:text-[var(--seed-color-fg-neutral-subtle)] outline-none focus:border-[#5b7fe0] focus:ring-1 focus:ring-[#5b7fe0]`}
+            className={`min-w-0 flex-1 rounded-xl border ${BORDER} ${CHIP} px-3 py-2.5 text-sm ${FG} placeholder:text-[var(--seed-color-fg-neutral-subtle)] outline-none focus:border-[#0e299c] focus:ring-1 focus:ring-[#0e299c]`}
           />
           <button
             onClick={handleCreate}

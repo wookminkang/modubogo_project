@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import { QueryProvider } from "@/providers/QueryProvider";
 import ChannelTalk from "@/components/ChannelTalk";
 
@@ -17,11 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="ko"
-      className="h-full antialiased"
-      data-seed-color-mode="dark-only"
-    >
+    <html lang="ko" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
         <QueryProvider>
           <main className="flex-1 w-full min-h-screen">{children}</main>

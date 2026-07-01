@@ -56,7 +56,7 @@ function CenterMessage({
   const bg =
     tone === "brand"
       ? "bg-[var(--seed-color-bg-brand-solid)]"
-      : "bg-[var(--seed-color-bg-neutral)]";
+      : "bg-gray-400";
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-6 py-10 text-center">
       <span

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import ThemeToggle from "./ThemeToggle";
 
 const TABS = [
   { href: "/hospital", label: "병원목록" },
@@ -89,8 +88,6 @@ export default function Header({
               {user.role === "super" ? "슈퍼관리자" : "관리자"}
             </Link>
           )}
-
-          <ThemeToggle />
         </div>
       </div>
     </header>

@@ -76,7 +76,7 @@ export function ConfirmStep({
           <Text
             as="p"
             textStyle="t10Bold"
-            color="fg.brandContrast"
+            color="fg.neutral"
             className="break-keep"
           >
             {hospitalName}

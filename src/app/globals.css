@@ -28,11 +28,29 @@
   --color-fd-muted: #212121 !important;
 }
 
-/* 앱 배경·기본 글씨색을 SEED 테마 토큰에 연결 (light-only 테마를 따름) */
+/* 테마(다크/라이트 전환) 제거 — 앱 전체를 흰 배경 라이트 단일 테마로 고정.
+   html 에 data-seed-color-mode 를 두지 않으면 SEED 토큰은 :root 기본(라이트)로 풀린다.
+   color-scheme:light 를 명시해 네이티브 컨트롤(select/스크롤바)도 라이트로 고정 →
+   Windows 에서 드롭다운이 흰 배경으로만 뜨는 문제(색상 불일치) 원천 차단. */
+:root {
+  color-scheme: light;
+}
+
+/* 앱 배경·기본 글씨색을 SEED 라이트 토큰에 연결 */
 body {
   background: var(--seed-color-bg-layer-default);
   color: var(--seed-color-fg-neutral);
   font-family: var(--font-geist-sans), sans-serif;
+}
+
+/* 네이티브 <select> 드롭다운(option)은 OS마다 렌더가 달라, 특히 Windows 는
+   color-scheme(dark)을 무시하고 목록을 흰 배경으로 그린다. 그러면 다크모드에서
+   밝은 글씨가 흰 목록 위에 놓여 안 보인다. option 에 배경/글씨를 명시해
+   크로스플랫폼(Windows/Mac)으로 통일한다. 토큰이라 라이트/다크 자동 대응. */
+select,
+option {
+  background-color: var(--seed-color-bg-layer-default);
+  color: var(--seed-color-fg-neutral);
 }
 
 /* SEED BottomSheet 는 Stackflow 환경 가정으로 z-index 가 2(=calc(2+layer))로 매우 낮다.

@@ -47,7 +47,7 @@ export function DecisionStep({
           color="fg.neutralSubtle"
           className="opacity-70"
         >
-          공휴일 {index + 1} / <b className="text-white">{total}</b>
+          공휴일 {index + 1} / <b className="text-[var(--seed-color-fg-neutral)]">{total}</b>
         </Text>
         <Text as="h1" textStyle="t10Bold">
           {dayjs(item.date).format("M월 D일 (ddd)")}
@@ -77,8 +77,8 @@ export function DecisionStep({
               onClick={() => onSelect(opt.key)}
               className={`relative flex flex-col items-center justify-center gap-2 rounded-2xl border py-9 transition-all ${
                 active
-                  ? "border-[var(--seed-color-bg-neutral-weak)] bg-[var(--seed-color-bg-neutral-weak)] ring-1 ring-[var(--seed-color-bg-neutral-weak)] ring-inset"
-                  : "border-[var(--seed-color-bg-neutral-weak)] active:bg-[var(--seed-color-bg-neutral-weak)]"
+                  ? "border-[#0e299c] bg-[#0e299c] ring-1 ring-[#0e299c] ring-inset"
+                  : "border-[var(--seed-color-stroke-neutral-muted)] active:bg-[var(--seed-color-bg-neutral-weak)]"
               }`}
             >
               {active && (
@@ -103,7 +103,10 @@ export function DecisionStep({
               >
                 {opt.label}
               </Text>
-              <Text textStyle="t5Regular" color="fg.neutralSubtle">
+              <Text
+                textStyle="t5Regular"
+                color={active ? "fg.brandContrast" : "fg.neutralSubtle"}
+              >
                 {opt.desc}
               </Text>
             </button>
