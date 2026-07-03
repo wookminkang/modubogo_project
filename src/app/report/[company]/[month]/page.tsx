@@ -230,12 +230,13 @@ export default async function ReportPage({
               height={1536}
               alt="광고 배너 1"
             />
-            {/* 아래 배너 */}
+            {/* 아래 배너 — 메디로드 */}
             <AdBanner
               src="/images/report_ad_banner02.png"
               width={1004}
               height={1567}
-              alt="광고 배너 2"
+              alt="메디로드 광고 배너"
+              href="https://mediroad.io"
             />
           </div>
         </aside>

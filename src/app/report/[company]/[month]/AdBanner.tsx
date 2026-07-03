@@ -7,24 +7,52 @@ import { Hourglass, X } from "lucide-react";
 
 /**
  * 광고 배너 (클릭 피드백용 클라이언트 래퍼).
- * 아직 오픈 전이라 클릭하면 "오픈 준비중" 모달을 띄운다.
+ * `href`가 있으면 해당 링크(새 탭)로 이동하고,
+ * 없으면 아직 오픈 전이라 "오픈 준비중" 모달을 띄운다.
  */
 export default function AdBanner({
   src,
   width,
   height,
   alt,
+  href,
 }: {
   src: string;
   width: number;
   height: number;
   alt: string;
+  href?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   // 포털은 클라이언트 마운트 후에만 (SSR 안전)
   useEffect(() => setMounted(true), []);
+
+  const image = (
+    <Image
+      src={src}
+      width={width}
+      height={height}
+      alt={alt}
+      className="w-full h-auto rounded-2xl shadow-sm"
+    />
+  );
+
+  // 링크가 지정된 배너는 실제 이동 (새 탭)
+  if (href) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block w-full cursor-pointer rounded-2xl transition-transform duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+        aria-label={alt}
+      >
+        {image}
+      </a>
+    );
+  }
 
   return (
     <>
@@ -34,13 +62,7 @@ export default function AdBanner({
         className="block w-full cursor-pointer rounded-2xl transition-transform duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
         aria-label={`${alt} (오픈 준비중)`}
       >
-        <Image
-          src={src}
-          width={width}
-          height={height}
-          alt={alt}
-          className="w-full h-auto rounded-2xl shadow-sm"
-        />
+        {image}
       </button>
 
       {open &&
