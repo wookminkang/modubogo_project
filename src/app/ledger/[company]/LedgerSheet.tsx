@@ -25,15 +25,22 @@ interface Props {
 /** 저장 디바운스(ms) — 입력을 멈추면 자동 저장. */
 const SAVE_DELAY = 900;
 
+/** 기본으로 보여줄 최소 행 수 (빈 행은 저장 시 자동 제외). */
+const MIN_ROWS = 8;
+
+function emptyRow(key: string): Row {
+  return { key, deposit_date: "", vendor: "", deposit: "", spend: "", note: "" };
+}
+
 /** 숫자(원) → "₩10,281,964" / 음수 "-₩2,255,000". */
 function formatKRW(n: number): string {
   const sign = n < 0 ? "-" : "";
   return `${sign}₩${Math.abs(n).toLocaleString("ko-KR")}`;
 }
 
-/** 입력 표시용: 숫자 문자열 → "10,281,964" (없으면 ''). */
-function withCommas(digits: string): string {
-  return digits ? parseInt(digits, 10).toLocaleString("ko-KR") : "";
+/** 입력 표시용: 숫자 문자열 → "₩10,281,964" (없으면 ''). */
+function withWon(digits: string): string {
+  return digits ? formatKRW(parseInt(digits, 10)) : "";
 }
 
 /** 입력값에서 숫자만 추출. */
@@ -53,16 +60,21 @@ function toPayload(rows: Row[]): LedgerEntryInput[] {
 }
 
 export default function LedgerSheet({ company, initialEntries, today }: Props) {
-  const [rows, setRows] = useState<Row[]>(() =>
-    initialEntries.map((e) => ({
+  const [rows, setRows] = useState<Row[]>(() => {
+    const base: Row[] = initialEntries.map((e) => ({
       key: `init-${e.id}`,
       deposit_date: e.deposit_date ?? "",
       vendor: e.vendor ?? "",
       deposit: e.deposit_amount != null ? String(e.deposit_amount) : "",
       spend: e.spend_amount != null ? String(e.spend_amount) : "",
       note: e.contract_note ?? "",
-    })),
-  );
+    }));
+    // 기본 8행 채우기 — 저장된 행이 8개 미만이면 빈 행으로 패딩
+    const pad = Array.from({ length: Math.max(0, MIN_ROWS - base.length) }, (_, i) =>
+      emptyRow(`empty-${i}`),
+    );
+    return [...base, ...pad];
+  });
   const [status, setStatus] = useState<SaveStatus>("idle");
 
   // ── 자동 저장(디바운스 + 직렬화 큐) ──────────────────────────
@@ -111,18 +123,7 @@ export default function LedgerSheet({ company, initialEntries, today }: Props) {
   const updateRow = (key: string, patch: Partial<Row>) =>
     apply(rows.map((r) => (r.key === key ? { ...r, ...patch } : r)));
 
-  const addRow = () =>
-    apply([
-      ...rows,
-      {
-        key: `new-${crypto.randomUUID()}`,
-        deposit_date: "",
-        vendor: "",
-        deposit: "",
-        spend: "",
-        note: "",
-      },
-    ]);
+  const addRow = () => apply([...rows, emptyRow(`new-${crypto.randomUUID()}`)]);
 
   const removeRow = (key: string) => apply(rows.filter((r) => r.key !== key));
 
@@ -165,6 +166,8 @@ export default function LedgerSheet({ company, initialEntries, today }: Props) {
   // ── 스타일 상수 ─────────────────────────────────────────────
   const HEAD = "bg-[#3b5bd9] text-white";
   const cell = "border border-[#d6dcec] px-3 py-2.5";
+  // 거래 상세내역 헤더 — 자체 스크롤 영역 안에서 상단 고정
+  const headCell = `${cell} ${HEAD} sticky top-0 z-10 font-semibold`;
   const inputCls =
     "w-full bg-transparent px-1 py-0.5 text-sm outline-none focus:bg-[#eef2fd] rounded";
 
@@ -298,16 +301,16 @@ export default function LedgerSheet({ company, initialEntries, today }: Props) {
       <div className={`rounded-t-md py-2 text-center text-sm font-bold ${HEAD}`}>
         거래 상세내역
       </div>
-      <div className="overflow-x-auto">
+      <div className="max-h-[60vh] overflow-auto">
         <table className="w-full min-w-[760px] border-collapse text-sm">
           <thead>
-            <tr className={HEAD}>
-              <th className={`${cell} w-[140px] font-semibold`}>입금날짜</th>
-              <th className={`${cell} font-semibold`}>업체명</th>
-              <th className={`${cell} w-[150px] font-semibold`}>입금 (VAT포함)</th>
-              <th className={`${cell} w-[150px] font-semibold`}>소진 (VAT포함)</th>
-              <th className={`${cell} font-semibold`}>계약내용</th>
-              <th className={`${cell} w-[52px] font-semibold`}> </th>
+            <tr>
+              <th className={`${headCell} w-[140px]`}>입금날짜</th>
+              <th className={headCell}>업체명</th>
+              <th className={`${headCell} w-[150px]`}>입금 (VAT포함)</th>
+              <th className={`${headCell} w-[150px]`}>소진 (VAT포함)</th>
+              <th className={headCell}>계약내용</th>
+              <th className={`${headCell} w-[52px]`}> </th>
             </tr>
           </thead>
           <tbody>
@@ -334,22 +337,22 @@ export default function LedgerSheet({ company, initialEntries, today }: Props) {
                 <td className={cell}>
                   <input
                     inputMode="numeric"
-                    value={withCommas(r.deposit)}
+                    value={withWon(r.deposit)}
                     onChange={(e) =>
                       updateRow(r.key, { deposit: onlyDigits(e.target.value) })
                     }
-                    placeholder="0"
+                    placeholder="₩0"
                     className={`${inputCls} text-right text-[#2563eb]`}
                   />
                 </td>
                 <td className={cell}>
                   <input
                     inputMode="numeric"
-                    value={withCommas(r.spend)}
+                    value={withWon(r.spend)}
                     onChange={(e) =>
                       updateRow(r.key, { spend: onlyDigits(e.target.value) })
                     }
-                    placeholder="0"
+                    placeholder="₩0"
                     className={`${inputCls} text-right text-[#c0392b]`}
                   />
                 </td>
@@ -381,6 +384,38 @@ export default function LedgerSheet({ company, initialEntries, today }: Props) {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* ── 합계 (거래 상세내역 표 바로 아래에 붙임) ─────────── */}
+      <div className="overflow-hidden rounded-b-md border border-t-0 border-[#2f4bc0]">
+        <div className="grid grid-cols-2">
+          <div className="border-b border-[#2f4bc0] bg-[#3b5bd9] px-5 py-3 text-sm font-bold text-white md:text-base">
+            총 입금금액 (VAT 포함)
+          </div>
+          <div className="border-b border-l border-[#2f4bc0] bg-[#4364db] px-5 py-3 text-right text-sm font-bold text-white md:text-base">
+            {formatKRW(summary.totalDeposit)}
+          </div>
+        </div>
+        <div className="grid grid-cols-2">
+          <div className="border-b border-[#2f4bc0] bg-[#3b5bd9] px-5 py-3 text-sm font-bold text-white md:text-base">
+            총 소진금액 (VAT 포함)
+          </div>
+          <div className="border-b border-l border-[#2f4bc0] bg-[#4364db] px-5 py-3 text-right text-sm font-bold text-white md:text-base">
+            {formatKRW(summary.totalSpend)}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 bg-[#5872e6]">
+          <div className="px-5 py-3 text-sm font-bold text-white md:text-base">
+            잔여 금액 (VAT 포함)
+          </div>
+          <div
+            className={`border-l border-[#2f4bc0] px-5 py-3 text-right text-sm font-bold md:text-base ${
+              summary.totalBalance < 0 ? "text-[#ff5c5c]" : "text-white"
+            }`}
+          >
+            {formatKRW(summary.totalBalance)}
+          </div>
+        </div>
       </div>
 
       <button
