@@ -35,9 +35,14 @@ export default async function HospitalDetailPage({ params }: Props) {
     (settings?.nanoid as string | null | undefined) ?? encodeURIComponent(company);
 
   const reportCta = (
-    <ActionButton asChild variant="brandSolid" size="medium" className="w-full">
-      <Link href={`/report/${reportSlug}`}>이 병원 보고서 보기</Link>
-    </ActionButton>
+    <div className="flex flex-col gap-2">
+      <ActionButton asChild variant="brandSolid" size="medium" className="w-full">
+        <Link href={`/report/${reportSlug}`}>이 병원 보고서 보기</Link>
+      </ActionButton>
+      <ActionButton asChild variant="neutralWeak" size="medium" className="w-full">
+        <Link href={`/ledger/${reportSlug}`}>입금·소진 관리내역</Link>
+      </ActionButton>
+    </div>
   );
 
   return (

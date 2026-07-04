@@ -800,3 +800,67 @@ export async function deleteIntake(nanoid: string): Promise<void> {
     .eq("nanoid", nanoid);
   if (error) throw new Error(`삭제 실패: ${error.message}`);
 }
+
+// ── 입금·소진 관리내역 (ledger_entries) ─────────────────────────
+// ledger_entries 테이블이 없으면 조회는 빈 배열([])을 반환(폴백)하므로
+// 테이블 생성(sql/ledger_entries.sql) 전에도 앱이 깨지지 않는다. 쓰기는 에러를 던진다.
+
+export interface LedgerEntry {
+  id: string;
+  company: string;
+  deposit_date: string | null; // 'YYYY-MM-DD'
+  vendor: string;
+  deposit_amount: number | null;
+  spend_amount: number | null;
+  contract_note: string;
+  sort_order: number;
+}
+
+/** 입력용(신규 저장) 행. id 없이 내용만. */
+export type LedgerEntryInput = Omit<LedgerEntry, "id" | "company">;
+
+const LEDGER_COLS =
+  "id, company, deposit_date, vendor, deposit_amount, spend_amount, contract_note, sort_order";
+
+/** 회사의 입금·소진 거래내역 (정렬순). 테이블 없으면 빈 배열. */
+export async function getLedgerEntries(
+  company: string,
+): Promise<LedgerEntry[]> {
+  const { data, error } = await supabase
+    .from("ledger_entries")
+    .select(LEDGER_COLS)
+    .eq("company", company)
+    .order("sort_order", { ascending: true });
+  if (error) return []; // 테이블 미생성 등
+  return (data ?? []) as LedgerEntry[];
+}
+
+/**
+ * 회사의 거래내역을 전량 교체 저장한다(보고서 자식 테이블과 동일한 delete→insert 방식).
+ * 빈 배열이면 전부 삭제만 수행한다.
+ */
+export async function replaceLedgerEntries(
+  company: string,
+  entries: LedgerEntryInput[],
+): Promise<void> {
+  const { error: delErr } = await supabase
+    .from("ledger_entries")
+    .delete()
+    .eq("company", company);
+  if (delErr) throw new Error(`거래내역 저장 실패: ${delErr.message}`);
+
+  if (entries.length === 0) return;
+
+  const rows = entries.map((e, i) => ({
+    company,
+    deposit_date: e.deposit_date || null,
+    vendor: e.vendor ?? "",
+    deposit_amount: e.deposit_amount ?? null,
+    spend_amount: e.spend_amount ?? null,
+    contract_note: e.contract_note ?? "",
+    sort_order: Number(e.sort_order) || i,
+  }));
+
+  const { error: insErr } = await supabase.from("ledger_entries").insert(rows);
+  if (insErr) throw new Error(`거래내역 저장 실패: ${insErr.message}`);
+}
