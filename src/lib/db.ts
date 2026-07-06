@@ -493,6 +493,47 @@ export async function deleteReport(id: number) {
   if (error) throw error;
 }
 
+/**
+ * 병원(회사)과 연관된 모든 데이터를 삭제한다.
+ * 보고서 자식(카테고리/심의/계약) → 보고서 → 회사 단위 테이블 → company_settings 순.
+ * 회사 단위 테이블 일부는 없을 수 있으므로 best-effort(에러 무시)로 처리하고,
+ * 핵심 레코드(company_settings) 삭제 실패만 에러로 던진다.
+ */
+export async function deleteHospitalCompletely(company: string): Promise<void> {
+  // 1) 보고서 id → 자식 테이블 삭제
+  const { data: reps } = await supabase
+    .from("reports")
+    .select("id")
+    .eq("company", company);
+  const reportIds = (reps ?? []).map((r) => r.id);
+  if (reportIds.length > 0) {
+    await Promise.all([
+      supabase.from("report_categories").delete().in("report_id", reportIds),
+      supabase.from("validity_items").delete().in("report_id", reportIds),
+      supabase.from("contract_items").delete().in("report_id", reportIds),
+    ]);
+  }
+
+  // 2) 회사 단위 테이블 (테이블/컬럼이 없으면 무시)
+  await supabase.from("reports").delete().eq("company", company);
+  for (const t of [
+    "alimtalk_logs",
+    "holiday_schedules",
+    "holiday_submissions",
+    "ledger_entries",
+    "hospital_notes",
+  ]) {
+    await supabase.from(t).delete().eq("company", company);
+  }
+
+  // 3) 핵심 레코드
+  const { error } = await supabase
+    .from("company_settings")
+    .delete()
+    .eq("company", company);
+  if (error) throw new Error(`병원 삭제 실패: ${error.message}`);
+}
+
 export async function logAlimtalk(data: {
   company: string;
   month: string;

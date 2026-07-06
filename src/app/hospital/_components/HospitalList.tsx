@@ -2,13 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
-import { Building2, Search, ChevronUp, ChevronDown } from "lucide-react";
+import { useSuspenseInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { Building2, Search, ChevronUp, ChevronDown, Trash2 } from "lucide-react";
 import { TagGroup } from "@seed-design/react";
 import { hospitalsInfiniteQuery } from "@/lib/queries";
+import { queryKeys } from "@/lib/queryKeys";
+import { removeHospital } from "@/lib/company-actions";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Text } from "seed-design/ui/text";
 import { ContentPlaceholder } from "seed-design/ui/content-placeholder";
+import ConfirmToast from "@/components/ConfirmToast";
+import Toast from "@/components/Toast";
 
 // 보고서 목록과 동일한 병원 유형 카테고리
 const TABS = [
@@ -44,10 +48,34 @@ function highlightMatch(text: string, query: string) {
 export function HospitalList() {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useSuspenseInfiniteQuery(hospitalsInfiniteQuery());
+  const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("전체");
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
+
+  // 병원 삭제 (확인창 → 서버액션 → 캐시 무효화)
+  const [confirmTarget, setConfirmTarget] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  const handleDelete = async () => {
+    if (!confirmTarget || pending) return;
+    setPending(true);
+    try {
+      await removeHospital(confirmTarget);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.hospitalsInfinite() }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.companiesSummary() }),
+      ]);
+      setToast("삭제되었습니다.");
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : "삭제에 실패했습니다.");
+    } finally {
+      setPending(false);
+      setConfirmTarget(null);
+    }
+  };
 
   // 검색어 디바운스 (300ms)
   useEffect(() => {
@@ -133,36 +161,46 @@ export function HospitalList() {
         // 모바일 1열 / PC 4열 그리드
         <div className="grid grid-cols-1 gap-4 px-5 pt-2 pb-6 md:grid-cols-4">
           {hospitals.map(({ company, region, hospitalType, nanoid }) => (
-            <Link
-              key={company}
-              href={`/hospital/${nanoid ?? encodeURIComponent(company)}`}
-              className="flex flex-col gap-2.5 rounded-2xl border border-[var(--seed-color-stroke-neutral-muted)] p-4 transition-colors hover:bg-[var(--seed-color-bg-neutral-weak)]"
-            >
-              <div className="flex items-center gap-2.5">
-                <ContentPlaceholder
-                  aria-hidden
-                  className="shrink-0 overflow-hidden rounded-lg"
-                  style={{ width: 40, height: 40 }}
-                >
-                  <Building2 className="h-5 w-5 text-gray-300" />
-                </ContentPlaceholder>
-                <Text textStyle="t5Bold" className="min-w-0 flex-1 truncate">
-                  {highlightMatch(company, debouncedQuery)}
-                </Text>
-              </div>
-              <TagGroup.Root size="t4">
-                <TagGroup.Item tone={region ? "neutral" : "neutralSubtle"}>
-                  <TagGroup.ItemLabel>
-                    {region ?? "지역 미설정"}
-                  </TagGroup.ItemLabel>
-                </TagGroup.Item>
-                {hospitalType && (
-                  <TagGroup.Item tone="neutral">
-                    <TagGroup.ItemLabel>{hospitalType}</TagGroup.ItemLabel>
+            <div key={company} className="relative">
+              <Link
+                href={`/hospital/${nanoid ?? encodeURIComponent(company)}`}
+                className="flex h-full flex-col gap-2.5 rounded-2xl border border-[var(--seed-color-stroke-neutral-muted)] p-4 transition-colors hover:bg-[var(--seed-color-bg-neutral-weak)]"
+              >
+                <div className="flex items-center gap-2.5 pr-7">
+                  <ContentPlaceholder
+                    aria-hidden
+                    className="shrink-0 overflow-hidden rounded-lg"
+                    style={{ width: 40, height: 40 }}
+                  >
+                    <Building2 className="h-5 w-5 text-gray-300" />
+                  </ContentPlaceholder>
+                  <Text textStyle="t5Bold" className="min-w-0 flex-1 truncate">
+                    {highlightMatch(company, debouncedQuery)}
+                  </Text>
+                </div>
+                <TagGroup.Root size="t4">
+                  <TagGroup.Item tone={region ? "neutral" : "neutralSubtle"}>
+                    <TagGroup.ItemLabel>
+                      {region ?? "지역 미설정"}
+                    </TagGroup.ItemLabel>
                   </TagGroup.Item>
-                )}
-              </TagGroup.Root>
-            </Link>
+                  {hospitalType && (
+                    <TagGroup.Item tone="neutral">
+                      <TagGroup.ItemLabel>{hospitalType}</TagGroup.ItemLabel>
+                    </TagGroup.Item>
+                  )}
+                </TagGroup.Root>
+              </Link>
+              <button
+                type="button"
+                onClick={() => setConfirmTarget(company)}
+                aria-label={`${company} 삭제`}
+                title="병원 삭제"
+                className="absolute right-2 top-2 z-10 grid h-7 w-7 place-items-center rounded-full bg-white/90 text-gray-300 shadow-sm transition-colors hover:bg-white hover:text-[#c0392b]"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
           ))}
         </div>
       )}
@@ -213,6 +251,22 @@ export function HospitalList() {
           <ChevronDown size={20} />
         </button>
       </div>
+
+      {confirmTarget && (
+        <ConfirmToast
+          title={confirmTarget}
+          subtitle="병원 삭제"
+          message="이 병원의 보고서·진료일정·입금소진·메모 등 모든 데이터가 함께 삭제됩니다. 삭제할까요?"
+          yesLabel={pending ? "삭제 중…" : "삭제"}
+          noLabel="취소"
+          showIcon={false}
+          onYes={handleDelete}
+          onNo={() => {
+            if (!pending) setConfirmTarget(null);
+          }}
+        />
+      )}
+      {toast && <Toast message={toast} onDone={() => setToast(null)} />}
     </>
   );
 }

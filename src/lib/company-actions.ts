@@ -9,8 +9,10 @@ import {
   ensureCompanyNanoid,
   addHospitalNote,
   deleteHospitalNote,
+  deleteHospitalCompletely,
   type HospitalNote,
 } from "./db";
+import { getAdminUser } from "./admin";
 
 /** 새 병원 등록. 동일 병원명이 이미 있으면 막는다. */
 export async function createHospital(data: {
@@ -32,6 +34,22 @@ export async function createHospital(data: {
     await updateCompanyHospitalType(company, data.hospitalType);
   }
   revalidatePath("/hospital");
+}
+
+/**
+ * 병원 삭제. 연관 데이터(보고서·진료일정·입금소진·메모 등)까지 함께 제거한다.
+ * 되돌릴 수 없는 작업이므로 관리자만 실행할 수 있게 가드한다.
+ */
+export async function removeHospital(company: string) {
+  const admin = await getAdminUser();
+  if (!admin) throw new Error("권한이 없습니다.");
+
+  const name = company?.trim();
+  if (!name) throw new Error("병원명이 필요합니다.");
+
+  await deleteHospitalCompletely(name);
+  revalidatePath("/hospital");
+  revalidatePath("/report");
 }
 
 /** 병원 정보 수정(지역). 병원명은 PK(보고서 참조)라 변경하지 않는다. */
