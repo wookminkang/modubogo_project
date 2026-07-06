@@ -102,6 +102,14 @@ export default async function ReportPage({
 
   if (!report) notFound();
 
+  // 탈퇴한 병원의 보고서는 링크로 직접 접근해도 공개하지 않는다(관리자만 열람 가능).
+  // 유형은 회사 단위(company_settings) 우선, 없으면 보고서(reports.hospital_type) 기준.
+  const hospitalType =
+    (settings?.hospital_type as string | null | undefined) ??
+    report.hospital_type ??
+    null;
+  if (hospitalType === "탈퇴" && !admin) notFound();
+
   if (report.password) {
     const cookieStore = await cookies();
     const authCookie = cookieStore.get(`report_auth_${report.id}`);

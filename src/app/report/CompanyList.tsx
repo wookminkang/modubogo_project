@@ -20,8 +20,11 @@ export default function CompanyList() {
     return () => clearTimeout(timer);
   }, [query]);
 
-  const filtered = companies.filter((c) =>
-    c.company.toLowerCase().includes(debouncedQuery.toLowerCase()),
+  // 탈퇴한 병원은 보고서 목록에서 숨긴다.
+  const filtered = companies.filter(
+    (c) =>
+      c.hospitalType !== "탈퇴" &&
+      c.company.toLowerCase().includes(debouncedQuery.toLowerCase()),
   );
 
   const search = (

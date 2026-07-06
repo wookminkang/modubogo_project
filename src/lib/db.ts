@@ -139,6 +139,19 @@ export async function getCompaniesSummaryFromDB() {
     }
   }
 
+  // 회사 단위 유형(company_settings.hospital_type) — 탈퇴 등 판별에 우선 사용.
+  // 컬럼이 없으면 select 가 에러(→null)라 별도 조회로 두어 region/nanoid 조회에 영향 없게 한다.
+  const typeMap = new Map<string, string>();
+  const { data: typeSettings } = await supabase
+    .from("company_settings")
+    .select("company, hospital_type");
+  for (const s of (typeSettings ?? []) as {
+    company: string;
+    hospital_type: string | null;
+  }[]) {
+    if (s.hospital_type) typeMap.set(s.company, s.hospital_type);
+  }
+
   const map = new Map<string, { latestMonth: string; reportCount: number; status: string; hospitalType: string | null }>();
   for (const r of reports) {
     const existing = map.get(r.company);
@@ -159,6 +172,8 @@ export async function getCompaniesSummaryFromDB() {
       ...data,
       region: regionMap.get(company) ?? null,
       nanoid: nanoidMap.get(company) ?? null,
+      // 회사 단위 유형 우선, 없으면 보고서 기준(reports.hospital_type)
+      hospitalType: typeMap.get(company) ?? data.hospitalType,
     }))
     .sort((a, b) => a.company.localeCompare(b.company, "ko"));
 }
