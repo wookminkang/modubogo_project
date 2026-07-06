@@ -12,6 +12,7 @@ import { queryKeys } from "@/lib/queryKeys";
 import {
   fetchHospitals,
   fetchHospitalsPage,
+  fetchAllHospitalsLite,
   fetchCompaniesSummary,
   fetchCompanyReports,
   fetchAlimtalkLogs,
@@ -21,6 +22,12 @@ import {
 export const hospitalsQuery = () => ({
   queryKey: queryKeys.hospitals(),
   queryFn: () => fetchHospitals(),
+});
+
+/** 전 병원 경량 목록(개수 집계용). */
+export const hospitalsLiteQuery = () => ({
+  queryKey: queryKeys.hospitalsLite(),
+  queryFn: () => fetchAllHospitalsLite(),
 });
 
 /** 무한 스크롤용 한 페이지 크기 */

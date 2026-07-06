@@ -282,6 +282,56 @@ export async function getHospitalList() {
 }
 
 /**
+ * 전 병원 경량 목록(개수 집계용) — 회사명/지역/유형만.
+ * 유형은 회사 단위(company_settings.hospital_type) 우선, 없으면 보고서 최신 기준으로 폴백한다
+ * (getHospitalListPaged 와 동일 규칙 → 목록 탭 필터와 개수가 일치).
+ */
+export async function getAllHospitalsLite(): Promise<
+  { company: string; region: string | null; hospitalType: string | null }[]
+> {
+  const { data } = await supabase
+    .from("company_settings")
+    .select("company, region")
+    .order("company", { ascending: true });
+  const rows = (data ?? []) as { company: string; region: string | null }[];
+  if (rows.length === 0) return [];
+  const companies = rows.map((r) => r.company);
+
+  // 회사 단위 유형 (컬럼 없으면 에러→무시되고 보고서로 폴백)
+  const settingsType = new Map<string, string>();
+  const { data: st } = await supabase
+    .from("company_settings")
+    .select("company, hospital_type")
+    .in("company", companies);
+  for (const s of (st ?? []) as { company: string; hospital_type?: string | null }[]) {
+    if (s.hospital_type) settingsType.set(s.company, s.hospital_type);
+  }
+
+  // 보고서 기준 유형 (폴백)
+  const reportType = new Map<string, string>();
+  const { data: rt } = await supabase
+    .from("reports")
+    .select("company, hospital_type, month")
+    .in("company", companies)
+    .order("month", { ascending: false });
+  for (const t of (rt ?? []) as {
+    company: string;
+    hospital_type: string | null;
+    month: string;
+  }[]) {
+    if (t.hospital_type && !reportType.has(t.company)) {
+      reportType.set(t.company, t.hospital_type);
+    }
+  }
+
+  return rows.map((r) => ({
+    company: r.company,
+    region: r.region,
+    hospitalType: settingsType.get(r.company) ?? reportType.get(r.company) ?? null,
+  }));
+}
+
+/**
  * 병원 목록을 offset 기반으로 페이지 단위 조회한다. (무한 스크롤용)
  * Supabase `.range()` 는 양끝 포함이므로 offset ~ offset+limit-1 까지 가져온다.
  */

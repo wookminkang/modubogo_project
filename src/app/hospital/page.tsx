@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import { HospitalList } from "@/app/hospital/_components/HospitalList";
 import { getQueryClient } from "@/hooks/get-query-client";
-import { hospitalsInfiniteQuery } from "@/lib/queries";
+import { hospitalsInfiniteQuery, hospitalsLiteQuery } from "@/lib/queries";
 import { ListSkeleton } from "@/components/ListSkeleton";
 import { Text } from "seed-design/ui/text";
 import { ActionButton } from "seed-design/ui/action-button";
@@ -12,7 +12,10 @@ import { ActionButton } from "seed-design/ui/action-button";
 export default async function HospitalListPage() {
   const queryClient = getQueryClient();
 
-  await queryClient.prefetchInfiniteQuery(hospitalsInfiniteQuery());
+  await Promise.all([
+    queryClient.prefetchInfiniteQuery(hospitalsInfiniteQuery()),
+    queryClient.prefetchQuery(hospitalsLiteQuery()),
+  ]);
 
   // 컨테이너·푸터는 hospital/layout.tsx 가 담당한다. 여기는 페이지 고유 헤더+본문만.
   return (

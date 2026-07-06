@@ -18,10 +18,16 @@ import {
   getDashboardRawDataFromDB,
   getHospitalList,
   getHospitalListPaged,
+  getAllHospitalsLite,
 } from "@/lib/db";
 
 export async function fetchHospitals() {
   return getHospitalList();
+}
+
+/** 전 병원 경량 목록(개수 집계용). */
+export async function fetchAllHospitalsLite() {
+  return getAllHospitalsLite();
 }
 
 /**

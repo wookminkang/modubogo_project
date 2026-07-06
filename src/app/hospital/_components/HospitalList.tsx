@@ -2,10 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useSuspenseInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useSuspenseInfiniteQuery,
+  useSuspenseQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { Building2, Search, ChevronUp, ChevronDown, Trash2 } from "lucide-react";
 import { TagGroup } from "@seed-design/react";
-import { hospitalsInfiniteQuery } from "@/lib/queries";
+import { hospitalsInfiniteQuery, hospitalsLiteQuery } from "@/lib/queries";
 import { queryKeys } from "@/lib/queryKeys";
 import { removeHospital } from "@/lib/company-actions";
 import { ActionButton } from "seed-design/ui/action-button";
@@ -49,6 +53,8 @@ function highlightMatch(text: string, query: string) {
 export function HospitalList() {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useSuspenseInfiniteQuery(hospitalsInfiniteQuery());
+  // 개수 집계용 전 병원 경량 목록 (무한스크롤과 별개로 전체를 한 번에 확보)
+  const { data: liteAll } = useSuspenseQuery(hospitalsLiteQuery());
   const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("전체");
@@ -84,20 +90,29 @@ export function HospitalList() {
     return () => clearTimeout(t);
   }, [query]);
 
-  // 페이지들을 평탄화한 뒤 유형 + 검색어로 필터링한다.
-  const all = data.pages.flatMap((page) => page.items);
-  const hospitals = all.filter((h) => {
+  // 탭 + 검색어 필터 (그리드/개수 공용 — liteAll 과 페이지 항목에 동일 적용)
+  const matchesFilter = (h: {
+    company: string;
+    region: string | null;
+    hospitalType: string | null;
+  }) => {
     const matchesTab =
       activeTab === "전체"
-        ? true
+        ? h.hospitalType !== "탈퇴" // 전체 탭에서는 탈퇴 병원 제외
         : activeTab === "지역 미설정"
-          ? !h.region || !h.region.trim()
+          ? (!h.region || !h.region.trim()) && h.hospitalType !== "탈퇴"
           : h.hospitalType === activeTab;
     const matchesQuery = h.company
       .toLowerCase()
       .includes(debouncedQuery.trim().toLowerCase());
     return matchesTab && matchesQuery;
-  });
+  };
+
+  // 렌더용: 로드된 페이지에서 필터링
+  const all = data.pages.flatMap((page) => page.items);
+  const hospitals = all.filter(matchesFilter);
+  // 개수용: 전체 경량 목록에서 필터링 (무한스크롤과 무관하게 정확)
+  const totalCount = liteAll.filter(matchesFilter).length;
 
   // 목록 끝 센티넬이 보이면 자동으로 다음 페이지를 불러온다.
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -120,8 +135,15 @@ export function HospitalList() {
   return (
     <>
     <div>
-      {/* 검색 */}
+      {/* 지점 수 (전체 경량 목록 기준 정확한 개수, 현재 탭·검색 반영) */}
       <div className="px-5 pt-4">
+        <span className="text-sm font-semibold text-gray-700">
+          지점 <span className="text-[#0e299c]">{totalCount}</span>개
+        </span>
+      </div>
+
+      {/* 검색 */}
+      <div className="px-5 pt-3">
         <div className="relative">
           <Search
             size={16}

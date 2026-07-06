@@ -6,6 +6,7 @@
 export const queryKeys = {
   hospitals: () => ["hospitals"] as const,
   hospitalsInfinite: () => ["hospitals", "infinite"] as const,
+  hospitalsLite: () => ["hospitals", "lite"] as const,
   companiesSummary: () => ["companies", "summary"] as const,
   companyReports: (company: string) => ["companies", company, "reports"] as const,
   alimtalkLogs: () => ["alimtalk", "logs"] as const,
