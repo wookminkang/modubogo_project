@@ -17,6 +17,7 @@ import Toast from "@/components/Toast";
 // 보고서 목록과 동일한 병원 유형 카테고리
 const TABS = [
   "전체",
+  "지역 미설정",
   "메인 관리",
   "한의원",
   "한의원(네트워크)",
@@ -86,7 +87,12 @@ export function HospitalList() {
   // 페이지들을 평탄화한 뒤 유형 + 검색어로 필터링한다.
   const all = data.pages.flatMap((page) => page.items);
   const hospitals = all.filter((h) => {
-    const matchesTab = activeTab === "전체" || h.hospitalType === activeTab;
+    const matchesTab =
+      activeTab === "전체"
+        ? true
+        : activeTab === "지역 미설정"
+          ? !h.region || !h.region.trim()
+          : h.hospitalType === activeTab;
     const matchesQuery = h.company
       .toLowerCase()
       .includes(debouncedQuery.trim().toLowerCase());
@@ -155,7 +161,9 @@ export function HospitalList() {
             ? `'${debouncedQuery.trim()}' 검색 결과가 없어요.`
             : activeTab === "전체"
               ? "등록된 병원이 없어요."
-              : `'${activeTab}' 유형의 병원이 없어요.`}
+              : activeTab === "지역 미설정"
+                ? "지역 미설정 병원이 없어요."
+                : `'${activeTab}' 유형의 병원이 없어요.`}
         </p>
       ) : (
         // 모바일 1열 / PC 4열 그리드
@@ -196,7 +204,7 @@ export function HospitalList() {
                 onClick={() => setConfirmTarget(company)}
                 aria-label={`${company} 삭제`}
                 title="병원 삭제"
-                className="absolute right-2 top-2 z-10 grid h-7 w-7 place-items-center rounded-full bg-white/90 text-gray-300 shadow-sm transition-colors hover:bg-white hover:text-[#c0392b]"
+                className="absolute right-2 top-2 z-10 grid h-7 w-7 place-items-center rounded-full bg-[#c0392b]/10 text-[#c0392b] shadow-sm transition-colors hover:bg-[#c0392b] hover:text-white"
               >
                 <Trash2 size={14} />
               </button>
