@@ -34,7 +34,7 @@ export default async function LedgerViewPage({ params }: Props) {
             priority
             className="h-7 w-auto"
           />
-          <span className="truncate text-[15px] font-bold text-gray-700">
+          <span className="truncate text-base font-bold text-gray-700">
             {decoded}
           </span>
         </div>
