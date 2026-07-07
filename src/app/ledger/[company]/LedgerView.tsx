@@ -100,8 +100,13 @@ export default function LedgerView({ entries }: Props) {
               <Fragment key={g.date}>
                 {gi === mascotAt && (
                   <div className="-mx-5 my-3 px-5">
-                    {/* 가로형 광고 배너 */}
-                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#eef2fd] to-[#e3ebff] px-4 py-4">
+                    {/* 가로형 광고 배너 — 클릭 시 메디로드로 이동 */}
+                    <a
+                      href="https://mediroad.io"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="relative block overflow-hidden rounded-2xl bg-gradient-to-r from-[#eef2fd] to-[#e3ebff] px-4 py-4 transition-shadow hover:shadow-md"
+                    >
                       <span className="absolute right-3 top-3 rounded bg-gray-900/50 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-white">
                         AD
                       </span>
@@ -116,7 +121,7 @@ export default function LedgerView({ entries }: Props) {
                       <p className="mt-2 text-sm font-bold text-[#0e299c]">
                         우리 동네 병원을 가장 쉽게 찾는 방법
                       </p>
-                    </div>
+                    </a>
                   </div>
                 )}
                 <div className="mt-5">
