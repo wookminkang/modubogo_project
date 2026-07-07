@@ -238,3 +238,125 @@ export async function sendHolidayAlimtalk({
 
   return results;
 }
+
+/**
+ * 입금·소진(결제) 내역 안내 알림톡 발송 (템플릿: modubogo_03)
+ * 변수: #{병원상호}, 버튼 URL 변수 #{slug}
+ * 버튼: '확인하기' → https://modubogo.com/ledger/#{slug}/view (광고주 공개 뷰)
+ * ⚠️ templateText·버튼 URL 은 카카오 승인된 modubogo_03 내용과 정확히 일치해야 합니다.
+ */
+export async function sendLedgerAlimtalk({
+  company,
+  slug,
+  recipients,
+}: {
+  company: string; // 병원 상호명 (#{병원상호})
+  slug: string; // 회사 식별자(nanoid) — 버튼 URL #{slug}
+  recipients?: string[];
+}) {
+  const apiKey = process.env.BIZGO_API_KEY;
+  const senderKey = process.env.BIZGO_SENDER_KEY;
+  const fallback = process.env.BIZGO_RECIPIENT;
+
+  if (!apiKey || !senderKey) {
+    throw new Error("BizGo 환경변수가 설정되지 않았습니다.");
+  }
+
+  const recipientList =
+    (recipients?.filter(Boolean) ?? []).length > 0
+      ? recipients!.filter(Boolean)
+      : fallback
+        ? [fallback]
+        : [];
+
+  if (recipientList.length === 0) {
+    throw new Error("알림톡 수신자가 설정되지 않았습니다.");
+  }
+
+  // 광고주 공개 뷰(/view). 관리자 편집 페이지(/ledger/#{slug})는 로그인이 필요하므로
+  // 광고주가 열람할 수 있도록 반드시 /view 로 보낸다. (승인 템플릿 버튼 URL도 동일해야 함)
+  const buttonUrl = "https://modubogo.com/ledger/#{slug}/view";
+  const resolvedUrl = `https://modubogo.com/ledger/${slug}/view`; // 로그용
+  const replaceWords: Record<string, string> = {
+    병원상호: company,
+    slug,
+  };
+  const templateText =
+    "안녕하세요, (주)알리다고입니다.\n\n" +
+    "#{병원상호}\n\n" +
+    "결제 내역을 안내드립니다.\n\n" +
+    "상세 결제 내역은 아래 [모두보고] 사이트에서 확인하실 수 있습니다.\n\n" +
+    "감사합니다.";
+  const text = Object.entries(replaceWords).reduce(
+    (t, [k, v]) => t.replaceAll(`#{${k}}`, v),
+    templateText,
+  );
+
+  const month = new Date().toISOString().slice(0, 7); // 로그용 YYYY-MM
+
+  let results;
+  try {
+    results = await Promise.all(
+      recipientList.map(async (to) => {
+        const body = {
+          messageFlow: [
+            {
+              alimtalk: {
+                msgType: "AI",
+                senderKey,
+                templateCode: "modubogo_03",
+                text,
+                attachment: {
+                  button: [
+                    {
+                      type: "WL",
+                      name: "확인하기",
+                      urlPc: buttonUrl,
+                      urlMobile: buttonUrl,
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          destinations: [{ to, replaceWords }],
+        };
+
+        const res = await fetch("https://mars.ibapi.kr/api/comm/v1/send/omni", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: apiKey,
+          },
+          body: JSON.stringify(body),
+        });
+
+        const json = await res.json();
+        if (!res.ok) {
+          throw new Error(json?.message ?? `BizGo API 오류 (${res.status})`);
+        }
+        return json;
+      }),
+    );
+  } catch (e) {
+    await logAlimtalk({
+      company,
+      month,
+      recipients: recipientList,
+      status: "failed",
+      error_message: e instanceof Error ? e.message : String(e),
+      report_url: resolvedUrl,
+    });
+    throw e;
+  }
+
+  await logAlimtalk({
+    company,
+    month,
+    recipients: recipientList,
+    status: "success",
+    report_url: resolvedUrl,
+  });
+
+  return results;
+}

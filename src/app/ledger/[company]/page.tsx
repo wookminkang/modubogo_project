@@ -6,11 +6,13 @@ import {
   resolveCompanyParam,
   getLedgerEntries,
   getLedgerAdSettings,
+  getCompanySettings,
 } from "@/lib/db";
 import dayjs from "@/lib/dayjs";
 import Header from "@/components/Header";
 import LedgerSheet from "./LedgerSheet";
 import LedgerAdForm from "./LedgerAdForm";
+import LedgerAlimtalkButton from "./LedgerAlimtalkButton";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +32,16 @@ export default async function LedgerCompanyPage({ params }: Props) {
   const decoded = await resolveCompanyParam(company);
   const entries = await getLedgerEntries(decoded);
   const ad = await getLedgerAdSettings(decoded);
+  const settings = (await getCompanySettings(decoded)) as {
+    recipient1?: string | null;
+    recipient2?: string | null;
+    recipient3?: string | null;
+  } | null;
+  const recipients = [
+    settings?.recipient1,
+    settings?.recipient2,
+    settings?.recipient3,
+  ].filter((n): n is string => !!n && n.trim() !== "");
 
   return (
     <>
@@ -44,14 +56,21 @@ export default async function LedgerCompanyPage({ params }: Props) {
             <ArrowLeft size={18} />
             병원 상세로 이동
           </Link>
-          <Link
-            href={`/ledger/${company}/view`}
-            target="_blank"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-semibold text-[#0e299c] shadow-sm transition-colors hover:bg-[#eef2fd]"
-          >
-            <Eye size={16} />
-            광고주 화면 보기
-          </Link>
+          <div className="flex items-center gap-2">
+            <LedgerAlimtalkButton
+              company={decoded}
+              slug={company}
+              recipients={recipients}
+            />
+            <Link
+              href={`/ledger/${company}/view`}
+              target="_blank"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-semibold text-[#0e299c] shadow-sm transition-colors hover:bg-[#eef2fd]"
+            >
+              <Eye size={16} />
+              광고주 화면 보기
+            </Link>
+          </div>
         </div>
 
           <LedgerAdForm
