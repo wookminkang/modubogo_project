@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import Image from "next/image";
 import { Text } from "seed-design/ui/text";
 import dayjs from "@/lib/dayjs";
@@ -44,6 +45,9 @@ export default function LedgerView({ entries }: Props) {
   const groups = Array.from(map.keys())
     .sort((a, b) => (a < b ? 1 : -1))
     .map((d) => ({ date: d, items: map.get(d)! }));
+
+  // 리스트 중간 지점 — 이 인덱스의 날짜 그룹 앞에 마스코트를 끼워 넣는다.
+  const mascotAt = Math.floor(groups.length / 2);
 
   return (
     <div className="mx-auto max-w-[480px]">
@@ -92,8 +96,30 @@ export default function LedgerView({ entries }: Props) {
             </div>
 
             {/* ── 거래 피드 (날짜별 그룹) ─────────────────────── */}
-            {groups.map((g) => (
-              <div key={g.date} className="mt-5">
+            {groups.map((g, gi) => (
+              <Fragment key={g.date}>
+                {gi === mascotAt && (
+                  <div className="-mx-5 my-3 px-5">
+                    {/* 가로형 광고 배너 */}
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#eef2fd] to-[#e3ebff] px-4 py-4">
+                      <span className="absolute right-3 top-3 rounded bg-gray-900/50 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-white">
+                        AD
+                      </span>
+                      <Image
+                        src="/medi-symbol.png"
+                        alt="메디로드"
+                        width={88}
+                        height={104}
+                        unoptimized
+                        className="h-9 w-auto"
+                      />
+                      <p className="mt-2 text-sm font-bold text-[#0e299c]">
+                        우리 동네 병원을 가장 쉽게 찾는 방법
+                      </p>
+                    </div>
+                  </div>
+                )}
+                <div className="mt-5">
                 <p className="mb-1 text-sm text-gray-400">
                   {dayjs(g.date).format("M월 D일 dddd")}
                 </p>
@@ -135,7 +161,8 @@ export default function LedgerView({ entries }: Props) {
                     );
                   })}
                 </div>
-              </div>
+                </div>
+              </Fragment>
             ))}
           </>
         ) : (
