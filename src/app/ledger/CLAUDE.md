@@ -12,8 +12,20 @@
 | 경로 | 파일 | 역할 | 인증 |
 |------|------|------|------|
 | `/ledger` | `page.tsx` | 병원 목록 (companiesSummary 재사용) | Admin, `force-dynamic` |
-| `/ledger/[company]` | `[company]/page.tsx` + `LedgerSheet.tsx` | 시트 뷰 + 인라인 편집 | Admin, `force-dynamic` |
+| `/ledger/[company]` | `[company]/page.tsx` + `LedgerSheet.tsx` | **관리자 편집 시트**(구글시트식 인라인) | Admin, `force-dynamic` |
+| `/ledger/[company]/view` | `[company]/view/page.tsx` + `LedgerView.tsx` | **광고주 공개 읽기전용 뷰**(모바일 카드형) | 링크 공개, `force-dynamic` |
 
+- **편집(마스터)과 조회(광고주)를 별도 라우트로 분리.** 편집은 admin 전용(`redirect("/admin/login")`),
+  `/view`는 인증 없이 **링크만 있으면 열람**. `/view`는 로그인 여부와 무관하게 항상 읽기전용이라
+  관리자가 광고주 화면을 그대로 미리보고 공유할 수 있다(편집 시트 상단 "광고주 화면 보기" 링크).
+- `LedgerView`(읽기전용)는 시안(`시안4_모바일`) 매칭 **모바일 카드형** UI:
+  월 필터=Seed `Tabs`, 유형 필터(전체/입금/소진)=Seed `SegmentedControl`, 검색=Seed `TextField`,
+  입금/소진 뱃지=Seed `Badge`(`informative`/`critical`), 타이포=Seed `Text`. 카드/다크 요약은
+  Seed 컴포넌트가 없어 Tailwind + 시안 리터럴 hex(`#2563eb`/`#ef4444`/`#222b63`)로 작성.
+- 광고주가 `/view`에 접속하면 `layout.tsx`의 `Header`가 `showNav={!!user}=false`라 nav/유저정보
+  없이 공개 헤더("광고 운영보고 시스템")만 노출된다. (`ReportHeader`/`ReportFooter`는 사용 안 함.)
+- `LedgerSheet`(편집)와 `LedgerView`(조회)는 집계·표시 로직을 각자 갖는다(시트=표/월요약,
+  뷰=카드/건수집계). 공용 유틸 `@/lib/ledger`(`summarizeLedger`/`formatKRW`)는 현재 미사용.
 - `layout.tsx`: 앱 공통 `Header`/`Footer`. 헤더 nav에 "입금소진" 탭 추가됨.
 - `[company]` 파라미터는 `resolveCompanyParam`(nanoid 또는 상호명)으로 해석.
 
