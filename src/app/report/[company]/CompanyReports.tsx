@@ -3,13 +3,13 @@ import Image from "next/image";
 import { Suspense } from "react";
 import dayjs from "@/lib/dayjs";
 import {
-  getReportsByCompanyFromDB,
   getCompanySettings,
   getAlimtalkCountsByMonth,
 } from "@/lib/db";
 import { getTotalAmount } from "@/lib/mockData";
 import { notFound, redirect } from "next/navigation";
 import { isAdmin } from "@/lib/admin";
+import { ensureCurrentMonthReport } from "@/lib/copy-actions";
 import DeleteReportButton from "@/components/DeleteReportButton";
 import KakaoNotifyButton from "@/components/KakaoNotifyButton";
 import ReportTotal, { ReportTotalSkeleton } from "./ReportTotal";
@@ -22,8 +22,11 @@ export default async function CompanyReports({ company }: { company: string }) {
   const admin = await isAdmin();
   if (!admin) redirect("/admin/login");
 
+  // 달이 바뀌면 이번 달 보고서를 지난달 복사본으로 자동 생성(없을 때만).
+  // 이번 달 포함 최신 목록을 그대로 돌려주므로 재조회하지 않는다(재조회 시 memoize된
+  // stale read 로 첫 접속에 이번 달이 누락되는 버그가 있어 반환값을 그대로 쓴다).
   const [reports, settings, alimtalkCounts] = await Promise.all([
-    getReportsByCompanyFromDB(company),
+    ensureCurrentMonthReport(company),
     getCompanySettings(company),
     getAlimtalkCountsByMonth(company),
   ]);
