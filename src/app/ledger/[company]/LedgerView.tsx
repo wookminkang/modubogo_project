@@ -8,6 +8,8 @@ interface Props {
   company: string;
   entries: LedgerEntry[];
   today: string;
+  /** 광고 배너 설정 — enabled + url 이 모두 있을 때만 노출. */
+  ad?: { enabled: boolean; url: string };
 }
 
 /** 숫자(원) → "10,281,964" (천단위, 기호 없음). */
@@ -19,7 +21,9 @@ function won(n: number): string {
  * 광고주(비로그인) 읽기전용 입금·소진 관리내역 뷰 (토스 스타일 거래 피드, 라이트 테마).
  * 상단: 소진·입금 합계 밴드. 하단: 전체 거래를 날짜별로 묶은 플랫 피드.
  */
-export default function LedgerView({ entries }: Props) {
+export default function LedgerView({ entries, ad }: Props) {
+  const adUrl = ad?.url?.trim() ?? "";
+  const showAd = !!(ad?.enabled && adUrl);
   // 표시할 거래내역만(빈 행 제거) + 날짜 있는 것만.
   const dated = entries.filter(
     (e) =>
@@ -98,11 +102,11 @@ export default function LedgerView({ entries }: Props) {
             {/* ── 거래 피드 (날짜별 그룹) ─────────────────────── */}
             {groups.map((g, gi) => (
               <Fragment key={g.date}>
-                {gi === mascotAt && (
+                {gi === mascotAt && showAd && (
                   <div className="-mx-5 my-3 px-5">
-                    {/* 가로형 광고 배너 — 클릭 시 메디로드로 이동 */}
+                    {/* 가로형 광고 배너 — 클릭 시 설정된 링크로 이동 */}
                     <a
-                      href="https://mediroad.io"
+                      href={adUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="relative block overflow-hidden rounded-2xl bg-gradient-to-r from-[#eef2fd] to-[#e3ebff] px-4 py-4 transition-shadow hover:shadow-md"

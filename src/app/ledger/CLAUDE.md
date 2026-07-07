@@ -28,6 +28,12 @@
   뷰=카드/건수집계). 공용 유틸 `@/lib/ledger`(`summarizeLedger`/`formatKRW`)는 현재 미사용.
 - `layout.tsx`: 앱 공통 `Header`/`Footer`. 헤더 nav에 "입금소진" 탭 추가됨.
 - `[company]` 파라미터는 `resolveCompanyParam`(nanoid 또는 상호명)으로 해석.
+- **광고 배너**: 편집 페이지 상단 `LedgerAdForm`(예/아니오 + 이동 링크)에서 회사 단위로 설정.
+  저장은 `saveLedgerAdSettings`(`ledger-actions`) → `company_settings.ledger_ad_enabled`/
+  `ledger_ad_url`(SQL: `sql/ledger_ad.sql`, 미실행 시 배너 무해하게 미노출).
+  `/view`의 `LedgerView`는 `ad={enabled,url}`를 받아 **enabled+url 둘 다 있을 때만** 거래 피드
+  중간(`mascotAt`)에 메디로드 배너 1개 노출, 클릭 시 새 탭으로 `url` 이동. 배너 크리에이티브
+  (심볼 `public/medi-symbol.png` + 문구)는 고정, 링크만 설정값 사용.
 
 ## 데이터 흐름
 

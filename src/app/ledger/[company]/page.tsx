@@ -2,10 +2,15 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, Eye } from "lucide-react";
 import { getAdminUser } from "@/lib/admin";
-import { resolveCompanyParam, getLedgerEntries } from "@/lib/db";
+import {
+  resolveCompanyParam,
+  getLedgerEntries,
+  getLedgerAdSettings,
+} from "@/lib/db";
 import dayjs from "@/lib/dayjs";
 import Header from "@/components/Header";
 import LedgerSheet from "./LedgerSheet";
+import LedgerAdForm from "./LedgerAdForm";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +29,7 @@ export default async function LedgerCompanyPage({ params }: Props) {
   const { company } = await params;
   const decoded = await resolveCompanyParam(company);
   const entries = await getLedgerEntries(decoded);
+  const ad = await getLedgerAdSettings(decoded);
 
   return (
     <>
@@ -47,6 +53,12 @@ export default async function LedgerCompanyPage({ params }: Props) {
             광고주 화면 보기
           </Link>
         </div>
+
+          <LedgerAdForm
+            company={decoded}
+            initialEnabled={ad.enabled}
+            initialUrl={ad.url}
+          />
 
           <LedgerSheet
             company={decoded}

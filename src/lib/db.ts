@@ -543,6 +543,45 @@ export async function deleteReport(id: number) {
   if (error) throw error;
 }
 
+/** 입금·소진(ledger) 광고 배너 설정 — 회사 단위. */
+export interface LedgerAdSettings {
+  enabled: boolean;
+  url: string;
+}
+
+/**
+ * 광고 배너 설정 조회. 컬럼(ledger_ad_enabled/ledger_ad_url)이 없거나 행이 없으면
+ * 무해하게 기본값(미노출)으로 폴백한다. (SQL: sql/ledger_ad.sql)
+ */
+export async function getLedgerAdSettings(
+  company: string,
+): Promise<LedgerAdSettings> {
+  const { data, error } = await supabase
+    .from("company_settings")
+    .select("ledger_ad_enabled, ledger_ad_url")
+    .eq("company", company)
+    .single();
+  if (error || !data) return { enabled: false, url: "" };
+  const row = data as { ledger_ad_enabled?: boolean; ledger_ad_url?: string };
+  return { enabled: !!row.ledger_ad_enabled, url: row.ledger_ad_url ?? "" };
+}
+
+/** 광고 배너 설정 저장(회사 단위 upsert). 컬럼이 없으면 에러를 던진다(SQL 미실행). */
+export async function updateLedgerAdSettings(
+  company: string,
+  settings: LedgerAdSettings,
+): Promise<void> {
+  const { error } = await supabase.from("company_settings").upsert(
+    {
+      company,
+      ledger_ad_enabled: settings.enabled,
+      ledger_ad_url: settings.url || null,
+    },
+    { onConflict: "company" },
+  );
+  if (error) throw error;
+}
+
 /**
  * 병원(회사)과 연관된 모든 데이터를 삭제한다.
  * 보고서 자식(카테고리/심의/계약) → 보고서 → 회사 단위 테이블 → company_settings 순.

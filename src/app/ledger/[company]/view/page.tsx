@@ -1,5 +1,9 @@
 import Image from "next/image";
-import { resolveCompanyParam, getLedgerEntries } from "@/lib/db";
+import {
+  resolveCompanyParam,
+  getLedgerEntries,
+  getLedgerAdSettings,
+} from "@/lib/db";
 import dayjs from "@/lib/dayjs";
 import LedgerView from "../LedgerView";
 
@@ -20,6 +24,7 @@ export default async function LedgerViewPage({ params }: Props) {
   const { company } = await params;
   const decoded = await resolveCompanyParam(company);
   const entries = await getLedgerEntries(decoded);
+  const ad = await getLedgerAdSettings(decoded);
 
   return (
     <>
@@ -46,6 +51,7 @@ export default async function LedgerViewPage({ params }: Props) {
             company={decoded}
             entries={entries}
             today={dayjs().format("YYYY. M. D")}
+            ad={ad}
           />
         </div>
       </div>
