@@ -505,15 +505,20 @@ export async function updateCompanyHospitalType(
 
 /**
  * 전 병원의 알림톡 설정 수신번호를 한 번에 조회한다.
- * 회사명 → 비어있지 않은 recipient1~3 배열. (진료일정 허브의 번호 설정 상태 표시용)
+ * 회사명 → 비어있지 않은 recipient1~5 배열. (진료일정 허브의 번호 설정 상태 표시용)
  */
 export async function getHolidayRecipients(): Promise<Map<string, string[]>> {
-  const { data } = await supabase
-    .from("company_settings")
-    .select("company, recipient1, recipient2, recipient3");
+  // select("*") 로 조회해 recipient4/5 컬럼이 아직 없어도(SQL 미실행) 안전하게 폴백.
+  const { data } = await supabase.from("company_settings").select("*");
   const map = new Map<string, string[]>();
   for (const r of data ?? []) {
-    const nums = [r.recipient1, r.recipient2, r.recipient3]
+    const nums = [
+      r.recipient1,
+      r.recipient2,
+      r.recipient3,
+      r.recipient4,
+      r.recipient5,
+    ]
       .map((n) => (typeof n === "string" ? n.trim() : ""))
       .filter(Boolean);
     if (nums.length > 0) map.set(r.company, nums);
@@ -529,6 +534,8 @@ export async function upsertCompanySettings(data: {
   recipient1?: string;
   recipient2?: string;
   recipient3?: string;
+  recipient4?: string;
+  recipient5?: string;
   dable_api_key?: string;
   dable_account?: string;
 }) {

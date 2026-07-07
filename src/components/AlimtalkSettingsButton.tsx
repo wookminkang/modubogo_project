@@ -20,6 +20,8 @@ interface Props {
     recipient1?: string;
     recipient2?: string;
     recipient3?: string;
+    recipient4?: string;
+    recipient5?: string;
   };
   /** 트리거 엘리먼트 교체용. 미지정 시 기본 풀버튼. */
   trigger?: ReactNode;
@@ -43,6 +45,8 @@ export default function AlimtalkSettingsButton({ company, defaultValues, trigger
     recipient1: formatPhone(defaultValues?.recipient1 ?? ""),
     recipient2: formatPhone(defaultValues?.recipient2 ?? ""),
     recipient3: formatPhone(defaultValues?.recipient3 ?? ""),
+    recipient4: formatPhone(defaultValues?.recipient4 ?? ""),
+    recipient5: formatPhone(defaultValues?.recipient5 ?? ""),
   });
 
   async function handleSubmit() {
@@ -54,6 +58,8 @@ export default function AlimtalkSettingsButton({ company, defaultValues, trigger
         recipient1: phones.recipient1.replace(/\D/g, ""),
         recipient2: phones.recipient2.replace(/\D/g, ""),
         recipient3: phones.recipient3.replace(/\D/g, ""),
+        recipient4: phones.recipient4.replace(/\D/g, ""),
+        recipient5: phones.recipient5.replace(/\D/g, ""),
       });
       setToast("알림톡 수신자가 저장되었어요 ✅");
       setOpen(false);
@@ -102,6 +108,26 @@ export default function AlimtalkSettingsButton({ company, defaultValues, trigger
                 value={phones.recipient3}
                 onValueChange={({ value }) =>
                   setPhones((p) => ({ ...p, recipient3: formatPhone(value) }))
+                }
+              >
+                <TextFieldInput inputMode="numeric" placeholder="010-1234-5678" />
+              </TextField>
+
+              <TextField
+                label="수신자 번호 4 (선택)"
+                value={phones.recipient4}
+                onValueChange={({ value }) =>
+                  setPhones((p) => ({ ...p, recipient4: formatPhone(value) }))
+                }
+              >
+                <TextFieldInput inputMode="numeric" placeholder="010-1234-5678" />
+              </TextField>
+
+              <TextField
+                label="수신자 번호 5 (선택)"
+                value={phones.recipient5}
+                onValueChange={({ value }) =>
+                  setPhones((p) => ({ ...p, recipient5: formatPhone(value) }))
                 }
               >
                 <TextFieldInput inputMode="numeric" placeholder="010-1234-5678" />

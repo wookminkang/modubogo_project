@@ -36,11 +36,15 @@ export default async function LedgerCompanyPage({ params }: Props) {
     recipient1?: string | null;
     recipient2?: string | null;
     recipient3?: string | null;
+    recipient4?: string | null;
+    recipient5?: string | null;
   } | null;
   const recipients = [
     settings?.recipient1,
     settings?.recipient2,
     settings?.recipient3,
+    settings?.recipient4,
+    settings?.recipient5,
   ].filter((n): n is string => !!n && n.trim() !== "");
 
   return (

@@ -106,6 +106,8 @@ export async function saveAlimtalkSettings(data: {
   recipient1?: string;
   recipient2?: string;
   recipient3?: string;
+  recipient4?: string;
+  recipient5?: string;
 }) {
   const existing = await getCompanySettings(data.company);
   await upsertCompanySettings({
@@ -116,5 +118,7 @@ export async function saveAlimtalkSettings(data: {
     recipient1: data.recipient1 ?? "",
     recipient2: data.recipient2 ?? "",
     recipient3: data.recipient3 ?? "",
+    recipient4: data.recipient4 ?? "",
+    recipient5: data.recipient5 ?? "",
   });
 }

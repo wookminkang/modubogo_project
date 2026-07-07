@@ -33,7 +33,13 @@ function StatusBadge({ connected, label }: { connected: boolean; label: string }
 }
 
 export default function HospitalTabs({ company, settings, initialNotes }: Props) {
-  const recipients = [settings?.recipient1, settings?.recipient2, settings?.recipient3]
+  const recipients = [
+    settings?.recipient1,
+    settings?.recipient2,
+    settings?.recipient3,
+    settings?.recipient4,
+    settings?.recipient5,
+  ]
     .map((n: unknown) => (typeof n === "string" ? n.trim() : ""))
     .filter(Boolean);
   const naverLinked = Boolean(

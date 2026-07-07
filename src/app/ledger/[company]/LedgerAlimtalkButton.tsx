@@ -15,7 +15,7 @@ type Step = "idle" | "confirm" | "sending" | "result";
 
 /**
  * 입금·소진(결제) 내역 안내 알림톡 발송 버튼 (템플릿: modubogo_03).
- * 등록된 수신번호(recipient1~3)로 발송, 버튼은 광고주 공개 뷰(/view)로 이동.
+ * 등록된 수신번호(recipient1~5)로 발송, 버튼은 광고주 공개 뷰(/view)로 이동.
  */
 export default function LedgerAlimtalkButton({
   company,

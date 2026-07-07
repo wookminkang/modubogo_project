@@ -136,6 +136,8 @@ export default async function CompanyReports({ company }: { company: string }) {
                         settings?.recipient1,
                         settings?.recipient2,
                         settings?.recipient3,
+                        settings?.recipient4,
+                        settings?.recipient5,
                       ].filter(Boolean) as string[]
                     }
                   />

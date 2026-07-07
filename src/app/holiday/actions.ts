@@ -46,6 +46,8 @@ export async function sendBulkHolidayAlimtalk(
         settings?.recipient1,
         settings?.recipient2,
         settings?.recipient3,
+        settings?.recipient4,
+        settings?.recipient5,
       ].filter(Boolean) as string[];
 
       const detailUrl = `https://modubogo.com/holiday/${encodeURIComponent(
