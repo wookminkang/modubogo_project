@@ -37,6 +37,7 @@ export const DESIGN_SECTIONS: DesignSection[] = [
     fields: [
       { key: "task_name", label: "작업명", type: "text", placeholder: "예) 7월 건강검진 이벤트 메인 배너" },
       { key: "purpose", label: "작업 목적", type: "textarea", rows: 10, placeholder: "예) 메인 페이지에서 이벤트를 홍보하고 예약을 유도하기 위함" },
+      { key: "etc", label: "기타 요청사항", type: "textarea", placeholder: "추가로 전달할 요청사항이 있으면 적어주세요." },
       { key: "content", label: "작업 내용", type: "textarea", rows: 10, placeholder: "예) PC 배너 1종, Mobile 배너 1종" },
       { key: "due_date", label: "마감일", type: "date" },
     ],
@@ -58,7 +59,6 @@ export const DESIGN_SECTIONS: DesignSection[] = [
     title: "디자인 방향",
     fields: [
       { key: "direction", label: "디자인 방향", type: "textarea", placeholder: "예) 심플한 스타일, 신뢰감 있는 분위기" },
-      { key: "etc", label: "기타 요청사항", type: "textarea", placeholder: "추가로 전달할 요청사항이 있으면 적어주세요." },
     ],
   },
 ];
