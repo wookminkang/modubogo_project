@@ -56,9 +56,21 @@ export default async function DesignerViewPage({ params }: Props) {
 
   return (
     <div className="mx-auto w-full max-w-[640px] px-4 py-8">
+      {/* 환영 캐릭터 */}
+      <div className="flex justify-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/welcome-a.png"
+          alt="반갑게 인사하는 캐릭터"
+          width={176}
+          height={176}
+          className="h-44 w-44 object-contain"
+        />
+      </div>
+
       {/* 제목 */}
-      <div className="rounded-2xl bg-white px-6 py-6 shadow-sm">
-        <p className="text-xs font-semibold text-[#0e299c]">🎨 디자인 작업 요청서</p>
+      <div className="mt-1 rounded-2xl bg-white px-6 py-6 shadow-sm">
+        <p className="text-xs font-semibold text-[#0e299c]">디자인 작업 요청서</p>
         <h1 className="mt-2 text-2xl font-bold break-keep text-gray-900">
           {designTitle(content)}
         </h1>
