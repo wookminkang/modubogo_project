@@ -9,6 +9,7 @@ const TABS = [
   { href: "/report", label: "보고서" },
   { href: "/holiday", label: "진료일정" },
   { href: "/intakes", label: "준비자료" },
+  { href: "/outsource", label: "외주 관리" },
 ];
 
 export interface HeaderUser {
@@ -18,7 +19,7 @@ export interface HeaderUser {
 
 /**
  * 앱 공통 상단 헤더.
- * showNav=true(관리자)일 때만 카테고리 탭(병원목록/보고서/진료일정)을 노출한다.
+ * showNav=true(관리자)일 때만 카테고리 탭(병원목록/보고서/진료일정/준비자료/외주 관리)을 노출한다.
  * user 가 있으면(로그인) 유저 정보 + 대시보드 버튼을 우측에 노출한다.
  * 공개 페이지(원장/광고주)에는 탭/유저 정보를 숨긴다.
  */

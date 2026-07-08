@@ -1016,3 +1016,175 @@ export async function replaceLedgerEntries(
   const { error: insErr } = await supabase.from("ledger_entries").insert(rows);
   if (insErr) throw new Error(`거래내역 저장 실패: ${insErr.message}`);
 }
+
+// ── 외주 디자이너 작업 요청서 (design_requests) ─────────────────
+// 관리자가 브리프를 작성하고 디자이너는 공개 링크(/design/{nanoid})로 읽는다.
+// 브리프 텍스트/선택 값은 content(jsonb), 첨부 리소스 메타는 files(jsonb).
+// 테이블이 없으면 목록/조회는 무해하게 빈 값으로 폴백(SQL: sql/design_requests.sql).
+import type { DesignContent, DesignFiles } from "./design-fields";
+
+export interface DesignRequest {
+  id: string;
+  nanoid: string;
+  title: string | null;
+  status: "draft" | "sent";
+  content: DesignContent;
+  files: DesignFiles;
+  designer_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Designer {
+  id: string;
+  name: string;
+  contact: string | null;
+  memo: string | null;
+  active: boolean;
+  created_at: string;
+}
+
+/** [관리자] 신규 요청서 생성 → nanoid 발급 후 draft 행 삽입. */
+export async function createDesignRequest(): Promise<DesignRequest> {
+  const nanoid = generateCompanyNanoid();
+  const { data, error } = await supabase
+    .from("design_requests")
+    .insert({ nanoid, status: "draft" })
+    .select()
+    .single();
+  if (error) throw new Error(`요청서 생성 실패: ${error.message}`);
+  return data as DesignRequest;
+}
+
+/** [관리자] 요청서 목록 — 최신순. 테이블 없으면 빈 배열. */
+export async function listDesignRequests(): Promise<DesignRequest[]> {
+  const { data, error } = await supabase
+    .from("design_requests")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) return [];
+  return (data as DesignRequest[] | null) ?? [];
+}
+
+/** 공개 링크(nanoid) → 요청서. 없으면 null. */
+export async function getDesignRequestByNanoid(
+  nanoid: string,
+): Promise<DesignRequest | null> {
+  const { data } = await supabase
+    .from("design_requests")
+    .select("*")
+    .eq("nanoid", nanoid)
+    .limit(1)
+    .maybeSingle();
+  return (data as DesignRequest | null) ?? null;
+}
+
+/** [관리자] 브리프 저장 — content/files/title/status 갱신. */
+export async function saveDesignRequest(
+  nanoid: string,
+  payload: {
+    title: string | null;
+    content: DesignContent;
+    files: DesignFiles;
+    status?: "draft" | "sent";
+  },
+): Promise<void> {
+  const patch: Record<string, unknown> = {
+    title: payload.title,
+    content: payload.content,
+    files: payload.files,
+    updated_at: new Date().toISOString(),
+  };
+  if (payload.status) patch.status = payload.status;
+  const { error } = await supabase
+    .from("design_requests")
+    .update(patch)
+    .eq("nanoid", nanoid);
+  if (error) throw new Error(`요청서 저장 실패: ${error.message}`);
+}
+
+/** [관리자] 상태만 변경 (draft ↔ sent). */
+export async function updateDesignRequestStatus(
+  nanoid: string,
+  status: "draft" | "sent",
+): Promise<void> {
+  const { error } = await supabase
+    .from("design_requests")
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq("nanoid", nanoid);
+  if (error) throw new Error(`상태 변경 실패: ${error.message}`);
+}
+
+/** [관리자] 요청서 삭제 (행만 — 파일 정리는 호출부에서 deleteDesignFiles 로). */
+export async function deleteDesignRequest(nanoid: string): Promise<void> {
+  const { error } = await supabase
+    .from("design_requests")
+    .delete()
+    .eq("nanoid", nanoid);
+  if (error) throw new Error(`삭제 실패: ${error.message}`);
+}
+
+// ── 외주 디자이너 명단 (designers) ──────────────────────────────
+// 테이블/컬럼이 없으면 조회는 빈 배열로 폴백(SQL: sql/designers.sql). 쓰기는 에러를 던진다.
+
+/** 디자이너 명단 — 활성 우선, 이름순. 테이블 없으면 빈 배열. */
+export async function listDesigners(): Promise<Designer[]> {
+  const { data, error } = await supabase
+    .from("designers")
+    .select("*")
+    .order("active", { ascending: false })
+    .order("name", { ascending: true });
+  if (error) return [];
+  return (data as Designer[] | null) ?? [];
+}
+
+/** 디자이너 등록. */
+export async function createDesigner(data: {
+  name: string;
+  contact?: string | null;
+  memo?: string | null;
+}): Promise<Designer> {
+  const { data: row, error } = await supabase
+    .from("designers")
+    .insert({
+      name: data.name,
+      contact: data.contact || null,
+      memo: data.memo || null,
+    })
+    .select()
+    .single();
+  if (error) throw new Error(`디자이너 등록 실패: ${error.message}`);
+  return row as Designer;
+}
+
+/** 디자이너 정보 수정. */
+export async function updateDesigner(
+  id: string,
+  data: { name?: string; contact?: string | null; memo?: string | null; active?: boolean },
+): Promise<void> {
+  const patch: Record<string, unknown> = {};
+  if (data.name !== undefined) patch.name = data.name;
+  if (data.contact !== undefined) patch.contact = data.contact || null;
+  if (data.memo !== undefined) patch.memo = data.memo || null;
+  if (data.active !== undefined) patch.active = data.active;
+  const { error } = await supabase.from("designers").update(patch).eq("id", id);
+  if (error) throw new Error(`디자이너 수정 실패: ${error.message}`);
+}
+
+/** 디자이너 삭제 (요청서 배정은 FK on delete set null 로 자동 해제). */
+export async function deleteDesigner(id: string): Promise<void> {
+  const { error } = await supabase.from("designers").delete().eq("id", id);
+  if (error) throw new Error(`디자이너 삭제 실패: ${error.message}`);
+}
+
+/** 요청서에 담당 디자이너 배정(해제는 designerId=null). */
+export async function assignDesigner(
+  nanoid: string,
+  designerId: string | null,
+): Promise<void> {
+  const { error } = await supabase
+    .from("design_requests")
+    .update({ designer_id: designerId, updated_at: new Date().toISOString() })
+    .eq("nanoid", nanoid);
+  if (error) throw new Error(`담당자 배정 실패: ${error.message}`);
+}
