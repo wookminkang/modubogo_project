@@ -16,23 +16,26 @@ import Toast from "@/components/Toast";
 import ConfirmToast from "@/components/ConfirmToast";
 import { createDesignForm, deleteDesignForm } from "@/lib/design-actions";
 import { designTitle } from "@/lib/design-fields";
-import type { DesignRequest, Designer } from "@/lib/db";
+import type { DesignRequest, Designer, OutsourcePost } from "@/lib/db";
 import DesignersTab from "./DesignersTab";
+import BoardTab from "./BoardTab";
 
-type Tab = "requests" | "designers";
+type Tab = "requests" | "designers" | "board";
 
 export default function OutsourceView({
   requests,
   designers,
+  posts,
 }: {
   requests: DesignRequest[];
   designers: Designer[];
+  posts: OutsourcePost[];
 }) {
   const [tab, setTab] = useState<Tab>("requests");
   const designerName = new Map(designers.map((d) => [d.id, d.name]));
 
   return (
-    <div className="mx-auto w-full max-w-[600px] px-5 py-8">
+    <div className="mx-auto w-full max-w-[900px] px-5 py-8">
       <h1 className="text-2xl font-bold text-[#0e299c]">외주 관리</h1>
 
       {/* 탭 */}
@@ -43,12 +46,17 @@ export default function OutsourceView({
         <TabButton active={tab === "designers"} onClick={() => setTab("designers")}>
           디자이너 {designers.length > 0 && <Count n={designers.length} />}
         </TabButton>
+        <TabButton active={tab === "board"} onClick={() => setTab("board")}>
+          게시판 {posts.length > 0 && <Count n={posts.length} />}
+        </TabButton>
       </div>
 
       {tab === "requests" ? (
         <RequestsTab requests={requests} designerName={designerName} />
-      ) : (
+      ) : tab === "designers" ? (
         <DesignersTab designers={designers} />
+      ) : (
+        <BoardTab posts={posts} />
       )}
     </div>
   );

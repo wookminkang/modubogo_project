@@ -1188,3 +1188,79 @@ export async function assignDesigner(
     .eq("nanoid", nanoid);
   if (error) throw new Error(`담당자 배정 실패: ${error.message}`);
 }
+
+// ── 외주 게시판 (outsource_posts) ──────────────────────────────
+// 관리자용 내부 게시판. 첨부는 design-files 버킷 재사용(board/{id}/...).
+// 테이블이 없으면 목록/조회는 빈 값으로 폴백(SQL: sql/outsource_posts.sql).
+
+export interface OutsourcePost {
+  id: string;
+  title: string | null;
+  content: string | null;
+  author: string | null;
+  files: DesignFiles;
+  created_at: string;
+  updated_at: string;
+}
+
+/** 게시글 목록 — 최신순. 테이블 없으면 빈 배열. */
+export async function listOutsourcePosts(): Promise<OutsourcePost[]> {
+  const { data, error } = await supabase
+    .from("outsource_posts")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) return [];
+  return (data as OutsourcePost[] | null) ?? [];
+}
+
+/** 게시글 1건 조회. 없으면 null. */
+export async function getOutsourcePost(
+  id: string,
+): Promise<OutsourcePost | null> {
+  const { data } = await supabase
+    .from("outsource_posts")
+    .select("*")
+    .eq("id", id)
+    .limit(1)
+    .maybeSingle();
+  return (data as OutsourcePost | null) ?? null;
+}
+
+/** 게시글 생성(빈 초안). 작성자 이름을 기록하고 생성 행을 반환. */
+export async function createOutsourcePost(
+  author?: string | null,
+): Promise<OutsourcePost> {
+  const { data, error } = await supabase
+    .from("outsource_posts")
+    .insert({ author: author || null })
+    .select()
+    .single();
+  if (error) throw new Error(`게시글 생성 실패: ${error.message}`);
+  return data as OutsourcePost;
+}
+
+/** 게시글 저장 — 제목/내용/첨부 갱신. */
+export async function saveOutsourcePost(
+  id: string,
+  payload: { title: string | null; content: string | null; files: DesignFiles },
+): Promise<void> {
+  const { error } = await supabase
+    .from("outsource_posts")
+    .update({
+      title: payload.title,
+      content: payload.content,
+      files: payload.files,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  if (error) throw new Error(`게시글 저장 실패: ${error.message}`);
+}
+
+/** 게시글 삭제 (첨부 정리는 호출부에서 deleteBoardFiles 로). */
+export async function deleteOutsourcePost(id: string): Promise<void> {
+  const { error } = await supabase
+    .from("outsource_posts")
+    .delete()
+    .eq("id", id);
+  if (error) throw new Error(`게시글 삭제 실패: ${error.message}`);
+}

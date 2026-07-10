@@ -38,7 +38,7 @@ export default async function OutsourceEditPage({ params }: Props) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[600px] px-5 py-8">
+    <div className="mx-auto w-full max-w-[900px] px-5 py-8">
       <Link
         href="/outsource"
         className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-gray-600 transition-colors hover:text-[#0e299c]"
