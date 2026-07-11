@@ -1,0 +1,35 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 남은 금액: 3D 지갑 + 코인 -->
+  <defs>
+    <linearGradient id="rWallet" x1="10" y1="14" x2="54" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3D5AF1"/>
+      <stop offset="1" stop-color="#16227A"/>
+    </linearGradient>
+    <linearGradient id="rFlap" x1="12" y1="14" x2="50" y2="34" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8FA7FF"/>
+      <stop offset="1" stop-color="#4864E8"/>
+    </linearGradient>
+    <linearGradient id="rCoin" x1="36" y1="28" x2="52" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFE083"/>
+      <stop offset="1" stop-color="#F0A93B"/>
+    </linearGradient>
+    <radialGradient id="rShadow" cx="0" cy="0" r="1" gradientTransform="translate(32 56) scale(20 4)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#16227A" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#16227A" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="32" cy="56" rx="20" ry="4" fill="url(#rShadow)"/>
+  <!-- 지갑 뒷면(플랩) -->
+  <path d="M12 22c0-3.3 2.7-6 6-6h28c3.3 0 6 2.7 6 6v6H12v-6z" fill="url(#rFlap)"/>
+  <!-- 코인(지갑에서 반쯤 나온) -->
+  <circle cx="44" cy="34" r="9" fill="url(#rCoin)"/>
+  <circle cx="44" cy="34" r="9" stroke="#E0932B" stroke-width="0.8"/>
+  <path d="M44 29.5v9M41 32h6M41 35.5h6" stroke="#C97E22" stroke-width="1.6" stroke-linecap="round"/>
+  <!-- 지갑 앞면 -->
+  <path d="M10 28c0-2.2 1.8-4 4-4h36c2.2 0 4 1.8 4 4v20c0 2.2-1.8 4-4 4H14c-2.2 0-4-1.8-4-4V28z" fill="url(#rWallet)"/>
+  <!-- 상단 하이라이트 -->
+  <path d="M14 24h36c2.2 0 4 1.8 4 4v2H10v-2c0-2.2 1.8-4 4-4z" fill="#FFFFFF" fill-opacity="0.18"/>
+  <!-- 잠금 버튼 -->
+  <rect x="38" y="34" width="18" height="10" rx="5" fill="#0D1560"/>
+  <circle cx="45" cy="39" r="3" fill="#8FA7FF"/>
+</svg>

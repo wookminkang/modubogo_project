@@ -19,7 +19,7 @@ function won(n: number): string {
 
 /**
  * 광고주(비로그인) 읽기전용 입금·소진 관리내역 뷰 (토스 스타일 거래 피드, 라이트 테마).
- * 상단: 소진·입금 합계 밴드. 하단: 전체 거래를 날짜별로 묶은 플랫 피드.
+ * 상단: 남은 금액 + 소진·입금 합계 밴드. 하단: 전체 거래를 날짜별로 묶은 플랫 피드.
  */
 export default function LedgerView({ entries, ad }: Props) {
   const adUrl = ad?.url?.trim() ?? "";
@@ -34,9 +34,10 @@ export default function LedgerView({ entries, ad }: Props) {
         e.contract_note?.trim()),
   );
 
-  // 전체 합계.
+  // 전체 합계 + 남은 금액(입금 − 소진). 초과 소진이면 음수.
   const totalDeposit = dated.reduce((s, e) => s + (e.deposit_amount ?? 0), 0);
   const totalSpend = dated.reduce((s, e) => s + (e.spend_amount ?? 0), 0);
+  const remaining = totalDeposit - totalSpend;
 
   // 날짜별 그룹(최신 날짜 먼저).
   const map = new Map<string, LedgerEntry[]>();
@@ -77,25 +78,68 @@ export default function LedgerView({ entries, ad }: Props) {
 
         {groups.length > 0 ? (
           <>
-            {/* ── 소진·입금 요약 밴드 (카드 폭 꽉 채움) ───────── */}
-            <div className="-mx-5 mt-5 grid grid-cols-2 gap-4 bg-gray-100 px-5 py-4">
-              <div>
-                <p className="text-sm font-medium text-gray-400">소진</p>
-                <p className="mt-0.5 text-2xl font-bold tracking-tight text-[#191f28]">
-                  −{won(totalSpend)}
-                  <span className="ml-0.5 text-base font-semibold text-gray-400">
-                    원
-                  </span>
-                </p>
+            {/* ── 남은 금액 + 소진·입금 요약 밴드 (카드 폭 꽉 채움) ── */}
+            <div className="-mx-5 mt-5 bg-gray-50 px-5 py-4">
+              <div className="flex items-center gap-2 pb-4">
+                <Image
+                  src="/ledger-remain-3d.svg"
+                  alt=""
+                  width={34}
+                  height={34}
+                  className="shrink-0"
+                />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-400">남은 금액</p>
+                  <p
+                    className={`mt-0.5 text-xl font-bold tracking-tight ${
+                      remaining < 0 ? "text-[#c0392b]" : "text-[#191f28]"
+                    }`}
+                  >
+                    {remaining < 0 ? "−" : ""}
+                    {won(remaining)}
+                    <span className="ml-0.5 text-sm font-semibold text-gray-400">
+                      원
+                    </span>
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-400">입금</p>
-                <p className="mt-0.5 text-2xl font-bold tracking-tight text-[#0e299c]">
-                  +{won(totalDeposit)}
-                  <span className="ml-0.5 text-base font-semibold text-gray-400">
-                    원
-                  </span>
-                </p>
+              <div className="grid grid-cols-2 gap-3 border-t border-gray-200 pt-4">
+                <div className="flex items-center gap-2">
+                  <Image
+                    src="/ledger-spend-3d.svg"
+                    alt=""
+                    width={34}
+                    height={34}
+                    className="shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-400">소진</p>
+                    <p className="mt-0.5 text-xl font-bold tracking-tight text-[#191f28]">
+                      −{won(totalSpend)}
+                      <span className="ml-0.5 text-sm font-semibold text-gray-400">
+                        원
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Image
+                    src="/ledger-deposit-3d.svg"
+                    alt=""
+                    width={34}
+                    height={34}
+                    className="shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-400">입금</p>
+                    <p className="mt-0.5 text-xl font-bold tracking-tight text-[#0e299c]">
+                      +{won(totalDeposit)}
+                      <span className="ml-0.5 text-sm font-semibold text-gray-400">
+                        원
+                      </span>
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
