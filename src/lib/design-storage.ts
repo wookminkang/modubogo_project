@@ -68,14 +68,20 @@ export async function uploadDesignFile(
   return { name: file.name, path, size: file.size };
 }
 
-/** 조회용 signed URL 발급 (기본 1시간). 실패 시 null. */
+/**
+ * 조회용 signed URL 발급 (기본 1시간). 실패 시 null.
+ *
+ * `download` 에 파일명을 주면 Content-Disposition: attachment 가 붙어 실제로 저장된다.
+ * (Storage 는 앱과 오리진이 달라 <a download> 속성이 무시되므로 이 옵션이 필요)
+ */
 export async function getDesignFileSignedUrl(
   path: string,
   expiresInSec = 3600,
+  download?: string,
 ): Promise<string | null> {
   const { data, error } = await getClient()
     .storage.from(DESIGN_BUCKET)
-    .createSignedUrl(path, expiresInSec);
+    .createSignedUrl(path, expiresInSec, download ? { download } : undefined);
   return error ? null : (data?.signedUrl ?? null);
 }
 
@@ -130,5 +136,37 @@ export async function deleteBoardFiles(postId: string): Promise<void> {
     .from(DESIGN_BUCKET)
     .list(`board/${postId}`, { limit: 1000 });
   const paths = (files ?? []).map((f) => `board/${postId}/${f.name}`);
+  if (paths.length) await client.storage.from(DESIGN_BUCKET).remove(paths);
+}
+
+// ── 보고서 첨부 (동일 design-files 버킷 재사용, report/{reportId}/ 경로) ──
+
+/** 보고서 첨부 1개 업로드. 경로: report/{reportId}/{timestamp}_{index}-{safeName} */
+export async function uploadReportFile(
+  reportId: number | string,
+  index: number,
+  file: File,
+): Promise<DesignFileMeta> {
+  const path = `report/${reportId}/${Date.now()}_${index}-${safeName(file.name)}`;
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const { error } = await getClient()
+    .storage.from(DESIGN_BUCKET)
+    .upload(path, buffer, {
+      contentType: file.type || "application/octet-stream",
+      upsert: true,
+    });
+  if (error) throw new Error(`파일 업로드 실패(${file.name}): ${error.message}`);
+  return { name: file.name, path, size: file.size };
+}
+
+/** 보고서 1건의 모든 첨부 삭제 (보고서 삭제 시 정리). */
+export async function deleteReportFiles(
+  reportId: number | string,
+): Promise<void> {
+  const client = getClient();
+  const { data: files } = await client.storage
+    .from(DESIGN_BUCKET)
+    .list(`report/${reportId}`, { limit: 1000 });
+  const paths = (files ?? []).map((f) => `report/${reportId}/${f.name}`);
   if (paths.length) await client.storage.from(DESIGN_BUCKET).remove(paths);
 }

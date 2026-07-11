@@ -2,8 +2,15 @@
 
 import { useFieldArray, useForm, Controller } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { upsertReport, deleteReport } from "@/lib/db";
+import { saveReportFiles, clearReportFiles } from "@/lib/report-actions";
+import FileAttachments, {
+  toNewFiles,
+  revokeNewFiles,
+  type NewFile,
+} from "@/components/FileAttachments";
+import type { DesignFileMeta } from "@/lib/design-fields";
 import ResultSuccess from "@/components/ResultSuccess";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -59,6 +66,8 @@ interface Props {
   company: string;
   month: string;
   categoryOptions: string[];
+  initialFiles?: DesignFileMeta[];
+  initialFileUrls?: Record<string, string>;
 }
 
 export default function EditForm({
@@ -67,12 +76,36 @@ export default function EditForm({
   company,
   month,
   categoryOptions,
+  initialFiles = [],
+  initialFileUrls = {},
 }: Props) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [saved, setSaved] = useState(false);
   const [redirectTo, setRedirectTo] = useState("");
+
+  // 첨부파일: 기존(유지/삭제) + 새로 추가
+  const [existingFiles, setExistingFiles] =
+    useState<DesignFileMeta[]>(initialFiles);
+  const [newAttachments, setNewAttachments] = useState<NewFile[]>([]);
+  const addAttachments = (list: FileList | null) =>
+    setNewAttachments((p) => [...p, ...toNewFiles(list)]);
+  const removeNewAttachment = (idx: number) =>
+    setNewAttachments((p) => {
+      const t = p[idx];
+      if (t?.url) URL.revokeObjectURL(t.url);
+      return p.filter((_, i) => i !== idx);
+    });
+  const removeExistingFile = (path: string) =>
+    setExistingFiles((p) => p.filter((m) => m.path !== path));
+
+  // 미리보기 objectURL 은 언마운트 시 해제
+  const newAttachmentsRef = useRef<NewFile[]>([]);
+  useEffect(() => {
+    newAttachmentsRef.current = newAttachments;
+  }, [newAttachments]);
+  useEffect(() => () => revokeNewFiles(newAttachmentsRef.current), []);
 
   const { register, control, handleSubmit } = useForm<FormValues>({
     defaultValues: {
@@ -106,6 +139,11 @@ export default function EditForm({
         status: "완료",
         hospital_type: data.hospital_type || undefined,
       });
+      // 첨부: 유지할 기존 파일 경로 + 새 파일 업로드
+      const fd = new FormData();
+      for (const m of existingFiles) fd.append("keep", m.path);
+      for (const a of newAttachments) fd.append("files", a.file);
+      await saveReportFiles(reportId, fd);
       setRedirectTo(
         `/report/${encodeURIComponent(data.company)}/${data.month}`,
       );
@@ -122,6 +160,7 @@ export default function EditForm({
     if (!confirm("보고서를 삭제하시겠습니까?")) return;
     setDeleting(true);
     try {
+      await clearReportFiles(reportId).catch(() => {});
       await deleteReport(reportId);
       router.push("/report");
       router.refresh();
@@ -264,6 +303,25 @@ export default function EditForm({
               </div>
               {/* 열람 비밀번호 — 현재 미사용. 기존 값은 유지하되 입력 UI는 숨김 */}
               <input type="hidden" {...register("password")} />
+            </CardContent>
+          </Card>
+
+          {/* 첨부파일 */}
+          <Card className="ring-[var(--seed-color-stroke-neutral-muted)]">
+            <CardHeader>
+              <CardTitle className="text-[var(--seed-color-fg-neutral)]">
+                첨부파일
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FileAttachments
+                existing={existingFiles}
+                newFiles={newAttachments}
+                urls={initialFileUrls}
+                onAdd={addAttachments}
+                onRemoveNew={removeNewAttachment}
+                onRemoveExisting={removeExistingFile}
+              />
             </CardContent>
           </Card>
 

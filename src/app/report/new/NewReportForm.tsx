@@ -14,6 +14,12 @@ import { OrderStepper } from "@/components/ui/order-stepper";
 import { AmountInput } from "@/components/ui/amount-input";
 import { Trash2, Search, ArrowLeft } from "lucide-react";
 import { loadLatestReportData } from "@/lib/copy-actions";
+import { saveReportFiles } from "@/lib/report-actions";
+import FileAttachments, {
+  toNewFiles,
+  revokeNewFiles,
+  type NewFile,
+} from "@/components/FileAttachments";
 import { Dialog } from "@seed-design/react";
 import { Text } from "seed-design/ui/text";
 import { ActionButton } from "seed-design/ui/action-button";
@@ -209,6 +215,27 @@ export default function ReportNewPage({
   const selectedType = useWatch({ control, name: "hospital_type" });
   const selectedRegion = useWatch({ control, name: "region" });
 
+  // 첨부파일 (react-hook-form 과 별개 상태로 관리)
+  const [attachments, setAttachments] = useState<NewFile[]>([]);
+  const addAttachments = (list: FileList | null) =>
+    setAttachments((p) => [...p, ...toNewFiles(list)]);
+  const removeAttachment = (idx: number) =>
+    setAttachments((p) => {
+      const t = p[idx];
+      if (t?.url) URL.revokeObjectURL(t.url);
+      return p.filter((_, i) => i !== idx);
+    });
+
+  // 미리보기 objectURL 은 언마운트 시 해제
+  const attachmentsRef = useRef<NewFile[]>([]);
+  useEffect(() => {
+    attachmentsRef.current = attachments;
+  }, [attachments]);
+  useEffect(() => () => revokeNewFiles(attachmentsRef.current), []);
+
+  // 첨부 업로드만 실패했을 때 재시도하면 보고서가 중복 생성되지 않도록 id 를 기억
+  const [createdId, setCreatedId] = useState<number | undefined>(undefined);
+
   // 오류 피드백 (Alert Dialog)
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const showError = (message: string) => setErrorMsg(message);
@@ -236,22 +263,45 @@ export default function ReportNewPage({
 
   const onSubmit = async (data: FormValues) => {
     setSaving(true);
+    let reportId = createdId;
     try {
-      await upsertReport({
+      const report = await upsertReport({
         ...data,
+        id: reportId,
         status: "작성중",
         hospital_type: data.hospital_type || undefined,
       });
-      setRedirectTo(
-        `/report/${encodeURIComponent(data.company)}/${data.month}`,
-      );
-      setSaved(true);
+      reportId = report?.id;
+      setCreatedId(reportId);
     } catch (e) {
       console.error(e);
       showError("저장 중 오류가 발생했습니다.");
+      setSaving(false);
+      return;
+    }
+
+    // 첨부파일은 보고서 id 가 필요하므로 저장 후 업로드한다.
+    // 실패해도 보고서는 이미 저장된 상태이므로, 다시 '등록'을 누르면 같은 보고서에 첨부만 재시도된다.
+    try {
+      if (attachments.length > 0 && reportId) {
+        const fd = new FormData();
+        for (const a of attachments) fd.append("files", a.file);
+        await saveReportFiles(reportId, fd);
+        revokeNewFiles(attachments);
+        setAttachments([]);
+      }
+    } catch (e) {
+      console.error(e);
+      showError(
+        "보고서는 저장됐지만 첨부파일 업로드에 실패했습니다. 다시 '등록'을 누르면 첨부만 재시도합니다.",
+      );
+      return;
     } finally {
       setSaving(false);
     }
+
+    setRedirectTo(`/report/${encodeURIComponent(data.company)}/${data.month}`);
+    setSaved(true);
   };
 
   const inputClass =
@@ -392,6 +442,23 @@ export default function ReportNewPage({
               <input type="hidden" {...register("password")} />
             </div>
           </section>
+          </div>
+
+          {/* 첨부파일 */}
+          <div className="flex flex-col gap-2">
+            <Text as="h2" textStyle="t8Bold" className="block px-1">
+              첨부파일
+            </Text>
+            <section className="rounded-2xl border border-[var(--seed-color-stroke-neutral-muted)] p-4">
+              <FileAttachments
+                existing={[]}
+                newFiles={attachments}
+                urls={{}}
+                onAdd={addAttachments}
+                onRemoveNew={removeAttachment}
+                onRemoveExisting={() => {}}
+              />
+            </section>
           </div>
 
           {/* 집행 항목 */}

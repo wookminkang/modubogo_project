@@ -550,6 +550,34 @@ export async function deleteReport(id: number) {
   if (error) throw error;
 }
 
+// ── 보고서 첨부파일 (reports.files jsonb) ───────────────────────
+// 컬럼(files)이 없으면 조회는 빈 값으로 폴백(SQL: sql/report_files.sql).
+
+/** 보고서의 첨부 메타 조회. 컬럼/행 없으면 {files:[]}. */
+export async function getReportFilesById(
+  reportId: number | string,
+): Promise<DesignFiles> {
+  const { data, error } = await supabase
+    .from("reports")
+    .select("files")
+    .eq("id", reportId)
+    .single();
+  if (error || !data) return {};
+  return ((data as { files?: DesignFiles }).files ?? {}) as DesignFiles;
+}
+
+/** 보고서 첨부 메타 저장(파일 실체는 Storage). */
+export async function updateReportFiles(
+  reportId: number | string,
+  files: DesignFiles,
+): Promise<void> {
+  const { error } = await supabase
+    .from("reports")
+    .update({ files })
+    .eq("id", reportId);
+  if (error) throw new Error(`첨부 저장 실패: ${error.message}`);
+}
+
 /** 입금·소진(ledger) 광고 배너 설정 — 회사 단위. */
 export interface LedgerAdSettings {
   enabled: boolean;
@@ -666,11 +694,15 @@ export async function getAlimtalkLogs() {
 export async function getAlimtalkCountsByMonth(
   company: string
 ): Promise<Record<string, number>> {
+  // alimtalk_logs 는 보고서/진료일정/입금소진 알림톡 공용 테이블이므로,
+  // 보고서 목록의 발송 횟수는 report_url 에 '/report/' 가 포함된 '보고서 알림톡'만 센다.
+  // (진료일정 '/holiday/', 입금소진 '/ledger/' 발송이 섞여 잘못 집계되는 것 방지)
   const { data } = await supabase
     .from("alimtalk_logs")
     .select("month")
     .eq("company", company)
-    .eq("status", "success");
+    .eq("status", "success")
+    .ilike("report_url", "%/report/%");
   const counts: Record<string, number> = {};
   for (const row of (data as { month: string }[] | null) ?? []) {
     if (row.month) counts[row.month] = (counts[row.month] ?? 0) + 1;

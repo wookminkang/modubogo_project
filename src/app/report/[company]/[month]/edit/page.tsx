@@ -1,5 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getReportFromDB, getCategoryColorsFromDB, getCompanySettings, resolveCompanyParam } from "@/lib/db";
+import { getDesignFileSignedUrl } from "@/lib/design-storage";
+import type { DesignFileMeta } from "@/lib/design-fields";
 import { isAdmin } from "@/lib/admin";
 import EditForm from "./EditForm";
 
@@ -23,12 +25,22 @@ export default async function ReportEditPage({ params }: Props) {
 
   if (!report) notFound();
 
+  // 첨부파일 + 미리보기 signed URL (이미지 썸네일·PDF 인라인·다운로드에 공통 사용)
+  const files = ((report.files as { files?: DesignFileMeta[] } | undefined)?.files) ?? [];
+  const signed = await Promise.all(
+    files.map(async (m) => [m.path, await getDesignFileSignedUrl(m.path)] as const),
+  );
+  const fileUrls: Record<string, string> = {};
+  for (const [path, url] of signed) if (url) fileUrls[path] = url;
+
   return (
     <EditForm
       reportId={report.id}
       company={decoded}
       month={month}
       categoryOptions={categoryOptions}
+      initialFiles={files}
+      initialFileUrls={fileUrls}
       defaultValues={{
         company: report.company,
         month: report.month,

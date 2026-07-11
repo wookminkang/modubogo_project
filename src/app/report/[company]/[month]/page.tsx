@@ -27,6 +27,9 @@ import ContractTable from "@/components/ContractTable";
 import Image from "next/image";
 import CopyLinkButton from "@/components/CopyLinkButton";
 import AdBanner from "./AdBanner";
+import ReportAttachments from "@/components/ReportAttachments";
+import { getDesignFileSignedUrl } from "@/lib/design-storage";
+import type { DesignFileMeta } from "@/lib/design-fields";
 import { getNaverAdCosts } from "@/lib/naverAd";
 import ExternalBalances, {
   ExternalBalancesSkeleton,
@@ -127,6 +130,26 @@ export default async function ReportPage({
 
   const categories = report.categories;
   const total = getTotalAmount(categories, month);
+
+  // 첨부자료 — 보기용/다운로드용 signed URL 발급(1시간).
+  // 다운로드용은 Content-Disposition 이 붙어야 저장되므로 별도로 발급한다.
+  const attachMetas =
+    ((report.files as { files?: DesignFileMeta[] } | undefined)?.files) ?? [];
+  const attachments = await Promise.all(
+    attachMetas.map(async (m) => {
+      const [url, downloadUrl] = await Promise.all([
+        getDesignFileSignedUrl(m.path),
+        getDesignFileSignedUrl(m.path, 3600, m.name),
+      ]);
+      return {
+        name: m.name,
+        size: m.size,
+        isImage: /\.(png|jpe?g|gif|webp|svg|avif)$/i.test(m.name),
+        url,
+        downloadUrl,
+      };
+    }),
+  );
   const uniqueAgencies = new Set(
     categories.map((c: { agency: string }) => c.agency),
   ).size;
@@ -596,6 +619,9 @@ export default async function ReportPage({
 
             {/* 광고 심의 및 운영 현황 */}
             <ValidityTable validity={report.validity} colorMap={colorMap} />
+
+            {/* 첨부자료 — 이미지는 확대, 그 외는 새 탭 */}
+            <ReportAttachments attachments={attachments} />
           </div>
 
           <Script id="channeltalk" strategy="afterInteractive">{`
