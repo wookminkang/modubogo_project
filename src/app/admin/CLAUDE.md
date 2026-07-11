@@ -10,7 +10,7 @@
 
 | 경로 | 파일 | 역할 | 인증 |
 |------|------|------|------|
-| `/admin/login` | `login/page.tsx` | 비밀번호 로그인 폼 → 성공 시 `/report`로 이동 | 공개 |
+| `/admin/login` | `login/page.tsx` | 비밀번호 로그인 폼 → 성공 시 `/hospital`로 이동 | 공개 |
 | `/admin/dashboard` | `dashboard/page.tsx` | KPI 카드, 월별 광고비 트렌드(바차트), 만료 임박 계약(D-day) | 필수 |
 | `/admin/alimtalk-logs` | `alimtalk-logs/page.tsx` | 알림톡 발송 이력 (성공/실패 탭, `?status=`) | 필수 |
 | `/admin/category-colors` | `category-colors/page.tsx` | 카테고리 배경/텍스트 색상 CRUD | 필수 |

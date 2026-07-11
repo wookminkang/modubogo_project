@@ -7,8 +7,8 @@ interface Props {
 }
 
 export default async function AdminLoginPage({ searchParams }: Props) {
-  // 이미 로그인했으면 로그인 폼 대신 보고서 목록으로
-  if (await getAdminUser()) redirect('/report');
+  // 이미 로그인했으면 로그인 폼 대신 병원 목록으로
+  if (await getAdminUser()) redirect('/hospital');
 
   const { error } = await searchParams;
 

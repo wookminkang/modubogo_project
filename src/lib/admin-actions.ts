@@ -32,7 +32,7 @@ export async function loginAdmin(formData: FormData) {
     maxAge: 60 * 60 * 24 * 7, // 7일
     path: "/",
   });
-  redirect("/report");
+  redirect("/hospital");
 }
 
 export async function logoutAdmin() {
