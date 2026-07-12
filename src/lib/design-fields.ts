@@ -68,6 +68,9 @@ export const DESIGN_FIELDS: DesignFieldDef[] = DESIGN_SECTIONS.flatMap((s) => s.
 export const DESIGN_FIELD_MAP = new Map(DESIGN_FIELDS.map((f) => [f.key, f]));
 
 // ── 전달 자료(파일 첨부) ─────────────────────────────────────
+/** 첨부 파일이 저장되는 Storage 버킷. 서버·클라이언트 공용(브라우저 직접 업로드에 필요). */
+export const DESIGN_BUCKET = "design-files";
+
 export interface DesignFileMeta {
   name: string;
   path: string;

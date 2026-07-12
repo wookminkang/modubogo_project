@@ -4,7 +4,8 @@ import { useFieldArray, useForm, Controller } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { upsertReport, deleteReport } from "@/lib/db";
-import { saveReportFiles, clearReportFiles } from "@/lib/report-actions";
+import { clearReportFiles } from "@/lib/report-actions";
+import { saveReportAttachments } from "@/lib/report-upload";
 import FileAttachments, {
   toNewFiles,
   revokeNewFiles,
@@ -12,6 +13,7 @@ import FileAttachments, {
 } from "@/components/FileAttachments";
 import type { DesignFileMeta } from "@/lib/design-fields";
 import ResultSuccess from "@/components/ResultSuccess";
+import Toast from "@/components/Toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,6 +62,13 @@ interface FormValues {
   contracts: ContractField[];
 }
 
+/** 서버 액션/DB 에러에서 사람이 읽을 메시지만 뽑는다(원인 파악용). */
+function msgOf(e: unknown): string {
+  if (e instanceof Error && e.message) return e.message;
+  if (typeof e === "string") return e;
+  return "알 수 없는 오류";
+}
+
 interface Props {
   reportId: number;
   defaultValues: FormValues;
@@ -84,6 +93,7 @@ export default function EditForm({
   const [deleting, setDeleting] = useState(false);
   const [saved, setSaved] = useState(false);
   const [redirectTo, setRedirectTo] = useState("");
+  const [toast, setToast] = useState("");
 
   // 첨부파일: 기존(유지/삭제) + 새로 추가
   const [existingFiles, setExistingFiles] =
@@ -139,21 +149,34 @@ export default function EditForm({
         status: "완료",
         hospital_type: data.hospital_type || undefined,
       });
-      // 첨부: 유지할 기존 파일 경로 + 새 파일 업로드
-      const fd = new FormData();
-      for (const m of existingFiles) fd.append("keep", m.path);
-      for (const a of newAttachments) fd.append("files", a.file);
-      await saveReportFiles(reportId, fd);
-      setRedirectTo(
-        `/report/${encodeURIComponent(data.company)}/${data.month}`,
-      );
-      setSaved(true);
     } catch (e) {
       console.error(e);
-      alert("저장 중 오류가 발생했습니다.");
+      setToast(`저장 중 오류가 발생했습니다. (${msgOf(e)})`);
+      setSaving(false);
+      return;
+    }
+
+    // 첨부: 유지할 기존 파일 경로 + 새 파일(브라우저 → Storage 직접 업로드).
+    // 보고서 본문은 이미 저장됐으므로, 실패해도 무엇이 실패했는지 구분해 알린다.
+    try {
+      await saveReportAttachments(
+        reportId,
+        existingFiles.map((m) => m.path),
+        newAttachments.map((a) => a.file),
+      );
+    } catch (e) {
+      console.error(e);
+      setToast(
+        `보고서는 저장됐지만 첨부파일 저장에 실패했습니다. (${msgOf(e)})`,
+      );
+      setSaving(false);
+      return;
     } finally {
       setSaving(false);
     }
+
+    setRedirectTo(`/report/${encodeURIComponent(data.company)}/${data.month}`);
+    setSaved(true);
   };
 
   const handleDelete = async () => {
@@ -754,6 +777,8 @@ export default function EditForm({
           </div>
         </form>
       </div>
+
+      {toast && <Toast message={toast} onDone={() => setToast("")} />}
     </div>
   );
 }

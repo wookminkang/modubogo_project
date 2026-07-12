@@ -14,7 +14,7 @@ import { OrderStepper } from "@/components/ui/order-stepper";
 import { AmountInput } from "@/components/ui/amount-input";
 import { Trash2, Search, ArrowLeft } from "lucide-react";
 import { loadLatestReportData } from "@/lib/copy-actions";
-import { saveReportFiles } from "@/lib/report-actions";
+import { saveReportAttachments } from "@/lib/report-upload";
 import FileAttachments, {
   toNewFiles,
   revokeNewFiles,
@@ -23,6 +23,13 @@ import FileAttachments, {
 import { Dialog } from "@seed-design/react";
 import { Text } from "seed-design/ui/text";
 import { ActionButton } from "seed-design/ui/action-button";
+
+/** 서버/DB 에러에서 사람이 읽을 메시지만 뽑는다(원인 파악용). */
+function msgOf(e: unknown): string {
+  if (e instanceof Error && e.message) return e.message;
+  if (typeof e === "string") return e;
+  return "알 수 없는 오류";
+}
 
 interface CategoryField {
   category: string;
@@ -275,25 +282,27 @@ export default function ReportNewPage({
       setCreatedId(reportId);
     } catch (e) {
       console.error(e);
-      showError("저장 중 오류가 발생했습니다.");
+      showError(`저장 중 오류가 발생했습니다. (${msgOf(e)})`);
       setSaving(false);
       return;
     }
 
-    // 첨부파일은 보고서 id 가 필요하므로 저장 후 업로드한다.
+    // 첨부파일은 보고서 id 가 필요하므로 저장 후 업로드한다(브라우저 → Storage 직접).
     // 실패해도 보고서는 이미 저장된 상태이므로, 다시 '등록'을 누르면 같은 보고서에 첨부만 재시도된다.
     try {
       if (attachments.length > 0 && reportId) {
-        const fd = new FormData();
-        for (const a of attachments) fd.append("files", a.file);
-        await saveReportFiles(reportId, fd);
+        await saveReportAttachments(
+          reportId,
+          [],
+          attachments.map((a) => a.file),
+        );
         revokeNewFiles(attachments);
         setAttachments([]);
       }
     } catch (e) {
       console.error(e);
       showError(
-        "보고서는 저장됐지만 첨부파일 업로드에 실패했습니다. 다시 '등록'을 누르면 첨부만 재시도합니다.",
+        `보고서는 저장됐지만 첨부파일 업로드에 실패했습니다. 다시 '등록'을 누르면 첨부만 재시도합니다. (${msgOf(e)})`,
       );
       return;
     } finally {

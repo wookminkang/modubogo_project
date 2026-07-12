@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { DesignFileMeta } from "./design-fields";
+import { DESIGN_BUCKET, type DesignFileMeta } from "./design-fields";
 
 /**
  * 외주 디자이너 요청서 리소스 파일 저장용 Supabase Storage 헬퍼 (서버 전용).
@@ -14,7 +14,7 @@ import type { DesignFileMeta } from "./design-fields";
  * (nanoid 는 추측 불가하므로 사실상 링크 토큰 역할을 겸함)
  */
 
-export const DESIGN_BUCKET = "design-files";
+export { DESIGN_BUCKET };
 
 let _client: SupabaseClient | null = null;
 
@@ -157,6 +157,29 @@ export async function uploadReportFile(
     });
   if (error) throw new Error(`파일 업로드 실패(${file.name}): ${error.message}`);
   return { name: file.name, path, size: file.size };
+}
+
+/**
+ * 보고서 첨부용 **서명 업로드 URL** 발급 (브라우저가 Storage 로 직접 업로드).
+ *
+ * 서버 액션으로 파일 바이트를 실어 보내면 Vercel 서버리스의 요청 본문 4.5MB 제한에 걸린다
+ * (next.config 의 bodySizeLimit 을 올려도 플랫폼 한계는 그대로). 그래서 파일은 브라우저가
+ * 이 토큰으로 Storage 에 직접 올리고, 서버 액션은 메타데이터(JSON)만 받는다.
+ */
+export async function createReportUploadTarget(
+  reportId: number | string,
+  index: number,
+  fileName: string,
+): Promise<{ path: string; token: string }> {
+  const path = `report/${reportId}/${Date.now()}_${index}-${safeName(fileName)}`;
+  const { data, error } = await getClient()
+    .storage.from(DESIGN_BUCKET)
+    .createSignedUploadUrl(path);
+  if (error || !data)
+    throw new Error(
+      `업로드 준비 실패(${fileName}): ${error?.message ?? "알 수 없는 오류"}`,
+    );
+  return { path: data.path, token: data.token };
 }
 
 /** 보고서 1건의 모든 첨부 삭제 (보고서 삭제 시 정리). */
