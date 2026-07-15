@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   Check,
@@ -70,6 +70,47 @@ const STEPS: StepDef[] = [
 ];
 
 const TOTAL_PHASES = STEPS.length; // 5
+
+// ── 업로드 제한 ──────────────────────────────────────────────
+// 제출은 FormData 를 서버 액션으로 통째로 보내는데, Next.js 서버 액션 body 한도
+// (next.config 의 serverActions.bodySizeLimit = 50MB)를 넘기면 요청 자체가 실패한다.
+// 새로 추가한 파일만 body 로 전송되므로(기존 파일은 경로만 keep) 그 합계에 상한을 둔다.
+// 서버 한도(50MB) 아래로 여유를 둔 값. 필요하면 여기와 next.config 를 함께 올린다.
+// 정책: 파일 개별 크기는 보지 않고 "새로 올린 전체 파일 합계"만 제한한다.
+const MAX_TOTAL_MB = 40; // 새로 올린 전체 파일 합계 최대
+const MAX_TOTAL_BYTES = MAX_TOTAL_MB * 1024 * 1024;
+const sumBytes = (arr: File[]) => arr.reduce((a, f) => a + f.size, 0);
+const totalNewBytes = (map: Record<string, File[]>) =>
+  Object.values(map).reduce((s, arr) => s + sumBytes(arr), 0);
+
+// 제출 실패·새로고침·브라우저 재시작 대비 임시 저장(draft). 파일은 직렬화 불가라 텍스트만 보관.
+// localStorage 사용 → 탭을 닫거나 브라우저를 껐다 켜도 유지, 제출 성공 시 삭제.
+const draftKey = (nanoid: string) => `intake-draft:${nanoid}`;
+type IntakeDraft = {
+  company?: string;
+  text?: Record<string, string>;
+  screen?: number;
+};
+const readDraft = (nanoid: string): IntakeDraft | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(draftKey(nanoid));
+    return raw ? (JSON.parse(raw) as IntakeDraft) : null;
+  } catch {
+    return null; // 손상된 draft 는 무시
+  }
+};
+
+// 스텝을 URL(?step=)에 반영해 브라우저 뒤로/앞으로가 스텝 단위로 동작하게 한다.
+const clampStep = (n: number) => Math.min(STEPS.length + 1, Math.max(0, n));
+const readStepFromUrl = (): number | null => {
+  if (typeof window === "undefined") return null;
+  const raw = new URLSearchParams(window.location.search).get("step");
+  if (raw === null) return null;
+  const n = Number(raw);
+  return Number.isInteger(n) ? clampStep(n) : null;
+};
+
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
 const fmtSize = (n: number) =>
   n < 1024 * 1024
@@ -91,10 +132,21 @@ export default function IntakeForm({
 }) {
   // 제출 완료 상태면 먼저 "이미 제출됨" 안내 화면을 보여준다(수정하기 누르면 폼 진입).
   const [reviewing, setReviewing] = useState(submitted);
-  // screen: 0 = intro, 1..STEPS.length = 스텝, STEPS.length+1 = 확인
-  const [screen, setScreen] = useState(0);
-  const [company, setCompany] = useState(initialCompany);
-  const [text, setText] = useState<Record<string, string>>(initialText);
+  // 임시 저장된 입력값 복원 (제출 완료건은 서버값 사용). 마운트 시 한 번만 읽는다.
+  const [screen, setScreen] = useState(() => {
+    if (submitted) return 0;
+    // URL 쿼리파람(?step=) 우선 → 없으면 draft → 0
+    const fromUrl = readStepFromUrl();
+    if (fromUrl !== null) return fromUrl;
+    const s = readDraft(nanoid)?.screen;
+    return typeof s === "number" ? clampStep(s) : 0;
+  });
+  const [company, setCompany] = useState(
+    () => (submitted ? initialCompany : readDraft(nanoid)?.company || initialCompany),
+  );
+  const [text, setText] = useState<Record<string, string>>(
+    () => (submitted ? initialText : readDraft(nanoid)?.text ?? initialText),
+  );
   // 새로 추가한 파일 (File 객체)
   const [files, setFiles] = useState<Record<string, File[]>>({});
   // 기존에 제출된 파일 메타 (유지/삭제 대상)
@@ -104,13 +156,46 @@ export default function IntakeForm({
   const [error, setError] = useState("");
   // 파일 삭제 확인 다이얼로그 대상
   const [removeReq, setRemoveReq] = useState<RemoveReq | null>(null);
+  // 업로드 제한 초과 즉시 알림 (다이얼로그)
+  const [capacityMsg, setCapacityMsg] = useState("");
 
   const CONFIRM = STEPS.length + 1;
+
+  // 스텝 → URL 경로. step 0(안내)은 파라미터 없이 깔끔하게.
+  const stepUrl = (n: number) =>
+    n <= 0
+      ? window.location.pathname
+      : `${window.location.pathname}?step=${n}`;
+
+  // 브라우저 뒤로/앞으로가 스텝을 오가도록: 마운트 시 URL 정렬 + popstate 동기화.
+  useEffect(() => {
+    const cur = readStepFromUrl();
+    if (cur !== screen)
+      window.history.replaceState(null, "", stepUrl(screen));
+    const onPop = () => setScreen(readStepFromUrl() ?? 0);
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+    // 마운트 시 1회만 등록
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 화면 전환 시 최상단으로 (퍼널 UX)
   useEffect(() => {
     window.scrollTo({ top: 0 });
   }, [screen, reviewing, done]);
+
+  // 입력값 변경 시 임시 저장 (파일 제외). 외부 시스템 동기화라 setState 없음.
+  useEffect(() => {
+    if (submitted || done) return;
+    try {
+      window.localStorage.setItem(
+        draftKey(nanoid),
+        JSON.stringify({ company, text, screen }),
+      );
+    } catch {
+      // 저장 실패(용량 등)는 무시 — 저장은 편의 기능일 뿐
+    }
+  }, [company, text, screen, submitted, done, nanoid]);
 
   const setTextValue = (k: string, v: string) =>
     setText((p) => ({ ...p, [k]: v }));
@@ -118,6 +203,8 @@ export default function IntakeForm({
   const addFiles = (k: string, list: FileList | null, multiple: boolean) => {
     if (!list || !list.length) return;
     const incoming = Array.from(list);
+    // 첨부는 자유롭게 허용한다. 전체 용량 초과 여부는 게이지로 즉시 보여주고,
+    // 최종 제출 시점에 막는다(handleSubmit / 제출 버튼 비활성).
     setFiles((p) => ({
       ...p,
       [k]: multiple ? [...(p[k] ?? []), ...incoming] : [incoming[0]],
@@ -142,8 +229,18 @@ export default function IntakeForm({
     setRemoveReq(null);
   };
 
-  const move = (dir: 1 | -1) =>
-    setScreen((s) => Math.min(CONFIRM, Math.max(0, s + dir)));
+  const move = (dir: 1 | -1) => {
+    // 뒤로: 히스토리 pop → 브라우저 뒤로가기와 동일하게 동작 (popstate 가 스텝 동기화)
+    if (dir === -1) {
+      window.history.back();
+      return;
+    }
+    // 앞으로: 스텝을 URL(?step=n)로 push → 브라우저 뒤로가기 시 이전 스텝으로
+    const n = clampStep(screen + dir);
+    if (n === screen) return;
+    setScreen(n);
+    window.history.pushState(null, "", stepUrl(n));
+  };
 
   // 스텝 진행 가능 여부 (현재는 계산서 이메일만 필수)
   const stepValid = (stepIdx: number) => {
@@ -155,8 +252,16 @@ export default function IntakeForm({
   };
 
   const phase = screen === 0 ? 0 : screen === CONFIRM ? TOTAL_PHASES : screen;
+  // 새로 올린 파일 합계가 한도를 넘으면 제출 차단 (첨부는 자유, 제출 시점에 막는다)
+  const overCapacity = totalNewBytes(files) > MAX_TOTAL_BYTES;
 
   const handleSubmit = async () => {
+    if (overCapacity) {
+      setCapacityMsg(
+        `· 전체 첨부 용량이 ${MAX_TOTAL_MB}MB를 넘어 제출할 수 없어요.\n· 파일을 줄인 뒤 다시 시도해 주세요.`,
+      );
+      return;
+    }
     setSaving(true);
     setError("");
     try {
@@ -169,6 +274,9 @@ export default function IntakeForm({
         for (const m of existing[f.key] ?? []) fd.append("keep", m.path);
       }
       await submitIntake(nanoid, fd);
+      try {
+        window.localStorage.removeItem(draftKey(nanoid)); // 성공 시 임시 저장 정리
+      } catch {}
       setDone(true);
     } catch (e) {
       console.error("준비자료 제출 실패:", e);
@@ -188,6 +296,7 @@ export default function IntakeForm({
         onEdit={() => {
           setReviewing(false);
           setScreen(1); // 안내(intro) 건너뛰고 첫 스텝부터
+          window.history.pushState(null, "", stepUrl(1));
         }}
       />
     );
@@ -211,8 +320,17 @@ export default function IntakeForm({
     );
   } else if (screen === CONFIRM) {
     cta = (
-      <ActionButton {...ctaProps} loading={saving} onClick={handleSubmit}>
-        {submitted ? "수정 내용 제출" : "제출하기"}
+      <ActionButton
+        {...ctaProps}
+        loading={saving}
+        disabled={overCapacity}
+        onClick={handleSubmit}
+      >
+        {overCapacity
+          ? `용량 초과 (최대 ${MAX_TOTAL_MB}MB)`
+          : submitted
+            ? "수정 내용 제출"
+            : "제출하기"}
       </ActionButton>
     );
   } else {
@@ -230,7 +348,7 @@ export default function IntakeForm({
 
   return (
     <div className="flex-1 px-4 py-6">
-      <div className="mx-auto flex max-w-[480px] flex-col rounded-2xl shadow-sm">
+      <div className="mx-auto flex max-w-[480px] flex-col rounded-2xl">
         <ProgressBar
           phase={phase}
           showBack={screen !== 0}
@@ -312,6 +430,35 @@ export default function IntakeForm({
           </Dialog.Content>
         </Dialog.Positioner>
       </Dialog.Root>
+
+      {/* 업로드 용량 초과 알림 다이얼로그 */}
+      <Dialog.Root
+        open={!!capacityMsg}
+        onOpenChange={(open) => {
+          if (!open) setCapacityMsg("");
+        }}
+      >
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content>
+            <Dialog.Header>
+              <Dialog.Title>첨부 용량을 확인해 주세요</Dialog.Title>
+              <Dialog.Description>
+                <span className="whitespace-pre-wrap">{capacityMsg}</span>
+              </Dialog.Description>
+            </Dialog.Header>
+            <Dialog.Footer>
+              <ActionButton
+                variant="brandSolid"
+                className="w-full"
+                onClick={() => setCapacityMsg("")}
+              >
+                확인
+              </ActionButton>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Dialog.Root>
     </div>
   );
 }
@@ -364,7 +511,7 @@ function ProgressBar({
 // ── 하단 고정 CTA 래퍼 ──
 function StickyBar({ children }: { children: React.ReactNode }) {
   return (
-    <div className="sticky bottom-0 z-10 rounded-b-2xl pt-3 pb-20 backdrop-blur">
+    <div className="sticky bottom-0 z-[1] rounded-b-2xl pt-3 pb-20 backdrop-blur">
       {children}
     </div>
   );
@@ -468,6 +615,15 @@ function StepScreen({
   onAddFiles: (k: string, l: FileList | null, multiple: boolean) => void;
   onRequestRemove: (req: RemoveReq) => void;
 }) {
+  // 이 스텝에 파일 항목이 하나라도 있으면 전체 사용량 표시
+  const hasFileField = step.keys.some((k) =>
+    FILE_DEF.has(k as FileFieldDef["key"]),
+  );
+  const usedBytes = totalNewBytes(files);
+  // 첨부는 자유롭게 허용하되, 한도를 넘으면 게이지·문구로 알리고 제출을 막는다.
+  const over = usedBytes > MAX_TOTAL_BYTES;
+  const overBy = usedBytes - MAX_TOTAL_BYTES;
+
   return (
     <div className="flex flex-col gap-5 py-5 pt-10">
       <div className="flex flex-col gap-2">
@@ -481,6 +637,39 @@ function StepScreen({
           {step.subtitle}
         </Text>
       </div>
+
+      {/* 파일 용량 사용량 + 초과 안내 (즉시 피드백) */}
+      {hasFileField && (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <Text textStyle="t7Regular" color="fg.neutralSubtle">
+              첨부 용량
+            </Text>
+            <Text
+              textStyle="t7Bold"
+              color={over ? "fg.critical" : "fg.neutralSubtle"}
+            >
+              {fmtSize(usedBytes)} / {MAX_TOTAL_MB}MB
+            </Text>
+          </div>
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--seed-color-bg-neutral-weak)]">
+            <div
+              className={`h-full rounded-full transition-all ${
+                over ? "bg-[#e25151]" : "bg-[var(--seed-color-bg-brand-solid)]"
+              }`}
+              style={{
+                width: `${Math.min(100, (usedBytes / MAX_TOTAL_BYTES) * 100)}%`,
+              }}
+            />
+          </div>
+          {over && (
+            <div className="rounded-lg bg-[#fdecec] px-3 py-2 text-xs font-medium text-[#c0392b]">
+              전체 첨부 용량이 {MAX_TOTAL_MB}MB를 넘었어요 (약 {fmtSize(overBy)}{" "}
+              초과). 제출하려면 파일을 줄여 주세요.
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-col gap-6">
         {step.keys.map((key) => {
@@ -617,6 +806,7 @@ function FileCard({
               key={`${f.name}-${idx}`}
               name={f.name}
               size={f.size}
+              file={f}
               onRemove={() =>
                 onRequestRemove({
                   kind: "new",
@@ -637,19 +827,46 @@ function FileRow({
   name,
   size,
   badge,
+  file,
   onRemove,
 }: {
   name: string;
   size: number;
   badge?: string;
+  /** 새로 추가한 파일 — 이미지면 썸네일 프리뷰 표시 */
+  file?: File;
   onRemove: () => void;
 }) {
+  // 이미지 파일이면 object URL 로 썸네일 생성 (언마운트 시 revoke)
+  const previewUrl = useMemo(
+    () =>
+      file && file.type.startsWith("image/")
+        ? URL.createObjectURL(file)
+        : null,
+    [file],
+  );
+  useEffect(
+    () => () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    },
+    [previewUrl],
+  );
+
   return (
     <div className="flex items-center gap-2 rounded-lg bg-[var(--seed-color-bg-neutral-weak)] px-3 py-2">
-      <Paperclip
-        size={14}
-        className="shrink-0 text-[var(--seed-color-fg-neutral-subtle)]"
-      />
+      {previewUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={previewUrl}
+          alt={name}
+          className="h-9 w-9 shrink-0 rounded object-cover"
+        />
+      ) : (
+        <Paperclip
+          size={14}
+          className="shrink-0 text-[var(--seed-color-fg-neutral-subtle)]"
+        />
+      )}
       <span className="min-w-0 flex-1 truncate text-sm text-[var(--seed-color-fg-neutral)]">
         {name}
       </span>
