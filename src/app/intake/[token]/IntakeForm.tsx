@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   Check,
@@ -837,20 +837,19 @@ function FileRow({
   file?: File;
   onRemove: () => void;
 }) {
-  // 이미지 파일이면 object URL 로 썸네일 생성 (언마운트 시 revoke)
-  const previewUrl = useMemo(
-    () =>
-      file && file.type.startsWith("image/")
-        ? URL.createObjectURL(file)
-        : null,
-    [file],
-  );
-  useEffect(
-    () => () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-    },
-    [previewUrl],
-  );
+  // 이미지 파일이면 object URL 로 썸네일 생성.
+  // 생성과 revoke 를 같은 effect 안에서 처리해야 StrictMode(dev) 이중 마운트에서도
+  // URL 이 조기 revoke 되어 이미지가 깨지지 않는다.
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!file || !file.type.startsWith("image/")) return;
+    const url = URL.createObjectURL(file);
+    // object URL 을 외부 리소스로 동기화하는 정당한 케이스. 같은 effect 에서 생성/해제해야
+    // StrictMode 재마운트에도 안전하므로 set-state-in-effect 규칙을 여기선 예외 처리한다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
 
   return (
     <div className="flex items-center gap-2 rounded-lg bg-[var(--seed-color-bg-neutral-weak)] px-3 py-2">
