@@ -411,6 +411,34 @@ export async function getHospitalNotes(company: string): Promise<HospitalNote[]>
   return (data ?? []) as HospitalNote[];
 }
 
+// ── 네이버 플레이스 리뷰 히스토리 ────────────────────────────
+// naver_review_history 테이블은 외부 크론이 매일 아침 플레이스 리뷰 수를
+// 스냅샷으로 적재한다. 연결 키는 회사명(name == company_settings.company).
+// 테이블이 없거나 적재 전이면 빈 배열을 반환(폴백)한다.
+
+export interface NaverReviewSnapshot {
+  captured_date: string; // "YYYY-MM-DD"
+  visitor_reviews: number;
+  blog_reviews: number;
+}
+
+// 네이버 리뷰 기능(버튼·페이지)을 노출할 병원 (naver_review_history.name 과 정확히 일치).
+// 병원 상세페이지와 리뷰 페이지가 공유한다.
+export const NAVER_REVIEW_COMPANIES = new Set(["리움한방병원 강동송파"]);
+
+/** 회사명 기준 네이버 리뷰 일자별 스냅샷 (최신순). 없으면 빈 배열. */
+export async function getNaverReviewHistory(
+  company: string,
+): Promise<NaverReviewSnapshot[]> {
+  const { data, error } = await supabase
+    .from("naver_review_history")
+    .select("captured_date, visitor_reviews, blog_reviews")
+    .eq("name", company)
+    .order("captured_date", { ascending: false });
+  if (error) return []; // 테이블 미생성 등
+  return (data ?? []) as NaverReviewSnapshot[];
+}
+
 /** 메모 추가. 생성된 행을 반환한다. */
 export async function addHospitalNote(
   company: string,

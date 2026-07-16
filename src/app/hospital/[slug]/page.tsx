@@ -5,7 +5,9 @@ import {
   getCompanySettings,
   getCompanyHospitalType,
   getHospitalNotes,
+  getNaverReviewHistory,
   resolveCompanyParam,
+  NAVER_REVIEW_COMPANIES,
 } from "@/lib/db";
 import { ContentPlaceholder } from "seed-design/ui/content-placeholder";
 import { Text } from "seed-design/ui/text";
@@ -25,14 +27,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function HospitalDetailPage({ params }: Props) {
   const { slug } = await params;
   const company = await resolveCompanyParam(slug);
-  const [settings, hospitalType, notes] = await Promise.all([
+  const [settings, hospitalType, notes, reviews] = await Promise.all([
     getCompanySettings(company),
     getCompanyHospitalType(company),
     getHospitalNotes(company),
+    NAVER_REVIEW_COMPANIES.has(company)
+      ? getNaverReviewHistory(company)
+      : Promise.resolve([]),
   ]);
   const region = settings?.region ?? null;
   const reportSlug =
     (settings?.nanoid as string | null | undefined) ?? encodeURIComponent(company);
+  const reviewsHref = `/hospital/${reportSlug}/reviews`;
 
   const reportCta = (
     <div className="flex flex-col gap-2">
@@ -42,6 +48,11 @@ export default async function HospitalDetailPage({ params }: Props) {
       <ActionButton asChild variant="neutralWeak" size="medium" className="w-full">
         <Link href={`/ledger/${reportSlug}`}>입금·소진 관리내역</Link>
       </ActionButton>
+      {reviews.length > 0 && (
+        <ActionButton asChild variant="neutralWeak" size="medium" className="w-full">
+          <Link href={reviewsHref}>네이버 리뷰</Link>
+        </ActionButton>
+      )}
     </div>
   );
 
