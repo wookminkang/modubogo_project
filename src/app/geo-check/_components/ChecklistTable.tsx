@@ -60,8 +60,10 @@ export default function ChecklistTable({
     });
   }
 
-  // 표는 결과가 아니라 **키워드 전체**를 기준으로 그린다.
+  // 표는 결과가 아니라 **현재 키워드**를 기준으로 그린다.
   // 이번 회차에 안 돌린 키워드도 행은 있어야 하고, 그 칸이 "공란=미점검"이다.
+  // 삭제된 키워드는 표에서 완전히 빼므로(결과 스냅샷은 DB에 남지만 화면엔 안 띄움),
+  // 현재 키워드 목록에 없는 결과는 렌더하지 않는다.
   const resultByKeywordId = new Map(
     results.filter((r) => r.keywordId).map((r) => [r.keywordId as string, r]),
   );
@@ -74,16 +76,6 @@ export default function ChecklistTable({
     active: k.active,
     result: resultByKeywordId.get(k.id) ?? null,
   }));
-
-  // 키워드가 지워졌는데 과거 결과만 남은 행은 이력 보존 차원에서 뒤에 붙인다.
-  for (const r of results) {
-    if (r.keywordId && resultByKeywordId.has(r.keywordId) && keywords.some((k) => k.id === r.keywordId)) continue;
-    if (rows.some((row) => row.result?.id === r.id)) continue;
-    rows.push({
-      key: r.id, keywordId: r.keywordId, keywordText: r.keywordText,
-      category: null, memo: null, active: false, result: r,
-    });
-  }
 
   const checkedCount = rows.filter((r) => r.result?.status === "done").length;
 

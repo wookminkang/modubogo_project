@@ -3,7 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { startGeoRun, executeGeoRun, retryGeoRun, getRunProgress } from "@/lib/geo-actions";
+import {
+  startGeoRun,
+  executeGeoRun,
+  retryGeoRun,
+  startNewKeywordsRun,
+  getRunProgress,
+} from "@/lib/geo-actions";
 import type { GeoKeyword, GeoRunDetail } from "@/lib/geo-db";
 import ChecklistTable from "./ChecklistTable";
 
@@ -125,6 +131,37 @@ export default function RunPanel({
     }
   }
 
+  // 오늘 점검에 아직 없는 새 키워드만 점검한다 (이미 점검한 건 비용 안 씀).
+  async function checkNew() {
+    if (running) return;
+    setRunning(true);
+    setError(null);
+    try {
+      const started = await startNewKeywordsRun(targetId);
+      if (!started.ok) {
+        setError(started.error);
+        return;
+      }
+      const { runId } = started.data;
+      const first = await getRunProgress(runId);
+      if (first.ok) setDetail(first.data);
+      startPolling(runId);
+
+      const done = await executeGeoRun(runId);
+      stopPolling();
+      if (!done.ok) setError(done.error);
+
+      const final = await getRunProgress(runId);
+      if (final.ok) setDetail(final.data);
+      router.refresh();
+    } catch {
+      setError("새 키워드 점검을 처리하지 못했습니다.");
+    } finally {
+      stopPolling();
+      setRunning(false);
+    }
+  }
+
   const results = detail?.results ?? [];
   const total = results.length;
   const completed = results.filter((r) => r.status !== "pending").length;
@@ -136,6 +173,12 @@ export default function RunPanel({
 
   const isToday = date === today;
   const checked = new Set(checkedDates);
+
+  // 오늘 점검에 아직 들어가지 않은 활성 키워드 수 (= 삭제하고 새로 추가한 것).
+  const checkedKeywordIds = new Set(results.map((r) => r.keywordId).filter(Boolean));
+  const newKeywordCount = detail
+    ? keywords.filter((k) => k.active && !checkedKeywordIds.has(k.id)).length
+    : 0;
 
   return (
     <div>
@@ -203,15 +246,35 @@ export default function RunPanel({
 
           {/* 점검은 오늘 날짜에만 실행한다 — 지난 날짜를 소급해 채울 수는 없다 */}
           {isToday && (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={runAll}
                 disabled={running || activeCount === 0}
                 className="rounded-lg bg-[#0e299c] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0a1f7a] disabled:cursor-not-allowed disabled:bg-gray-300"
               >
-                {running ? "점검 중…" : detail ? "다시 점검" : "오늘 점검 실행"}
+                {running ? (
+                  <span className="flex items-center gap-2">
+                    <Spinner light />
+                    점검 중…
+                  </span>
+                ) : detail ? (
+                  "전체 다시 점검"
+                ) : (
+                  "오늘 점검 실행"
+                )}
               </button>
+              {/* 삭제하고 새로 추가한 키워드만 — 이미 점검한 건 비용 안 씀 */}
+              {detail && newKeywordCount > 0 && (
+                <button
+                  type="button"
+                  onClick={checkNew}
+                  disabled={running}
+                  className="rounded-lg bg-[#0e299c]/10 px-4 py-2.5 text-sm font-semibold text-[#0e299c] transition-colors hover:bg-[#0e299c]/15 disabled:cursor-not-allowed disabled:text-gray-300"
+                >
+                  새 키워드 {newKeywordCount}개만 점검
+                </button>
+              )}
               {detail && unfinished > 0 && (
                 <button
                   type="button"
@@ -226,17 +289,32 @@ export default function RunPanel({
           )}
         </div>
 
-        {running && total > 0 && (
-          <div className="mt-5">
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
-              <div
-                className="h-full rounded-full bg-[#0e299c] transition-all duration-500"
-                style={{ width: `${total ? (completed / total) * 100 : 0}%` }}
-              />
+        {running && (
+          <div className="mt-5 rounded-lg bg-[#0e299c]/5 px-4 py-4">
+            <div className="flex items-center gap-2.5">
+              <Spinner />
+              <span className="text-sm font-semibold text-[#0e299c]">
+                ChatGPT에서 검색 중…
+                {total > 0 && (
+                  <span className="ml-1 font-normal text-[#6b7684]">
+                    {completed}/{total} 완료
+                  </span>
+                )}
+              </span>
             </div>
-            <p className="mt-2 text-xs text-[#6b7684]">
-              {completed}/{total} 완료 — 키워드마다 ChatGPT가 웹 검색을 하므로 1~3분 걸릴 수
-              있습니다. 이 탭을 벗어나도 결과는 저장됩니다.
+
+            {total > 0 && (
+              <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white">
+                <div
+                  className="h-full rounded-full bg-[#0e299c] transition-all duration-500"
+                  style={{ width: `${(completed / total) * 100}%` }}
+                />
+              </div>
+            )}
+
+            <p className="mt-2.5 text-xs text-[#6b7684]">
+              키워드마다 ChatGPT가 웹 검색을 하므로 1~3분 걸릴 수 있습니다. 이 탭을 벗어나도
+              결과는 저장됩니다.
             </p>
           </div>
         )}
@@ -263,6 +341,18 @@ export default function RunPanel({
         </div>
       )}
     </div>
+  );
+}
+
+/** 회전 로딩 스피너. light=버튼(파란 배경) 위에서 흰색으로 쓴다. */
+function Spinner({ light = false }: { light?: boolean }) {
+  return (
+    <span
+      className={`inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 ${
+        light ? "border-white/40 border-t-white" : "border-[#0e299c]/30 border-t-[#0e299c]"
+      }`}
+      aria-hidden
+    />
   );
 }
 

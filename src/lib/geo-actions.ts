@@ -19,7 +19,7 @@ const MAX_KEYWORDS = 30;
 /** 동시 실행 수. web_search 는 자체 레이트리밋이 있어 올릴수록 429 로 오히려 느려진다. */
 const CONCURRENCY = 4;
 /** 키워드 1건 제한시간. reasoning=low 로 보통 ~30초지만 간헐적 지연을 감안해 여유를 둔다. */
-const PER_KEYWORD_MS = 90_000;
+const PER_KEYWORD_MS = 95_000;
 /** 전역 예산. Vercel maxDuration 300초보다 여유를 두고 마감한다. */
 const BUDGET_MS = 260_000;
 
@@ -234,6 +234,64 @@ export async function startGeoRun(
     return { ok: true, data: { runId, total: keywords.length } };
   } catch (e) {
     return fail(e, "실행을 시작하지 못했습니다");
+  }
+}
+
+/**
+ * "새 키워드만 점검" — 오늘 실행에 아직 들어가 있지 않은 활성 키워드만 골라
+ * 오늘 실행에 pending 으로 덧붙이고 그 runId 를 돌려준다.
+ * 이미 점검한 키워드는 건드리지 않으므로 새로 추가한 것에만 API 비용이 든다.
+ *
+ * 오늘 실행 자체가 없으면 새 키워드 개념이 없으니 전체 점검(startGeoRun)과 같다.
+ */
+export async function startNewKeywordsRun(
+  targetId: string,
+): Promise<GeoResult<{ runId: string; added: number }>> {
+  const denied = await guard();
+  if (denied) return { ok: false, error: denied };
+
+  if (!process.env.OPENAI_API_KEY) {
+    return {
+      ok: false,
+      error: "OPENAI_API_KEY 환경변수가 설정되지 않았습니다. .env.local 에 키를 추가한 뒤 서버를 재시작하세요.",
+    };
+  }
+
+  try {
+    const target = await db.getGeoTarget(targetId);
+    if (!target) return { ok: false, error: "대상을 찾을 수 없습니다." };
+
+    const active = (await db.listGeoKeywords(targetId)).filter((k) => k.active);
+    if (!active.length) return { ok: false, error: "활성 키워드가 없습니다." };
+
+    // 오늘 실행 찾기.
+    const today = db.todayKst();
+    const runs = await db.listGeoRuns(targetId, 60);
+    const todayRun = runs.find((r) => db.kstDate(r.startedAt) === today);
+
+    // 오늘 실행이 없으면 전체 점검과 동일.
+    if (!todayRun) {
+      const started = await startGeoRun(targetId);
+      if (!started.ok) return started;
+      return { ok: true, data: { runId: started.data.runId, added: started.data.total } };
+    }
+
+    const detail = await db.getGeoRunDetail(todayRun.id);
+    const already = new Set((detail?.results ?? []).map((r) => r.keywordId).filter(Boolean));
+    const fresh = active.filter((k) => !already.has(k.id));
+    if (!fresh.length) {
+      return { ok: false, error: "오늘 점검에 아직 없는 새 키워드가 없습니다." };
+    }
+
+    await db.insertPendingResults(
+      todayRun.id,
+      fresh.map((k) => ({ id: k.id, keyword: k.keyword })),
+    );
+    await db.bumpGeoRunTotal(todayRun.id, fresh.length);
+
+    return { ok: true, data: { runId: todayRun.id, added: fresh.length } };
+  } catch (e) {
+    return fail(e, "새 키워드 점검을 시작하지 못했습니다");
   }
 }
 

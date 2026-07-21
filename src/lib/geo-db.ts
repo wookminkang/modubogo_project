@@ -339,6 +339,17 @@ export async function finishGeoRun(
   assertOk(error, "실행 마감");
 }
 
+/** 실행에 키워드를 추가로 붙일 때 total_count 를 늘린다 (노출률 분모 정합성). */
+export async function bumpGeoRunTotal(runId: string, by: number): Promise<void> {
+  const run = await getGeoRun(runId);
+  if (!run) throw new Error("실행을 찾을 수 없습니다.");
+  const { error } = await supabase
+    .from("geo_runs")
+    .update({ total_count: run.totalCount + by })
+    .eq("id", runId);
+  assertOk(error, "실행 키워드 수 갱신");
+}
+
 export async function getGeoRun(runId: string): Promise<GeoRun | null> {
   const { data, error } = await supabase
     .from("geo_runs")
