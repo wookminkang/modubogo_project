@@ -33,6 +33,7 @@ export default function ChecklistTable({
   hasRun,
   results,
   keywords,
+  readOnly = false,
 }: {
   targetId: string;
   targetName: string;
@@ -44,6 +45,8 @@ export default function ChecklistTable({
   hasRun: boolean;
   results: GeoRunResult[];
   keywords: GeoKeyword[];
+  /** 공개 뷰용. 비고 편집을 끄고 관리자 전용 서버 액션을 호출하지 않는다. */
+  readOnly?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState<string | null>(null);
@@ -92,10 +95,13 @@ export default function ChecklistTable({
         {!hasRun && " (미점검)"}
       </div>
 
-      <p className="border-b border-gray-200 bg-white px-4 py-2 text-[12px] italic text-gray-600">
-        ※ ChatGPT(웹검색·추론 모드) 기준. O=노출 / X=미노출 / 공란=미점검. 제미나이는 미점검.
-        {" "}(전체 {rows.length}개 중 {checkedCount}개 점검)
-      </p>
+      {/* 안내 문구는 관리자 화면에서만. 공개 뷰(readOnly)에서는 깔끔하게 숨긴다. */}
+      {!readOnly && (
+        <p className="border-b border-gray-200 bg-white px-4 py-2 text-[12px] italic text-gray-600">
+          ※ ChatGPT(웹검색·추론 모드) 기준. O=노출 / X=미노출 / 공란=미점검. 제미나이는 미점검.
+          {" "}(전체 {rows.length}개 중 {checkedCount}개 점검)
+        </p>
+      )}
 
       <div className="overflow-x-auto">
         <table className="w-full min-w-[860px] border-collapse text-[13px]">
@@ -164,16 +170,20 @@ export default function ChecklistTable({
                     <Td className="bg-[#fafafa] text-center text-gray-300">&nbsp;</Td>
 
                     <Td>
-                      <input
-                        defaultValue={row.memo ?? ""}
-                        onBlur={(e) => {
-                          if (e.target.value !== (row.memo ?? "")) {
-                            saveMemo(row.keywordId, e.target.value);
-                          }
-                        }}
-                        placeholder="—"
-                        className="w-full bg-transparent text-[13px] text-[#333d4b] outline-none placeholder:text-gray-300 focus:bg-white"
-                      />
+                      {readOnly ? (
+                        <span className="text-[13px] text-[#333d4b]">{row.memo || ""}</span>
+                      ) : (
+                        <input
+                          defaultValue={row.memo ?? ""}
+                          onBlur={(e) => {
+                            if (e.target.value !== (row.memo ?? "")) {
+                              saveMemo(row.keywordId, e.target.value);
+                            }
+                          }}
+                          placeholder="—"
+                          className="w-full bg-transparent text-[13px] text-[#333d4b] outline-none placeholder:text-gray-300 focus:bg-white"
+                        />
+                      )}
                     </Td>
                   </tr>
 

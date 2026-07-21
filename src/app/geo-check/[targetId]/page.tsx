@@ -14,6 +14,7 @@ import {
 import { coreToken } from "@/lib/geo-match";
 import KeywordManager from "../_components/KeywordManager";
 import RunPanel from "../_components/RunPanel";
+import ShareLinkButton from "../_components/ShareLinkButton";
 
 export const dynamic = "force-dynamic";
 // 키워드 여러 개를 web_search 로 돌리므로 실행 시간을 넉넉히 잡는다.
@@ -58,9 +59,12 @@ export default async function GeoTargetPage({
 
   return (
     <div className="mx-auto w-full max-w-6xl px-6 py-10">
-      <Link href="/geo-check" className="text-xs font-semibold text-[#6b7684] hover:text-[#0e299c]">
-        ← GEO 체크 목록
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link href="/geo-check" className="text-xs font-semibold text-[#6b7684] hover:text-[#0e299c]">
+          ← GEO 체크 목록
+        </Link>
+        <ShareLinkButton targetId={targetId} />
+      </div>
 
       <div className="mt-3">
         <CardTitle

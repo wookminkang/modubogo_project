@@ -188,7 +188,6 @@ export default function RunPanel({
                 <p className="mt-2 text-xs text-[#6b7684]">
                   {new Date(detail.run.startedAt).toLocaleString("ko-KR")}
                   {detail.run.startedBy ? ` · ${detail.run.startedBy}` : ""}
-                  {detail.run.model ? ` · ${detail.run.model}` : ""}
                   {failed > 0 ? ` · 실패 ${failed}건` : ""}
                   {prevRunDate ? ` · 직전 점검 ${prevRunDate}` : ""}
                 </p>
