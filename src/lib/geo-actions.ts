@@ -18,8 +18,8 @@ export type GeoResult<T> = { ok: true; data: T } | { ok: false; error: string };
 const MAX_KEYWORDS = 30;
 /** 동시 실행 수. web_search 는 자체 레이트리밋이 있어 올릴수록 429 로 오히려 느려진다. */
 const CONCURRENCY = 4;
-/** 키워드 1건 제한시간. 하나가 물고 늘어져 전체를 죽이지 않게 한다. */
-const PER_KEYWORD_MS = 60_000;
+/** 키워드 1건 제한시간. reasoning=low 로 보통 ~30초지만 간헐적 지연을 감안해 여유를 둔다. */
+const PER_KEYWORD_MS = 90_000;
 /** 전역 예산. Vercel maxDuration 300초보다 여유를 두고 마감한다. */
 const BUDGET_MS = 260_000;
 

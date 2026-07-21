@@ -50,6 +50,10 @@ export async function askChatGpt(
   const res = await client().responses.create(
     {
       model: COLLECT_MODEL,
+      // reasoning 모델(5.5+)의 기본 추론은 웹검색을 10회 이상 돌려 90초 가까이 걸린다.
+      // low 로 낮추면 ~27초로 줄고(검색 1~2회), 무거운 추론 없이 답하는 일반 사용자
+      // 경험에도 더 가깝다. 키워드당 60초 제한을 넘겨 실패(!)나는 걸 막는 핵심 설정.
+      reasoning: { effort: "low" },
       tools: [
         {
           type: "web_search",
