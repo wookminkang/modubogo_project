@@ -139,6 +139,36 @@ export async function deleteBoardFiles(postId: string): Promise<void> {
   if (paths.length) await client.storage.from(DESIGN_BUCKET).remove(paths);
 }
 
+// ── 외주 파트너 첨부 (동일 design-files 버킷 재사용, partner/{id}/ 경로) ──
+
+/** 파트너(디자이너·개발자) 첨부 1개 업로드. 경로: partner/{id}/{timestamp}_{index}-{safeName} */
+export async function uploadPartnerFile(
+  partnerId: string,
+  index: number,
+  file: File,
+): Promise<DesignFileMeta> {
+  const path = `partner/${partnerId}/${Date.now()}_${index}-${safeName(file.name)}`;
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const { error } = await getClient()
+    .storage.from(DESIGN_BUCKET)
+    .upload(path, buffer, {
+      contentType: file.type || "application/octet-stream",
+      upsert: true,
+    });
+  if (error) throw new Error(`파일 업로드 실패(${file.name}): ${error.message}`);
+  return { name: file.name, path, size: file.size };
+}
+
+/** 파트너 1명의 모든 첨부 삭제 (파트너 삭제 시 정리). */
+export async function deletePartnerFiles(partnerId: string): Promise<void> {
+  const client = getClient();
+  const { data: files } = await client.storage
+    .from(DESIGN_BUCKET)
+    .list(`partner/${partnerId}`, { limit: 1000 });
+  const paths = (files ?? []).map((f) => `partner/${partnerId}/${f.name}`);
+  if (paths.length) await client.storage.from(DESIGN_BUCKET).remove(paths);
+}
+
 // ── 보고서 첨부 (동일 design-files 버킷 재사용, report/{reportId}/ 경로) ──
 
 /** 보고서 첨부 1개 업로드. 경로: report/{reportId}/{timestamp}_{index}-{safeName} */

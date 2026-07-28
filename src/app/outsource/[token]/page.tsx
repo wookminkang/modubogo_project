@@ -20,11 +20,14 @@ export default async function OutsourceEditPage({ params }: Props) {
   if (!admin) redirect("/admin/login");
 
   const { token } = await params;
-  const [request, designers] = await Promise.all([
+  const [request, partners] = await Promise.all([
     getDesignRequestByNanoid(token),
     listDesigners(),
   ]);
   if (!request) notFound();
+
+  // 요청서 담당자는 디자이너만 배정한다(개발자는 명단 관리 용도).
+  const designers = partners.filter((p) => p.role === "designer");
 
   // 저장된 이미지 첨부는 미리보기용 signed URL 을 발급해 폼에 넘긴다(path → url).
   const initialFileUrls: Record<string, string> = {};

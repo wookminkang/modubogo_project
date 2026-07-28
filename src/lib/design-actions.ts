@@ -11,7 +11,9 @@ import {
   createDesigner,
   updateDesigner,
   deleteDesigner,
+  getDesigner,
   assignDesigner,
+  type PartnerRole,
 } from "./db";
 import {
   DESIGN_FIELDS,
@@ -25,6 +27,8 @@ import {
   uploadDesignFile,
   deleteDesignFiles,
   deleteDesignFilePaths,
+  uploadPartnerFile,
+  deletePartnerFiles,
 } from "./design-storage";
 
 /** 관리자 전용 액션 가드 */
@@ -123,42 +127,102 @@ export async function saveDesignForm(
   return { ok: true, files };
 }
 
-// ── 외주 디자이너 명단 + 배정 ──────────────────────────────────
+// ── 외주 파트너(디자이너·개발자) 명단 + 배정 ────────────────────
 
-/** [관리자] 디자이너 등록 */
-export async function createDesignerAction(data: {
-  name: string;
-  contact?: string;
-  memo?: string;
-}): Promise<void> {
-  await assertAdmin();
-  if (!data.name?.trim()) throw new Error("이름을 입력해주세요.");
-  await createDesigner({
-    name: data.name.trim(),
-    contact: data.contact?.trim() || null,
-    memo: data.memo?.trim() || null,
-  });
-  revalidatePath("/outsource");
+const PARTNER_FILE_KEY = "files";
+
+/**
+ * FormData 의 첨부 항목을 처리해 최종 files 메타를 만든다.
+ * - `keep`: 유지할 기존 파일 path (넘어오지 않은 기존 파일은 Storage 에서 삭제)
+ * - `files`: 새로 올라온 File 들
+ */
+async function resolvePartnerFiles(
+  partnerId: string,
+  formData: FormData,
+  prev: DesignFileMeta[],
+): Promise<DesignFiles> {
+  const keptPaths = new Set(
+    formData.getAll("keep").filter((v): v is string => typeof v === "string"),
+  );
+  const retained = prev.filter((m) => keptPaths.has(m.path));
+  const removedPaths = prev
+    .filter((m) => !keptPaths.has(m.path))
+    .map((m) => m.path);
+
+  const newEntries = formData
+    .getAll(PARTNER_FILE_KEY)
+    .filter((v): v is File => v instanceof File && v.size > 0);
+
+  const metas: DesignFileMeta[] = [...retained];
+  for (let i = 0; i < newEntries.length; i++) {
+    metas.push(await uploadPartnerFile(partnerId, i, newEntries[i]));
+  }
+
+  if (removedPaths.length)
+    await deleteDesignFilePaths(removedPaths).catch(() => {});
+
+  return metas.length ? { [PARTNER_FILE_KEY]: metas } : {};
 }
 
-/** [관리자] 디자이너 수정 */
-export async function updateDesignerAction(
+/**
+ * [관리자] 파트너 등록 — 이름/연락처/메모 + 첨부(FormData).
+ * 첨부 경로에 id 가 필요해 행을 먼저 만든 뒤 업로드하고 files 만 갱신한다.
+ */
+export async function createPartnerAction(
+  role: PartnerRole,
+  formData: FormData,
+): Promise<{ ok: boolean; files: DesignFiles }> {
+  await assertAdmin();
+  const name = ((formData.get("name") as string | null) ?? "").trim();
+  if (!name) throw new Error("이름을 입력해주세요.");
+
+  const row = await createDesigner({
+    name,
+    contact: ((formData.get("contact") as string | null) ?? "").trim() || null,
+    memo: ((formData.get("memo") as string | null) ?? "").trim() || null,
+    role,
+  });
+
+  const files = await resolvePartnerFiles(row.id, formData, []);
+  if (files[PARTNER_FILE_KEY]?.length) await updateDesigner(row.id, { files });
+
+  revalidatePath("/outsource");
+  return { ok: true, files };
+}
+
+/** [관리자] 파트너 수정 — 이름/연락처/메모 + 첨부(FormData). */
+export async function updatePartnerAction(
   id: string,
-  data: { name?: string; contact?: string; memo?: string; active?: boolean },
-): Promise<void> {
+  formData: FormData,
+): Promise<{ ok: boolean; files: DesignFiles }> {
   await assertAdmin();
+  const existing = await getDesigner(id);
+  if (!existing) throw new Error("유효하지 않은 대상입니다.");
+
+  const name = ((formData.get("name") as string | null) ?? "").trim();
+  if (!name) throw new Error("이름을 입력해주세요.");
+
+  const files = await resolvePartnerFiles(
+    id,
+    formData,
+    existing.files?.[PARTNER_FILE_KEY] ?? [],
+  );
+
   await updateDesigner(id, {
-    name: data.name?.trim(),
-    contact: data.contact?.trim(),
-    memo: data.memo?.trim(),
-    active: data.active,
+    name,
+    contact: ((formData.get("contact") as string | null) ?? "").trim(),
+    memo: ((formData.get("memo") as string | null) ?? "").trim(),
+    files,
   });
+
   revalidatePath("/outsource");
+  return { ok: true, files };
 }
 
-/** [관리자] 디자이너 삭제 */
-export async function deleteDesignerAction(id: string): Promise<void> {
+/** [관리자] 파트너 삭제 (첨부까지 정리) */
+export async function deletePartnerAction(id: string): Promise<void> {
   await assertAdmin();
+  await deletePartnerFiles(id).catch(() => {});
   await deleteDesigner(id);
   revalidatePath("/outsource");
 }

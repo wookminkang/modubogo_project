@@ -17,22 +17,28 @@ import ConfirmToast from "@/components/ConfirmToast";
 import { createDesignForm, deleteDesignForm } from "@/lib/design-actions";
 import { designTitle } from "@/lib/design-fields";
 import type { DesignRequest, Designer, OutsourcePost } from "@/lib/db";
-import DesignersTab from "./DesignersTab";
+import PartnersTab from "./PartnersTab";
 import BoardTab from "./BoardTab";
 
-type Tab = "requests" | "designers" | "board";
+type Tab = "requests" | "designers" | "developers" | "board";
 
 export default function OutsourceView({
   requests,
-  designers,
+  partners,
   posts,
+  partnerFileUrls,
 }: {
   requests: DesignRequest[];
-  designers: Designer[];
+  /** 디자이너+개발자 전체 (role 로 탭 분기) */
+  partners: Designer[];
   posts: OutsourcePost[];
+  /** 파트너 첨부 이미지 미리보기 URL (path → signed url) */
+  partnerFileUrls: Record<string, string>;
 }) {
   const [tab, setTab] = useState<Tab>("requests");
-  const designerName = new Map(designers.map((d) => [d.id, d.name]));
+  const designerName = new Map(partners.map((d) => [d.id, d.name]));
+  const designers = partners.filter((p) => p.role === "designer");
+  const developers = partners.filter((p) => p.role === "developer");
 
   return (
     <div className="mx-auto w-full max-w-[900px] px-5 py-8">
@@ -46,6 +52,9 @@ export default function OutsourceView({
         <TabButton active={tab === "designers"} onClick={() => setTab("designers")}>
           디자이너 {designers.length > 0 && <Count n={designers.length} />}
         </TabButton>
+        <TabButton active={tab === "developers"} onClick={() => setTab("developers")}>
+          개발자 {developers.length > 0 && <Count n={developers.length} />}
+        </TabButton>
         <TabButton active={tab === "board"} onClick={() => setTab("board")}>
           게시판 {posts.length > 0 && <Count n={posts.length} />}
         </TabButton>
@@ -54,7 +63,17 @@ export default function OutsourceView({
       {tab === "requests" ? (
         <RequestsTab requests={requests} designerName={designerName} />
       ) : tab === "designers" ? (
-        <DesignersTab designers={designers} />
+        <PartnersTab
+          role="designer"
+          partners={designers}
+          fileUrls={partnerFileUrls}
+        />
+      ) : tab === "developers" ? (
+        <PartnersTab
+          role="developer"
+          partners={developers}
+          fileUrls={partnerFileUrls}
+        />
       ) : (
         <BoardTab posts={posts} />
       )}

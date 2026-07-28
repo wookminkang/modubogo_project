@@ -1095,12 +1095,18 @@ export interface DesignRequest {
   updated_at: string;
 }
 
+/** 외주 파트너 구분 — 같은 designers 테이블을 role 로 나눠 쓴다. */
+export type PartnerRole = "designer" | "developer";
+
 export interface Designer {
   id: string;
   name: string;
   contact: string | null;
   memo: string | null;
   active: boolean;
+  role: PartnerRole;
+  /** 첨부 메타 — { files: DesignFileMeta[] } */
+  files: DesignFiles;
   created_at: string;
 }
 
@@ -1184,10 +1190,19 @@ export async function deleteDesignRequest(nanoid: string): Promise<void> {
   if (error) throw new Error(`삭제 실패: ${error.message}`);
 }
 
-// ── 외주 디자이너 명단 (designers) ──────────────────────────────
+// ── 외주 파트너 명단 (designers, role=designer|developer) ───────
 // 테이블/컬럼이 없으면 조회는 빈 배열로 폴백(SQL: sql/designers.sql). 쓰기는 에러를 던진다.
 
-/** 디자이너 명단 — 활성 우선, 이름순. 테이블 없으면 빈 배열. */
+/** role/files 컬럼이 없던 시절의 행도 안전하게 다루기 위한 정규화. */
+function normalizeDesigner(row: Record<string, unknown>): Designer {
+  return {
+    ...(row as unknown as Designer),
+    role: row.role === "developer" ? "developer" : "designer",
+    files: (row.files as DesignFiles | null) ?? {},
+  };
+}
+
+/** 파트너 명단(디자이너+개발자) — 활성 우선, 이름순. 테이블 없으면 빈 배열. */
 export async function listDesigners(): Promise<Designer[]> {
   const { data, error } = await supabase
     .from("designers")
@@ -1195,14 +1210,15 @@ export async function listDesigners(): Promise<Designer[]> {
     .order("active", { ascending: false })
     .order("name", { ascending: true });
   if (error) return [];
-  return (data as Designer[] | null) ?? [];
+  return ((data as Record<string, unknown>[] | null) ?? []).map(normalizeDesigner);
 }
 
-/** 디자이너 등록. */
+/** 파트너 등록. */
 export async function createDesigner(data: {
   name: string;
   contact?: string | null;
   memo?: string | null;
+  role?: PartnerRole;
 }): Promise<Designer> {
   const { data: row, error } = await supabase
     .from("designers")
@@ -1210,31 +1226,50 @@ export async function createDesigner(data: {
       name: data.name,
       contact: data.contact || null,
       memo: data.memo || null,
+      role: data.role ?? "designer",
     })
     .select()
     .single();
-  if (error) throw new Error(`디자이너 등록 실패: ${error.message}`);
-  return row as Designer;
+  if (error) throw new Error(`등록 실패: ${error.message}`);
+  return normalizeDesigner(row as Record<string, unknown>);
 }
 
-/** 디자이너 정보 수정. */
+/** 파트너 정보 수정. */
 export async function updateDesigner(
   id: string,
-  data: { name?: string; contact?: string | null; memo?: string | null; active?: boolean },
+  data: {
+    name?: string;
+    contact?: string | null;
+    memo?: string | null;
+    active?: boolean;
+    files?: DesignFiles;
+  },
 ): Promise<void> {
   const patch: Record<string, unknown> = {};
   if (data.name !== undefined) patch.name = data.name;
   if (data.contact !== undefined) patch.contact = data.contact || null;
   if (data.memo !== undefined) patch.memo = data.memo || null;
   if (data.active !== undefined) patch.active = data.active;
+  if (data.files !== undefined) patch.files = data.files;
   const { error } = await supabase.from("designers").update(patch).eq("id", id);
-  if (error) throw new Error(`디자이너 수정 실패: ${error.message}`);
+  if (error) throw new Error(`수정 실패: ${error.message}`);
 }
 
-/** 디자이너 삭제 (요청서 배정은 FK on delete set null 로 자동 해제). */
+/** 파트너 1명 조회 (첨부 갱신용). 없으면 null. */
+export async function getDesigner(id: string): Promise<Designer | null> {
+  const { data } = await supabase
+    .from("designers")
+    .select("*")
+    .eq("id", id)
+    .limit(1)
+    .maybeSingle();
+  return data ? normalizeDesigner(data as Record<string, unknown>) : null;
+}
+
+/** 파트너 삭제 (요청서 배정은 FK on delete set null 로 자동 해제). */
 export async function deleteDesigner(id: string): Promise<void> {
   const { error } = await supabase.from("designers").delete().eq("id", id);
-  if (error) throw new Error(`디자이너 삭제 실패: ${error.message}`);
+  if (error) throw new Error(`삭제 실패: ${error.message}`);
 }
 
 /** 요청서에 담당 디자이너 배정(해제는 designerId=null). */
