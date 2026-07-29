@@ -50,12 +50,16 @@ export async function sendBulkHolidayAlimtalk(
         settings?.recipient5,
       ].filter(Boolean) as string[];
 
-      const detailUrl = `https://modubogo.com/holiday/${encodeURIComponent(
-        company
-      )}/${monthKey}`;
+      // 링크에는 nanoid 를 쓴다 — 상호명이 URL 에 박히면 나중에 이름을 바꿨을 때
+      // 이미 발송된 버튼이 끊긴다. nanoid 가 없는 병원만 이름으로 폴백.
+      const slug =
+        (settings?.nanoid as string | null | undefined) ??
+        encodeURIComponent(company);
+      const detailUrl = `https://modubogo.com/holiday/${slug}/${monthKey}`;
 
       await sendHolidayAlimtalk({
         company,
+        slug,
         monthLabel: monthKey,
         monthNum: month,
         schedule,

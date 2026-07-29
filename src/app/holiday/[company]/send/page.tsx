@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import dayjs from "@/lib/dayjs";
 import { isAdmin } from "@/lib/admin";
 import { getPublicHolidays } from "@/lib/publicHoliday";
-import { getCompanySettings } from "@/lib/db";
+import { getCompanySettings, resolveCompanyParam } from "@/lib/db";
 import HolidayClient from "./HolidayClient";
 
 interface CompanyParamsType {
@@ -20,7 +20,7 @@ export default async function Holiday({
 
   const { company } = await params;
   const { month: monthParam } = await searchParams;
-  const hospitalName = decodeURIComponent(company);
+  const hospitalName = await resolveCompanyParam(company);
 
   // 기본 다음 달, ?month=YYYY-MM 로 다른 달 조회
   const base = monthParam ? dayjs(`${monthParam}-01`) : dayjs().add(1, "month");
@@ -39,9 +39,15 @@ export default async function Holiday({
     settings?.recipient5,
   ].filter(Boolean) as string[];
 
+  // 알림톡 버튼 URL 용 식별자 — nanoid 우선(상호명 변경에 안전), 없으면 이름 폴백
+  const slug =
+    (settings?.nanoid as string | null | undefined) ??
+    encodeURIComponent(hospitalName);
+
   return (
     <HolidayClient
       hospitalName={hospitalName}
+      slug={slug}
       year={year}
       month={month}
       holidays={holidays}

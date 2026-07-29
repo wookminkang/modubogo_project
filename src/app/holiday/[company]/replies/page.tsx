@@ -4,7 +4,11 @@ import { ArrowLeft, ArrowRight, ChevronDown } from "lucide-react";
 import dayjs from "@/lib/dayjs";
 import { getAdminUser } from "@/lib/admin";
 import { getPublicHolidays } from "@/lib/publicHoliday";
-import { getHolidaySchedules, getHolidaySubmissions } from "@/lib/db";
+import {
+  getHolidaySchedules,
+  getHolidaySubmissions,
+  resolveCompanyParam,
+} from "@/lib/db";
 import MonthNav from "@/components/MonthNav";
 import { pad } from "@/lib/utils";
 import { diffSnapshotItems, type SnapItem } from "../replyFormat";
@@ -149,9 +153,9 @@ export default async function HolidayRepliesPage({ params, searchParams }: Props
     params,
     searchParams,
   ]);
-  const hospitalName = decodeURIComponent(company);
-  // params.company 는 이미 인코딩된 값이라, 링크는 디코딩된 이름으로 다시 인코딩한다
-  const enc = encodeURIComponent(hospitalName);
+  const hospitalName = await resolveCompanyParam(company);
+  // 페이지 내부 링크는 들어온 파라미터(nanoid 우선)를 그대로 유지한다
+  const enc = encodeURIComponent(company);
 
   const base = monthParam ? dayjs(`${monthParam}-01`) : dayjs().add(1, "month");
   const year = base.year();

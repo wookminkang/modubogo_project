@@ -117,6 +117,7 @@ export async function sendAlimtalk({
  */
 export async function sendHolidayAlimtalk({
   company,
+  slug,
   monthLabel,
   monthNum,
   schedule,
@@ -124,6 +125,8 @@ export async function sendHolidayAlimtalk({
   recipients,
 }: {
   company: string;
+  /** 회사 식별자(nanoid). 버튼 URL 에 쓰며, 없으면 상호명으로 폴백. */
+  slug?: string | null;
   monthLabel: string; // 로그용 'YYYY-MM'
   monthNum: number; // 7
   schedule: string; // "- 7월 17일(금) 제헌절"
@@ -155,7 +158,12 @@ export async function sendHolidayAlimtalk({
     월: `${monthNum}월`, // 자연스러운 표기 (예: 7월). 로그는 monthLabel(yyyy-mm) 사용
     공휴일: schedule, // 각 줄 "- ..." 형식 (호출부에서 구성)
     // 버튼 URL 변수 (템플릿 버튼: https://modubogo.com/holiday/#{상호명}/#{날짜})
-    상호명: encodeURIComponent(company), // 한글 URL → 인코딩
+    //
+    // ⚠️ 변수명은 '상호명'이지만 값은 **nanoid 를 우선** 넣는다. 상호명이 URL 에 박히면
+    // 나중에 병원 이름을 바꿨을 때 이미 발송된 버튼이 전부 끊기기 때문. 변수명은 카카오에
+    // 등록된 템플릿과 맞춰야 해서 그대로 두고 값만 바꾼다(재검수 불필요). 본문에는
+    // 이 변수가 안 쓰여서(2026-06 개정에서 #{병원명} 제거) 수신자에게 노출되지 않는다.
+    상호명: slug ?? encodeURIComponent(company),
     날짜: monthLabel, // yyyy-mm
   };
   const templateText =

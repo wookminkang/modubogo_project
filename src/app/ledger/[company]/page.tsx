@@ -33,6 +33,7 @@ export default async function LedgerCompanyPage({ params }: Props) {
   const entries = await getLedgerEntries(decoded);
   const ad = await getLedgerAdSettings(decoded);
   const settings = (await getCompanySettings(decoded)) as {
+    nanoid?: string | null;
     recipient1?: string | null;
     recipient2?: string | null;
     recipient3?: string | null;
@@ -63,7 +64,12 @@ export default async function LedgerCompanyPage({ params }: Props) {
           <div className="flex items-center gap-2">
             <LedgerAlimtalkButton
               company={decoded}
-              slug={company}
+              // URL 파라미터를 그대로 쓰면 이름으로 들어온 경우 알림톡 링크에 상호명이
+              // 박혀, 나중에 이름을 바꿨을 때 이미 발송된 버튼이 끊긴다. nanoid 우선.
+              slug={
+                (settings?.nanoid as string | null | undefined) ??
+                encodeURIComponent(decoded)
+              }
               recipients={recipients}
             />
             <Link

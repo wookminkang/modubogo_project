@@ -1,5 +1,5 @@
 import { getPublicHolidays } from "@/lib/publicHoliday";
-import { getHolidaySchedules } from "@/lib/db";
+import { getHolidaySchedules, resolveCompanyParam } from "@/lib/db";
 import HolidayCheckForm from "./HolidayCheckForm";
 
 interface Props {
@@ -12,7 +12,9 @@ export const dynamic = "force-dynamic";
 // month = 'YYYY-MM'
 export default async function HolidayLandingPage({ params }: Props) {
   const { company, month } = await params;
-  const hospitalName = decodeURIComponent(company);
+  // nanoid 또는 상호명 모두 받는다 — 상호명이 바뀌어도 nanoid 링크는 계속 열리고,
+  // 과거에 이름으로 발송된 링크도 그대로 동작한다.
+  const hospitalName = await resolveCompanyParam(company);
   const [ys, ms] = month.split("-");
   const year = Number(ys);
   const monthNum = Number(ms);

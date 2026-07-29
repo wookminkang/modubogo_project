@@ -20,12 +20,15 @@ const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 export default function HolidayClient({
   hospitalName,
+  slug,
   year,
   month,
   holidays,
   recipients,
 }: {
   hospitalName: string;
+  /** 회사 식별자(nanoid). 알림톡 버튼 URL 에 쓴다 — 상호명이 바뀌어도 링크가 살아있도록. */
+  slug: string;
   year: number;
   month: number;
   holidays: Holiday[];
@@ -49,10 +52,11 @@ export default function HolidayClient({
               .map((h) => `- ${dayjs(h.date).format("M월 D일(ddd)")} ${h.name}`)
               .join("\n")
           : `- ${month}월 공휴일이 없습니다.`;
-      const detailUrl = `https://modubogo.com/holiday/${encodeURIComponent(hospitalName)}/${monthKey}`;
+      const detailUrl = `https://modubogo.com/holiday/${slug}/${monthKey}`;
 
       await sendHolidayAlimtalk({
         company: hospitalName,
+        slug,
         monthLabel: monthKey,
         monthNum: month,
         schedule,
