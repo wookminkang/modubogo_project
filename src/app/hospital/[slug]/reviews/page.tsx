@@ -6,7 +6,6 @@ import {
   resolveCompanyParam,
   getCompanySettings,
   getNaverReviewHistory,
-  NAVER_REVIEW_COMPANIES,
   type NaverReviewSnapshot,
 } from "@/lib/db";
 import dayjs from "@/lib/dayjs";
@@ -70,13 +69,13 @@ export default async function HospitalReviewsPage({ params }: Props) {
   const { slug } = await params;
   const company = await resolveCompanyParam(slug);
 
-  // 게이트: 허용 병원이 아니면 404.
-  if (!NAVER_REVIEW_COMPANIES.has(company)) notFound();
-
   const [settings, reviews] = await Promise.all([
     getCompanySettings(company),
     getNaverReviewHistory(company),
   ]);
+
+  // 게이트: 수집된 리뷰 스냅샷이 없으면 404 (병원 상세의 버튼도 같은 조건으로 숨는다).
+  if (reviews.length === 0) notFound();
   const backSlug =
     (settings?.nanoid as string | null | undefined) ?? encodeURIComponent(company);
 

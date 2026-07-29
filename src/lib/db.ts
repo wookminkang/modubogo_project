@@ -422,9 +422,8 @@ export interface NaverReviewSnapshot {
   blog_reviews: number;
 }
 
-// 네이버 리뷰 기능(버튼·페이지)을 노출할 병원 (naver_review_history.name 과 정확히 일치).
-// 병원 상세페이지와 리뷰 페이지가 공유한다.
-export const NAVER_REVIEW_COMPANIES = new Set(["리움한방병원 강동송파"]);
+// 네이버 리뷰 기능(버튼·페이지)의 노출 여부는 **스냅샷 데이터 유무**로 판단한다.
+// (예전엔 병원명 하드코딩 Set 이었는데, 상호명을 바꾸면 기능이 조용히 사라졌다)
 
 /** 회사명 기준 네이버 리뷰 일자별 스냅샷 (최신순). 없으면 빈 배열. */
 export async function getNaverReviewHistory(

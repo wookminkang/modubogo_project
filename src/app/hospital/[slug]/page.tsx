@@ -7,7 +7,6 @@ import {
   getHospitalNotes,
   getNaverReviewHistory,
   resolveCompanyParam,
-  NAVER_REVIEW_COMPANIES,
 } from "@/lib/db";
 import { ContentPlaceholder } from "seed-design/ui/content-placeholder";
 import { Text } from "seed-design/ui/text";
@@ -31,9 +30,8 @@ export default async function HospitalDetailPage({ params }: Props) {
     getCompanySettings(company),
     getCompanyHospitalType(company),
     getHospitalNotes(company),
-    NAVER_REVIEW_COMPANIES.has(company)
-      ? getNaverReviewHistory(company)
-      : Promise.resolve([]),
+    // 리뷰 스냅샷이 쌓인 병원에만 아래 '네이버 리뷰' 버튼이 노출된다.
+    getNaverReviewHistory(company),
   ]);
   const region = settings?.region ?? null;
   const reportSlug =
