@@ -1,6 +1,11 @@
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/admin";
-import { listDesignRequests, listDesigners, listOutsourcePosts } from "@/lib/db";
+import {
+  listDesignRequests,
+  listDesigners,
+  listOutsourcePosts,
+  listOutsourcePayments,
+} from "@/lib/db";
 import { getDesignFileSignedUrl } from "@/lib/design-storage";
 import OutsourceView from "./OutsourceView";
 
@@ -12,10 +17,11 @@ export default async function OutsourcePage() {
   const admin = await isAdmin();
   if (!admin) redirect("/admin/login");
 
-  const [requests, partners, posts] = await Promise.all([
+  const [requests, partners, posts, payments] = await Promise.all([
     listDesignRequests(),
     listDesigners(),
     listOutsourcePosts(),
+    listOutsourcePayments(),
   ]);
 
   // 파트너 첨부는 비공개 버킷이라 조회용 signed URL 을 서버에서 발급해 넘긴다(path → url).
@@ -37,6 +43,7 @@ export default async function OutsourcePage() {
       requests={requests}
       partners={partners}
       posts={posts}
+      payments={payments}
       partnerFileUrls={partnerFileUrls}
     />
   );

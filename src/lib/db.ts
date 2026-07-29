@@ -1359,3 +1359,84 @@ export async function deleteOutsourcePost(id: string): Promise<void> {
     .eq("id", id);
   if (error) throw new Error(`게시글 삭제 실패: ${error.message}`);
 }
+
+// ── 외주비 정산 (outsource_payments) ───────────────────────────
+// 외주 파트너에게 지급하는 비용 장부(구글시트식). /ledger 의 광고비 소진과는 별개.
+// 테이블이 없으면 목록은 빈 배열로 폴백(SQL: sql/outsource_payments.sql).
+
+export interface OutsourcePayment {
+  id: string;
+  partner_id: string | null;
+  partner_name: string | null;
+  task_name: string | null;
+  amount: number | null;
+  pay_date: string | null;
+  paid: boolean;
+  memo: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/** 시트에서 넘어오는 저장 단위 (id 는 클라이언트가 발급한 uuid). */
+export interface OutsourcePaymentInput {
+  id: string;
+  partner_id: string | null;
+  partner_name: string | null;
+  task_name: string;
+  amount: number | null;
+  pay_date: string | null;
+  paid: boolean;
+  memo: string;
+  sort_order: number;
+}
+
+/** 정산 내역 — 시트 행 순서대로. 테이블 없으면 빈 배열. */
+export async function listOutsourcePayments(): Promise<OutsourcePayment[]> {
+  const { data, error } = await supabase
+    .from("outsource_payments")
+    .select("*")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+  if (error) return [];
+  return (data as OutsourcePayment[] | null) ?? [];
+}
+
+/**
+ * 정산 내역 저장 — 넘어온 행은 upsert, 목록에서 사라진 행은 삭제.
+ *
+ * ledger_entries 처럼 전량 delete→insert 하지 않는 이유: 이 테이블은 회사 단위로
+ * 쪼개지지 않아 delete 가 곧 전체 삭제라, 뒤이은 insert 가 실패하면 장부가 통째로 날아간다.
+ */
+export async function saveOutsourcePayments(
+  entries: OutsourcePaymentInput[],
+): Promise<void> {
+  const now = new Date().toISOString();
+  const rows = entries.map((e) => ({
+    id: e.id,
+    partner_id: e.partner_id,
+    partner_name: e.partner_name,
+    task_name: e.task_name || null,
+    amount: e.amount,
+    pay_date: e.pay_date,
+    paid: e.paid,
+    memo: e.memo || null,
+    sort_order: e.sort_order,
+    updated_at: now,
+  }));
+
+  if (rows.length) {
+    const { error } = await supabase
+      .from("outsource_payments")
+      .upsert(rows, { onConflict: "id" });
+    if (error) throw new Error(`정산 저장 실패: ${error.message}`);
+  }
+
+  // 시트에서 제거된 행 정리 (남길 id 목록에 없는 행 삭제)
+  const keepIds = rows.map((r) => r.id);
+  const del = supabase.from("outsource_payments").delete();
+  const { error: delErr } = keepIds.length
+    ? await del.not("id", "in", `(${keepIds.join(",")})`)
+    : await del.neq("id", "00000000-0000-0000-0000-000000000000");
+  if (delErr) throw new Error(`정산 저장 실패: ${delErr.message}`);
+}

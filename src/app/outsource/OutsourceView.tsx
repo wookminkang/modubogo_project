@@ -16,22 +16,30 @@ import Toast from "@/components/Toast";
 import ConfirmToast from "@/components/ConfirmToast";
 import { createDesignForm, deleteDesignForm } from "@/lib/design-actions";
 import { designTitle } from "@/lib/design-fields";
-import type { DesignRequest, Designer, OutsourcePost } from "@/lib/db";
+import type {
+  DesignRequest,
+  Designer,
+  OutsourcePost,
+  OutsourcePayment,
+} from "@/lib/db";
 import PartnersTab from "./PartnersTab";
 import BoardTab from "./BoardTab";
+import PaymentsTab from "./PaymentsTab";
 
-type Tab = "requests" | "designers" | "developers" | "board";
+type Tab = "requests" | "designers" | "developers" | "board" | "payments";
 
 export default function OutsourceView({
   requests,
   partners,
   posts,
+  payments,
   partnerFileUrls,
 }: {
   requests: DesignRequest[];
   /** 디자이너+개발자 전체 (role 로 탭 분기) */
   partners: Designer[];
   posts: OutsourcePost[];
+  payments: OutsourcePayment[];
   /** 파트너 첨부 이미지 미리보기 URL (path → signed url) */
   partnerFileUrls: Record<string, string>;
 }) {
@@ -44,8 +52,8 @@ export default function OutsourceView({
     <div className="mx-auto w-full max-w-[900px] px-5 py-8">
       <h1 className="text-2xl font-bold text-[#0e299c]">외주 관리</h1>
 
-      {/* 탭 */}
-      <div className="mt-4 flex gap-1 border-b border-gray-100">
+      {/* 탭 — 5개라 좁은 화면에선 가로 스크롤 */}
+      <div className="mt-4 flex gap-1 overflow-x-auto border-b border-gray-100">
         <TabButton active={tab === "requests"} onClick={() => setTab("requests")}>
           요청서 {requests.length > 0 && <Count n={requests.length} />}
         </TabButton>
@@ -57,6 +65,9 @@ export default function OutsourceView({
         </TabButton>
         <TabButton active={tab === "board"} onClick={() => setTab("board")}>
           게시판 {posts.length > 0 && <Count n={posts.length} />}
+        </TabButton>
+        <TabButton active={tab === "payments"} onClick={() => setTab("payments")}>
+          외주비 (정산) {payments.length > 0 && <Count n={payments.length} />}
         </TabButton>
       </div>
 
@@ -74,8 +85,10 @@ export default function OutsourceView({
           partners={developers}
           fileUrls={partnerFileUrls}
         />
-      ) : (
+      ) : tab === "board" ? (
         <BoardTab posts={posts} />
+      ) : (
+        <PaymentsTab payments={payments} partners={partners} />
       )}
     </div>
   );
