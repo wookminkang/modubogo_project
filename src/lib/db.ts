@@ -484,6 +484,34 @@ export async function getCompanySettings(company: string) {
 }
 
 /**
+ * 병원 상호명 변경 — company 를 키로 쓰는 모든 테이블을 함께 갱신한다.
+ *
+ * company_settings.company 는 PK 이면서 reports·ledger_entries 등에 텍스트로 복사돼
+ * 있는 느슨한 키(FK 아님)라, 중간에 실패하면 한 병원의 데이터가 두 이름으로 쪼개진다.
+ * supabase-js 로는 여러 update 를 한 트랜잭션에 묶을 수 없어 Postgres 함수에 위임한다.
+ * (SQL: sql/rename_company.sql — 미실행 시 아래 안내 메시지로 실패)
+ *
+ * nanoid 는 그대로 두므로 nanoid 기반 공유 링크(/report/{nanoid} 등)는 계속 살아있다.
+ * 반면 **이름 기반 URL 은 끊긴다** (/report/{옛상호명}).
+ */
+export async function renameCompany(from: string, to: string): Promise<void> {
+  const { error } = await supabase.rpc("rename_company", {
+    old_name: from,
+    new_name: to,
+  });
+  if (!error) return;
+
+  // 함수 자체가 없는 경우(마이그레이션 미실행)를 구분해 안내한다.
+  const missing =
+    error.code === "PGRST202" || /function .*rename_company/i.test(error.message);
+  throw new Error(
+    missing
+      ? "상호명 변경 준비가 필요해요. Supabase 에서 sql/rename_company.sql 을 실행해주세요."
+      : `상호명 변경 실패: ${error.message}`,
+  );
+}
+
+/**
  * 병원의 유형(카테고리). 회사 단위(company_settings.hospital_type) 우선,
  * 없으면 보고서(reports.hospital_type 최신) 기준으로 폴백.
  */

@@ -10,6 +10,7 @@ import {
   addHospitalNote,
   deleteHospitalNote,
   deleteHospitalCompletely,
+  renameCompany,
   type HospitalNote,
 } from "./db";
 import { getAdminUser } from "./admin";
@@ -52,7 +53,33 @@ export async function removeHospital(company: string) {
   revalidatePath("/report");
 }
 
-/** 병원 정보 수정(지역). 병원명은 PK(보고서 참조)라 변경하지 않는다. */
+/**
+ * 병원 상호명 변경. company 를 키로 쓰는 모든 테이블을 한 트랜잭션으로 함께 갱신한다.
+ * 되돌리려면 반대 방향으로 다시 실행해야 하므로 관리자만 실행할 수 있게 가드한다.
+ */
+export async function renameHospital(data: { from: string; to: string }) {
+  const admin = await getAdminUser();
+  if (!admin) throw new Error("권한이 없습니다.");
+
+  const from = data.from?.trim();
+  const to = data.to?.trim();
+  if (!from) throw new Error("기존 병원명이 필요합니다.");
+  if (!to) throw new Error("새 병원명을 입력해주세요.");
+  if (from === to) return;
+
+  const existing = await getCompanySettings(to);
+  if (existing) throw new Error("이미 등록된 병원명이에요.");
+
+  await renameCompany(from, to);
+
+  revalidatePath("/hospital");
+  revalidatePath(`/hospital/${encodeURIComponent(from)}`);
+  revalidatePath(`/hospital/${encodeURIComponent(to)}`);
+  revalidatePath("/report");
+  revalidatePath("/ledger");
+}
+
+/** 병원 정보 수정(지역). */
 export async function updateHospitalRegion(data: { company: string; region?: string }) {
   await upsertHospitalInfo({ company: data.company, region: data.region?.trim() || null });
   revalidatePath("/hospital");
