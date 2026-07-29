@@ -90,7 +90,7 @@ export const DESIGN_FILE_FIELDS: DesignFileFieldDef[] = [
   {
     key: "materials",
     label: "전달 자료",
-    accept: "image/*,.pdf,.ai,.psd,.svg,.zip",
+    accept: "image/*,.pdf,.ai,.psd,.svg,.zip,.ppt,.pptx",
     hint: "로고 · 의료진 사진 · 참고 이미지 등",
   },
 ];
