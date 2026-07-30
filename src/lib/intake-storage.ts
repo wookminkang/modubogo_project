@@ -33,15 +33,24 @@ function getClient(): SupabaseClient {
   return _client;
 }
 
-/** 파일명에서 Storage 경로로 쓰기 위험한 문자를 제거 */
+/**
+ * 파일명 → Storage 경로용 안전한 이름.
+ *
+ * ⚠️ Supabase Storage 는 key 에 한글 등 비ASCII 문자를 허용하지 않는다("Invalid key").
+ * 그래서 경로는 ASCII 로만 만들고, **원본 파일명은 메타(name)에 따로 저장**하므로
+ * 화면 표시와 다운로드 파일명은 한글 그대로 유지된다. (design-storage.ts 와 동일 구현)
+ */
 function safeName(name: string): string {
-  // 확장자는 유지하고 본문만 정리
   const dot = name.lastIndexOf(".");
-  const ext = dot > 0 ? name.slice(dot) : "";
+  const ext = (dot > 0 ? name.slice(dot) : "")
+    .replace(/[^A-Za-z0-9.]/g, "")
+    .toLowerCase();
   const base = (dot > 0 ? name.slice(0, dot) : name)
-    .replace(/[^\w.\-가-힣]+/g, "_")
+    .replace(/[^A-Za-z0-9._-]+/g, "_")
+    .replace(/^_+|_+$/g, "")
     .slice(0, 60);
-  return `${base || "file"}${ext.toLowerCase()}`;
+  // 전부 한글 파일명이면 base 가 비거나 기호만 남는다 → "file" 로 대체
+  return `${/[A-Za-z0-9]/.test(base) ? base : "file"}${ext}`;
 }
 
 /**
