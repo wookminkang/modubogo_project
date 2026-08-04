@@ -1,6 +1,8 @@
 @layer theme, base, seed-base, components, seed-components, utilities;
 @import "@seed-design/css/base.layered.css";
 @import "tailwindcss";
+/* 사이트 분석 리포트 마크다운 렌더링용 (prose 클래스) */
+@plugin "@tailwindcss/typography";
 /* SEED 디자인 토큰을 Tailwind 유틸 클래스로 (text-fg-*, bg-bg-*, t5-regular, gap-x3 등) */
 @import "@seed-design/tailwind4-theme";
 

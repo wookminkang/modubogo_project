@@ -20,6 +20,7 @@ Claude Code가 이 저장소에서 작업할 때 따르는 지침. **작업 시�
 | 병원 목록 (작업 중)                    | `src/app/hospital/CLAUDE.md` |
 | **보고서 (메인 기능)**                 | `src/app/report/CLAUDE.md`   |
 | GEO 노출 체크 (ChatGPT O/X)            | `src/app/geo-check/CLAUDE.md` |
+| GEO 키워드 리포트 (환자 검색어 추리)   | `src/app/keyword/CLAUDE.md`  |
 | UI·디자인 시스템                       | `context/design-system.md`   |
 
 ## 기술 스택
@@ -50,7 +51,7 @@ src/
 
 - **DB**: `db.ts` — Supabase (reports/categories/validity/contracts/company_settings/alimtalk_logs/category_colors)
 - **외부 API**: `naverAd.ts`(네이버 광고·비즈머니), `dableAd.ts`(데이블), `bizgo.ts`(카카오 알림톡)
-- **AI**: `geo-openai.ts`·`geo-match.ts`·`geo-db.ts`·`geo-actions.ts` — ChatGPT 노출 O/X 체크 (→ `src/app/geo-check/CLAUDE.md`)
+- **AI**: `site-analysis-actions.ts`(Claude 기반 SEO/GEO 사이트 감사), `geo-openai.ts`·`geo-match.ts`·`geo-db.ts`·`geo-actions.ts`(ChatGPT 노출 O/X 체크 → `src/app/geo-check/CLAUDE.md`), `keyword-db.ts`·`keyword-openai.ts`·`keyword-actions.ts`(GEO 키워드 리포트 → `src/app/keyword/CLAUDE.md`)
 - **인증**: `admin.ts`/`admin-actions.ts`(관리자), `actions.ts`(보고서 비밀번호 게이트)
 - **서버 액션**: `company-actions.ts`(회사 설정), `copy-actions.ts`(보고서 복사)
 - **기타**: `categoryColors.ts`, `dayjs.ts`, `utils.ts`(cn), `mockData.ts`(타입·`getTotalAmount`)
