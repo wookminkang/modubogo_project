@@ -24,7 +24,12 @@ function highlightMatch(text: string, query: string) {
   );
 }
 
-export default function LedgerCompanyList() {
+export default function LedgerCompanyList({
+  ledgerCompanies,
+}: {
+  /** 입금·소진 내역이 입력된 회사명 목록 — 이 병원들만 노출한다. */
+  ledgerCompanies: string[];
+}) {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useSuspenseInfiniteQuery(hospitalsInfiniteQuery());
 
@@ -37,8 +42,11 @@ export default function LedgerCompanyList() {
     return () => clearTimeout(t);
   }, [query]);
 
-  // 로드된 페이지를 평탄화 후 검색어로 필터링 (병원 목록과 동일 패턴)
-  const all = data.pages.flatMap((page) => page.items);
+  // 로드된 페이지를 평탄화 → 내역 보유 병원만 남기고 → 검색어로 필터링
+  const allowed = new Set(ledgerCompanies);
+  const all = data.pages
+    .flatMap((page) => page.items)
+    .filter((h) => allowed.has(h.company));
   const companies = all.filter((h) =>
     h.company.toLowerCase().includes(debouncedQuery.trim().toLowerCase()),
   );
@@ -81,7 +89,7 @@ export default function LedgerCompanyList() {
         <p className="rounded-2xl bg-white py-16 text-center text-sm text-gray-400 shadow-sm">
           {debouncedQuery.trim()
             ? `'${debouncedQuery.trim()}' 검색 결과가 없어요.`
-            : "등록된 병원이 없어요."}
+            : "입금·소진 내역이 설정된 병원이 없어요."}
         </p>
       ) : (
         // 모바일 2열 / PC 5열 그리드
@@ -129,7 +137,7 @@ export default function LedgerCompanyList() {
           <p className="py-6 text-center text-xs text-gray-400">
             {debouncedQuery.trim()
               ? `${companies.length}개`
-              : `모든 병원을 불러왔어요 · 총 ${companies.length}개`}
+              : `내역이 설정된 병원 · 총 ${companies.length}개`}
           </p>
         )
       )}

@@ -11,7 +11,7 @@
 
 | 경로 | 파일 | 역할 | 인증 |
 |------|------|------|------|
-| `/ledger` | `page.tsx` | 병원 목록 (companiesSummary 재사용) | Admin, `force-dynamic` |
+| `/ledger` | `page.tsx` | 병원 목록 — `getLedgerCompanies`로 **내역이 입력된 병원만** 노출 | Admin, `force-dynamic` |
 | `/ledger/[company]` | `[company]/page.tsx` + `LedgerSheet.tsx` | **관리자 편집 시트**(구글시트식 인라인) | Admin, `force-dynamic` |
 | `/ledger/[company]/view` | `[company]/view/page.tsx` + `LedgerView.tsx` | **광고주 공개 읽기전용 뷰**(모바일 카드형) | 링크 공개, `force-dynamic` |
 

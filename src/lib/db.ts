@@ -1075,6 +1075,16 @@ export async function getLedgerEntries(
 }
 
 /**
+ * 입금·소진 내역이 1건이라도 입력된 회사 목록.
+ * /ledger 허브에서 내역이 설정된 병원만 노출할 때 사용한다.
+ */
+export async function getLedgerCompanies(): Promise<string[]> {
+  const { data, error } = await supabase.from("ledger_entries").select("company");
+  if (error) return []; // 테이블 미생성 등
+  return [...new Set((data ?? []).map((d) => (d as { company: string }).company))];
+}
+
+/**
  * 회사의 거래내역을 전량 교체 저장한다(보고서 자식 테이블과 동일한 delete→insert 방식).
  * 빈 배열이면 전부 삭제만 수행한다.
  */
