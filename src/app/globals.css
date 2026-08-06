@@ -45,6 +45,15 @@ body {
   font-family: var(--font-geist-sans), sans-serif;
 }
 
+/* 브라우저 기본값은 <button>에 pointer 커서를 주지 않는다(익명 <a>와 다름).
+   버튼마다 cursor-pointer 클래스를 일일이 붙이는 대신 전역으로 처리. */
+button:not(:disabled),
+[type="button"]:not(:disabled),
+[type="submit"]:not(:disabled),
+[type="reset"]:not(:disabled) {
+  cursor: pointer;
+}
+
 /* 네이티브 <select> 드롭다운(option)은 OS마다 렌더가 달라, 특히 Windows 는
    color-scheme(dark)을 무시하고 목록을 흰 배경으로 그린다. 그러면 다크모드에서
    밝은 글씨가 흰 목록 위에 놓여 안 보인다. option 에 배경/글씨를 명시해

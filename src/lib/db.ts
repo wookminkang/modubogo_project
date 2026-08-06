@@ -1114,6 +1114,203 @@ export async function replaceLedgerEntries(
   if (insErr) throw new Error(`거래내역 저장 실패: ${insErr.message}`);
 }
 
+// ── 직원 업무일지 (work_logs) ────────────────────────────────────
+// 직원당 하루 1건, 자유 텍스트. employees(비밀번호 보유)와 달리 비밀정보가
+// 없어 anon 클라이언트(supabase)로 접근한다. 테이블 없으면 조회는 폴백.
+
+export interface WorkLog {
+  id: string;
+  employee_id: string;
+  log_date: string; // 'YYYY-MM-DD'
+  content: string;
+  updated_at: string;
+}
+
+/** 특정 직원의 특정 날짜 업무일지 (없으면 null). */
+export async function getWorkLogForDate(
+  employeeId: string,
+  logDate: string,
+): Promise<WorkLog | null> {
+  const { data, error } = await supabase
+    .from("work_logs")
+    .select("id, employee_id, log_date, content, updated_at")
+    .eq("employee_id", employeeId)
+    .eq("log_date", logDate)
+    .maybeSingle();
+  if (error || !data) return null;
+  return data as WorkLog;
+}
+
+/** 특정 직원의 특정 월 업무일지 (해당 월 전체, 날짜순). 테이블 없으면 빈 배열. */
+export async function getWorkLogsForMonth(
+  employeeId: string,
+  month: string, // 'YYYY-MM'
+): Promise<WorkLog[]> {
+  const start = `${month}-01`;
+  const end = new Date(
+    new Date(`${start}T00:00:00Z`).setUTCMonth(
+      new Date(`${start}T00:00:00Z`).getUTCMonth() + 1,
+    ),
+  )
+    .toISOString()
+    .slice(0, 10);
+
+  const { data, error } = await supabase
+    .from("work_logs")
+    .select("id, employee_id, log_date, content, updated_at")
+    .eq("employee_id", employeeId)
+    .gte("log_date", start)
+    .lt("log_date", end)
+    .order("log_date", { ascending: true });
+  if (error) return [];
+  return (data ?? []) as WorkLog[];
+}
+
+/**
+ * [관리자] 전체 직원 업무일지 (필터: 직원/월). 최신순, 테이블 없으면 빈 배열.
+ * employees 는 RLS 로 anon 키 접근이 막혀있어 여기서 join 하지 않는다 — 호출부에서
+ * employee.ts 의 listEmployees()(service-role) 결과와 employee_id 로 매칭해 이름을 붙일 것.
+ */
+export async function getAllWorkLogsForAdmin(filters?: {
+  employeeId?: string;
+  month?: string; // 'YYYY-MM'
+}): Promise<WorkLog[]> {
+  let query = supabase
+    .from("work_logs")
+    .select("id, employee_id, log_date, content, updated_at")
+    .order("log_date", { ascending: false });
+
+  if (filters?.employeeId) query = query.eq("employee_id", filters.employeeId);
+  if (filters?.month) {
+    const start = `${filters.month}-01`;
+    const end = new Date(
+      new Date(`${start}T00:00:00Z`).setUTCMonth(
+        new Date(`${start}T00:00:00Z`).getUTCMonth() + 1,
+      ),
+    )
+      .toISOString()
+      .slice(0, 10);
+    query = query.gte("log_date", start).lt("log_date", end);
+  }
+
+  const { data, error } = await query;
+  if (error || !data) return [];
+  return data as WorkLog[];
+}
+
+/** 직원 본인 업무일지 upsert (employee_id, log_date 유니크). */
+export async function upsertWorkLog(
+  employeeId: string,
+  logDate: string,
+  content: string,
+): Promise<void> {
+  const { error } = await supabase.from("work_logs").upsert(
+    {
+      employee_id: employeeId,
+      log_date: logDate,
+      content,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "employee_id,log_date" },
+  );
+  if (error) throw new Error(`업무일지 저장 실패: ${error.message}`);
+}
+
+// ── 직원 휴가신청 (leave_requests) ────────────────────────────────
+// work_logs 와 동일 컨벤션: 비밀정보 없어 anon 클라이언트, RLS 없음, 테이블 없으면 폴백.
+// employees 는 RLS 로 anon 접근이 막혀있어 여기서 join 하지 않는다 — 관리자 화면에서
+// employee.ts 의 listEmployees()(service-role) 결과와 employee_id 로 매칭해 이름을 붙일 것.
+
+export interface LeaveRequest {
+  id: string;
+  employee_id: string;
+  start_date: string; // 'YYYY-MM-DD'
+  end_date: string; // 'YYYY-MM-DD'
+  reason: string;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+}
+
+/** 특정 직원의 휴가신청 전체 (최신순). 테이블 없으면 빈 배열. */
+export async function getLeaveRequestsByEmployee(
+  employeeId: string,
+): Promise<LeaveRequest[]> {
+  const { data, error } = await supabase
+    .from("leave_requests")
+    .select("id, employee_id, start_date, end_date, reason, status, created_at")
+    .eq("employee_id", employeeId)
+    .order("created_at", { ascending: false });
+  if (error) return [];
+  return (data ?? []) as LeaveRequest[];
+}
+
+/** [관리자] 전체 휴가신청 (필터: 직원/상태, 대기중 우선 그다음 최신순). 테이블 없으면 빈 배열. */
+export async function getAllLeaveRequestsForAdmin(filters?: {
+  employeeId?: string;
+  status?: LeaveRequest["status"];
+}): Promise<LeaveRequest[]> {
+  let query = supabase
+    .from("leave_requests")
+    .select("id, employee_id, start_date, end_date, reason, status, created_at")
+    .order("created_at", { ascending: false });
+
+  if (filters?.employeeId) query = query.eq("employee_id", filters.employeeId);
+  if (filters?.status) query = query.eq("status", filters.status);
+
+  const { data, error } = await query;
+  if (error) return [];
+  const rows = (data ?? []) as LeaveRequest[];
+  return rows.sort((a, b) =>
+    a.status === b.status ? 0 : a.status === "pending" ? -1 : b.status === "pending" ? 1 : 0,
+  );
+}
+
+/** 휴가신청 등록. */
+export async function createLeaveRequest(
+  employeeId: string,
+  startDate: string,
+  endDate: string,
+  reason: string,
+): Promise<void> {
+  const { error } = await supabase.from("leave_requests").insert({
+    employee_id: employeeId,
+    start_date: startDate,
+    end_date: endDate,
+    reason,
+    status: "pending",
+  });
+  if (error) throw new Error(`휴가신청 등록 실패: ${error.message}`);
+}
+
+/** [관리자] 휴가신청 승인/거절/되돌리기(대기중으로). */
+export async function updateLeaveRequestStatus(
+  id: string,
+  status: LeaveRequest["status"],
+): Promise<void> {
+  const { error } = await supabase
+    .from("leave_requests")
+    .update({
+      status,
+      decided_at: status === "pending" ? null : new Date().toISOString(),
+    })
+    .eq("id", id);
+  if (error) throw new Error(`휴가신청 처리 실패: ${error.message}`);
+}
+
+/** 본인 휴가신청 취소(철회). 대기중인 건만 취소 가능(승인/거절된 건 보호). */
+export async function deleteLeaveRequest(
+  id: string,
+  employeeId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from("leave_requests")
+    .delete()
+    .eq("id", id)
+    .eq("employee_id", employeeId)
+    .eq("status", "pending");
+  if (error) throw new Error(`휴가신청 취소 실패: ${error.message}`);
+}
+
 // ── 외주 디자이너 작업 요청서 (design_requests) ─────────────────
 // 관리자가 브리프를 작성하고 디자이너는 공개 링크(/design/{nanoid})로 읽는다.
 // 브리프 텍스트/선택 값은 content(jsonb), 첨부 리소스 메타는 files(jsonb).

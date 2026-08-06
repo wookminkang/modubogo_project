@@ -14,9 +14,28 @@
 | `/admin/dashboard` | `dashboard/page.tsx` | KPI 카드, 월별 광고비 트렌드(바차트), 만료 임박 계약(D-day) | 필수 |
 | `/admin/alimtalk-logs` | `alimtalk-logs/page.tsx` | 알림톡 발송 이력 (성공/실패 탭, `?status=`) | 필수 |
 | `/admin/category-colors` | `category-colors/page.tsx` | 카테고리 배경/텍스트 색상 CRUD | 필수 |
+| `/admin/employees` | `employees/page.tsx` | 직원 가입 승인/거절, 전체 직원 목록 | 필수 |
+| `/admin/employees/worklogs` | `employees/worklogs/page.tsx` | 전체 직원 업무일지 모아보기(직원/월 필터) | 필수 |
+| `/admin/employees/leave` | `employees/leave/page.tsx` | 휴가신청 승인/거절 — 승인 시 직원 캘린더에 반영 | 필수 |
 
 - `dashboard`, `alimtalk-logs`는 `export const dynamic = "force-dynamic"` (항상 최신 데이터).
-- `layout.tsx`: 최대 너비 600px, 모바일 우선 레이아웃.
+- `layout.tsx`: 최대 너비 600px, 모바일 우선 레이아웃. **단, `employees/layout.tsx`는 예외** — 아래 참고.
+
+## `/admin/employees/*` 만 사이드바 레이아웃 (예외)
+
+직원 승인·업무일지·휴가 승인 3개 페이지는 `employee/layout.tsx`(직원 쪽)와 톤을 맞춘
+**좌측 사이드바 + 상단바** 레이아웃을 쓴다(`employees/layout.tsx`, `AdminEmployeesSidebar.tsx`,
+`AdminEmployeesTopBar.tsx`). 다른 admin 페이지(dashboard/alimtalk-logs/category-colors)와
+report/ledger 등은 건드리지 않음 — **직원 관련 화면만** 요청받아 범위를 좁혔다.
+
+- 상위 `admin/layout.tsx`가 전체를 `max-w-[600px] mx-auto shadow-xl`로 감싸서, 그 안에서는
+  넓은 사이드바가 나올 수 없다. `employees/layout.tsx`는 `fixed inset-0`로 뷰포트 전체를 덮어
+  부모의 폭 제약을 벗어난다 — 이 트릭을 깨는 수정(예: fixed 제거)은 레이아웃이 600px로 눌리니 주의.
+- 각 페이지(`page.tsx`/`worklogs/page.tsx`/`leave/page.tsx`)는 더 이상 자체 뒤로가기 링크나
+  `px-4 py-6` 같은 패딩을 갖지 않는다 — 네비게이션은 사이드바가, 패딩은 레이아웃의 `<main>`이
+  담당(`max-w-5xl mx-auto px-6 py-8`). 새 페이지를 이 아래 추가하면 이 컨벤션을 따를 것.
+- "관리자 홈" 버튼은 상단바 좌측에 있다(`AdminEmployeesTopBar.tsx`) — 사이드바 하단에 있던 걸
+  옮긴 것. 채팅 위젯 아이콘에 가려 잘 안 보였던 문제라 상단바가 더 안전한 위치.
 
 ## 핵심 컴포넌트
 
@@ -29,17 +48,24 @@
 
 - `@/lib/admin`의 `isAdmin()`로 검증. 미인증 시 `/admin/login`으로 리다이렉트.
 - `@/lib/admin-actions`의 `loginAdmin()`/`logoutAdmin()` 서버 액션.
-- 쿠키 `admin_session`(httpOnly, 7일)에 비밀번호를 담아 `ADMIN_PASSWORD` 환경변수와 **평문 비교**.
-- ⚠️ 현재 비밀번호가 평문으로 쿠키/환경변수에 저장됨. 보안 강화 작업 시 이 점을 고려.
+- 쿠키 `admin_session`(httpOnly, 7일)에 `admin_users.id`를 서명해 저장. 비밀번호는 `@/lib/auth-crypto`의
+  scrypt 해시(`hashPassword`/`verifyPassword`)로 검증 — 평문 비교 아님.
+- `employees`(직원 업무일지)는 **완전히 별도 계정 체계**(`admin_users`와 무관). 인증은
+  `@/lib/employee`·`employee-actions.ts`, 쿠키는 `employee_session`으로 분리되어 있다.
+  자세한 내용은 `src/app/employee/CLAUDE.md` 참고.
 
 ## 데이터 소스 (`@/lib/db`)
 
 - `getDashboardRawDataFromDB()` — 대시보드 KPI (reports + categories + validity)
 - `getAlimtalkLogs()` — 알림톡 로그 전체 (최신순)
 - `getCategoryColorsFromDB()` / `upsertCategoryColor()` — 카테고리 색상
+- `getAllWorkLogsForAdmin()` — 전체 직원 업무일지(직원/월 필터), `employees/worklogs`에서 사용
 
 ## 작업 시 주의
 
 - 새 보호 페이지를 추가하면 페이지 상단에서 `isAdmin()` 체크 + 리다이렉트를 반드시 넣을 것.
 - 알림톡 로그의 `recipients`는 문자열 배열(JSON).
 - 금액 포맷은 dashboard의 `fmt()` 규칙을 따를 것.
+- `employees/page.tsx`의 승인/거절은 `isAdmin()`(super/staff 모두)이면 가능 — super 전용으로
+  제한하려면 `approveEmployeeAction`/`rejectEmployeeAction`(`@/lib/employee-actions`)의 체크를
+  `requireSuperAdmin()`으로 바꿀 것.
