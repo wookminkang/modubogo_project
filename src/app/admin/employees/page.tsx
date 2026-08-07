@@ -7,7 +7,7 @@ import {
   updateLeaveQuotaAction,
 } from "@/lib/employee-actions";
 import { getAllLeaveRequestsForAdmin } from "@/lib/db";
-import { daysInclusive, computeEntitledLeaveDays } from "@/lib/utils";
+import { leaveAmount, computeEntitledLeaveDays } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -39,8 +39,7 @@ export default async function AdminEmployeesPage() {
   const usedDaysById = new Map<string, number>();
   for (const r of approvedLeave) {
     if (!r.start_date.startsWith(thisYear)) continue;
-    const days = daysInclusive(r.start_date, r.end_date);
-    usedDaysById.set(r.employee_id, (usedDaysById.get(r.employee_id) ?? 0) + days);
+    usedDaysById.set(r.employee_id, (usedDaysById.get(r.employee_id) ?? 0) + leaveAmount(r));
   }
 
   return (

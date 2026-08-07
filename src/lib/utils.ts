@@ -15,6 +15,16 @@ export const daysInclusive = (start: string, end: string) =>
       86400000,
   ) + 1
 
+/**
+ * 휴가 1건이 연차에서 차감되는 실제 일수. 반차(half_am/half_pm)는 항상 0.5일,
+ * 종일(full)은 daysInclusive 그대로. 연차 잔여일수 계산·목록 표시 양쪽에서 재사용.
+ */
+export const leaveAmount = (request: {
+  start_date: string;
+  end_date: string;
+  unit: "full" | "half_am" | "half_pm";
+}) => (request.unit === "full" ? daysInclusive(request.start_date, request.end_date) : 0.5)
+
 /** start 부터 end 까지 만료된(만근) 개월 수. 입사일 기준 근속 개월 계산용. */
 export const monthsBetween = (start: string, end: string) => {
   const s = new Date(`${start}T00:00:00Z`);

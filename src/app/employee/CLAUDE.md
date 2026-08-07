@@ -50,8 +50,11 @@
 
 - `employees.annual_leave_days`(numeric, 기본 15) — 직원별 연간 부여일수. `sql/employees_leave_quota.sql`(이미 만든 `employees` 테이블에 추가된 마이그레이션, **별도 실행 필요**).
 - 관리자가 `/admin/employees` "전체 직원" 목록에서 승인된 직원마다 인라인으로 수정(`updateLeaveQuotaAction`, `@/lib/employee-actions`).
-- **사용일수 계산은 DB 컬럼이 아니라 매번 즉석 계산**이다 — 저장된 "사용 누계" 컬럼이 없고, `status='approved'`인 `leave_requests` 중 **시작일 기준 올해**인 것만 모아 `daysInclusive(start,end)`(`@/lib/utils`, 양끝 포함 일수)를 합산한다. 잔여 = 부여일수 − 합산. 이 로직은 `employee/leave/page.tsx`(본인용)와 `admin/employees/page.tsx`(관리자용)에 각각 있다 — 계산 방식을 바꾸려면 두 군데 다 고칠 것.
-- 연차 계산은 **달력일 기준**(주말/공휴일도 포함해서 셈)이다. 반차 등 세부 단위는 지원하지 않음(스코프 밖, 기간+사유만).
+- **사용일수 계산은 DB 컬럼이 아니라 매번 즉석 계산**이다 — 저장된 "사용 누계" 컬럼이 없고, `status='approved'`인 `leave_requests` 중 **시작일 기준 올해**인 것만 모아 `leaveAmount(r)`(`@/lib/utils` — 반차는 0.5, 종일은 `daysInclusive`)을 합산한다. 잔여 = 부여일수 − 합산(소수점 가능). 이 로직은 `employee/leave/page.tsx`(본인용)와 `admin/employees/page.tsx`(관리자용)에 각각 있다 — 계산 방식을 바꾸려면 두 군데 다 고칠 것.
+- 연차 계산은 **달력일 기준**(주말/공휴일도 포함해서 셈)이다.
+- **반차 지원**: `leave_requests.unit`(`'full' | 'half_am' | 'half_pm'`, `sql/leave_requests_unit.sql` — 별도 마이그레이션 필요)로 구분한다. 반차는 **항상 하루짜리**(`start_date === end_date`)이고 **0.5일 고정 차감** — `leaveAmount(request)`(`@/lib/utils`)가 `unit !== 'full'`이면 무조건 0.5, 아니면 `daysInclusive`를 반환한다. 연차 사용량 합산·목록 표시 전부 `daysInclusive` 대신 이 함수를 쓴다.
+  - `submitLeaveRequest`는 **반차일 때 클라이언트가 보낸 종료일을 무시하고 서버에서 `endDate = startDate`로 강제**한다 — 클라이언트 조작으로 반차인데 여러 날짜 범위가 들어가는 것을 막기 위함.
+  - 겹침(overlap) 검사는 `unit`과 무관하게 **날짜 범위만** 본다 — 즉 같은 날 오전반차+오후반차를 나눠 신청하는 것도 현재는 막힌다(하루를 두 번 신청하는 셈이라 겹침으로 처리). 필요해지면 이 부분만 별도로 풀어야 함.
 - 잔여일수를 초과해 신청해도 **막지 않는다** — `LeaveRequestForm.tsx`에서 초과 시 빨간 경고 문구만 보여주고 제출은 허용(관리자가 승인 단계에서 최종 판단하는 구조).
 - 카카오 알림톡 연동(신청/승인/거절 알림)과 "업무일지 미작성 직원 파악"은 **의도적으로 스코프 밖**(정책 확정 후 별도 작업).
 - **연차 부여일수는 정적 값이 아니라 근속 기반으로 계산된다** — `computeEntitledLeaveDays(hireDate, annualLeaveDays, asOf)`(`@/lib/utils`, 근로기준법 60조 방식): 입사 1년 미만은 만근 개월당 1일(최대 11일), 1년 이상은 관리자가 설정한 `annual_leave_days`를 그대로 적용. `hire_date`가 없는 레거시 계정은 근속 계산이 불가능하니 바로 연간 한도를 준다. `monthsBetween(start, end)`도 같은 파일에 있다. 이 로직도 `employee/leave/page.tsx`와 `admin/employees/page.tsx` 두 군데서 각각 호출한다 — 계산식을 바꾸면 두 곳 다 고칠 것.

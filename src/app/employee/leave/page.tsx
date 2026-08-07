@@ -1,7 +1,7 @@
 import { requireEmployee } from "@/lib/employee";
 import { getLeaveRequestsByEmployee, type LeaveRequest } from "@/lib/db";
 import { cancelLeaveRequestAction } from "@/lib/leave-actions";
-import { daysInclusive, computeEntitledLeaveDays, monthsBetween } from "@/lib/utils";
+import { leaveAmount, computeEntitledLeaveDays, monthsBetween } from "@/lib/utils";
 import LeaveRequestForm from "./LeaveRequestForm";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +28,12 @@ const STATUS_CLASS: Record<LeaveRequest["status"], string> = {
   rejected: "bg-gray-100 text-gray-500",
 };
 
+const UNIT_LABEL: Record<LeaveRequest["unit"], string> = {
+  full: "",
+  half_am: "오전반차",
+  half_pm: "오후반차",
+};
+
 export default async function EmployeeLeavePage({ searchParams }: Props) {
   const employee = await requireEmployee();
   const { error, submitted } = await searchParams;
@@ -37,7 +43,7 @@ export default async function EmployeeLeavePage({ searchParams }: Props) {
   const thisYear = String(new Date().getFullYear());
   const usedDays = requests
     .filter((r) => r.status === "approved" && r.start_date.startsWith(thisYear))
-    .reduce((sum, r) => sum + daysInclusive(r.start_date, r.end_date), 0);
+    .reduce((sum, r) => sum + leaveAmount(r), 0);
   const entitledDays = computeEntitledLeaveDays(
     employee.hireDate,
     employee.annualLeaveDays,
@@ -97,9 +103,9 @@ export default async function EmployeeLeavePage({ searchParams }: Props) {
               >
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-gray-900">
-                    {r.start_date} ~ {r.end_date}
+                    {r.unit === "full" ? `${r.start_date} ~ ${r.end_date}` : r.start_date}
                     <span className="ml-1.5 font-normal text-gray-400">
-                      ({daysInclusive(r.start_date, r.end_date)}일)
+                      ({r.unit === "full" ? `${leaveAmount(r)}일` : UNIT_LABEL[r.unit]})
                     </span>
                   </p>
                   {r.reason && (

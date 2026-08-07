@@ -11,6 +11,7 @@ create table if not exists public.leave_requests (
   start_date  date not null,
   end_date    date not null,
   reason      text not null default '',
+  unit        text not null default 'full' check (unit in ('full', 'half_am', 'half_pm')),
   status      text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
   created_at  timestamptz not null default now(),
   decided_at  timestamptz

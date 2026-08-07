@@ -1221,12 +1221,15 @@ export async function upsertWorkLog(
 // employees 는 RLS 로 anon 접근이 막혀있어 여기서 join 하지 않는다 — 관리자 화면에서
 // employee.ts 의 listEmployees()(service-role) 결과와 employee_id 로 매칭해 이름을 붙일 것.
 
+export type LeaveUnit = "full" | "half_am" | "half_pm";
+
 export interface LeaveRequest {
   id: string;
   employee_id: string;
   start_date: string; // 'YYYY-MM-DD'
   end_date: string; // 'YYYY-MM-DD'
   reason: string;
+  unit: LeaveUnit;
   status: "pending" | "approved" | "rejected";
   created_at: string;
 }
@@ -1237,7 +1240,7 @@ export async function getLeaveRequestsByEmployee(
 ): Promise<LeaveRequest[]> {
   const { data, error } = await supabase
     .from("leave_requests")
-    .select("id, employee_id, start_date, end_date, reason, status, created_at")
+    .select("id, employee_id, start_date, end_date, reason, unit, status, created_at")
     .eq("employee_id", employeeId)
     .order("created_at", { ascending: false });
   if (error) return [];
@@ -1251,7 +1254,7 @@ export async function getAllLeaveRequestsForAdmin(filters?: {
 }): Promise<LeaveRequest[]> {
   let query = supabase
     .from("leave_requests")
-    .select("id, employee_id, start_date, end_date, reason, status, created_at")
+    .select("id, employee_id, start_date, end_date, reason, unit, status, created_at")
     .order("created_at", { ascending: false });
 
   if (filters?.employeeId) query = query.eq("employee_id", filters.employeeId);
@@ -1271,12 +1274,14 @@ export async function createLeaveRequest(
   startDate: string,
   endDate: string,
   reason: string,
+  unit: LeaveUnit,
 ): Promise<void> {
   const { error } = await supabase.from("leave_requests").insert({
     employee_id: employeeId,
     start_date: startDate,
     end_date: endDate,
     reason,
+    unit,
     status: "pending",
   });
   if (error) throw new Error(`휴가신청 등록 실패: ${error.message}`);

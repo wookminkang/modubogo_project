@@ -7,6 +7,7 @@ import {
   updateLeaveRequestStatus,
   deleteLeaveRequest,
   getLeaveRequestsByEmployee,
+  type LeaveUnit,
 } from "./db";
 import { getEmployeeUser } from "./employee";
 import { isAdmin } from "./admin";
@@ -21,7 +22,11 @@ export async function submitLeaveRequest(formData: FormData) {
   if (!employee) redirect("/employee/login");
 
   const startDate = String(formData.get("startDate") ?? "");
-  const endDate = String(formData.get("endDate") ?? "");
+  const unitInput = String(formData.get("unit") ?? "full");
+  const unit: LeaveUnit =
+    unitInput === "half_am" || unitInput === "half_pm" ? unitInput : "full";
+  // 반차는 하루만 신청 가능 — 클라이언트가 보낸 종료일을 신뢰하지 않고 서버에서 강제한다.
+  const endDate = unit === "full" ? String(formData.get("endDate") ?? "") : startDate;
   const reason = String(formData.get("reason") ?? "").trim();
 
   if (!startDate || !endDate) redirect("/employee/leave?error=missing");
@@ -36,7 +41,7 @@ export async function submitLeaveRequest(formData: FormData) {
   );
   if (overlaps) redirect("/employee/leave?error=overlap");
 
-  await createLeaveRequest(employee.id, startDate, endDate, reason);
+  await createLeaveRequest(employee.id, startDate, endDate, reason, unit);
   revalidatePath("/employee/leave");
   redirect("/employee/leave?submitted=1");
 }

@@ -7,7 +7,7 @@ import {
   rejectLeaveRequestAction,
   revertLeaveRequestAction,
 } from "@/lib/leave-actions";
-import { daysInclusive } from "@/lib/utils";
+import { leaveAmount } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +25,12 @@ const STATUS_CLASS: Record<LeaveRequest["status"], string> = {
   pending: "bg-orange-100 text-orange-600",
   approved: "bg-[#0e299c]/10 text-[#0e299c]",
   rejected: "bg-gray-100 text-gray-500",
+};
+
+const UNIT_LABEL: Record<LeaveRequest["unit"], string> = {
+  full: "",
+  half_am: "오전반차",
+  half_pm: "오후반차",
 };
 
 export default async function AdminLeavePage({ searchParams }: Props) {
@@ -102,7 +108,8 @@ export default async function AdminLeavePage({ searchParams }: Props) {
                 <p className="text-sm font-semibold text-gray-900">
                   {nameById.get(r.employee_id) ?? "(알 수 없음)"}
                   <span className="ml-2 font-normal text-gray-400">
-                    {r.start_date} ~ {r.end_date} ({daysInclusive(r.start_date, r.end_date)}일)
+                    {r.unit === "full" ? `${r.start_date} ~ ${r.end_date}` : r.start_date} (
+                    {r.unit === "full" ? `${leaveAmount(r)}일` : UNIT_LABEL[r.unit]})
                   </span>
                 </p>
                 {r.reason && (
