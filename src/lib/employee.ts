@@ -12,6 +12,7 @@ export interface EmployeeUser {
   name: string;
   hireDate: string | null;
   annualLeaveDays: number;
+  leaveAdjustmentDays: number;
 }
 
 export interface EmployeeRow {
@@ -23,6 +24,7 @@ export interface EmployeeRow {
   hire_date: string | null;
   status: EmployeeStatus;
   annual_leave_days: number;
+  leave_adjustment_days: number;
   created_at: string;
 }
 
@@ -38,7 +40,7 @@ export async function getEmployeeUser(): Promise<EmployeeUser | null> {
 
   const { data, error } = await supabaseAdmin
     .from("employees")
-    .select("id, username, name, status, hire_date, annual_leave_days")
+    .select("id, username, name, status, hire_date, annual_leave_days, leave_adjustment_days")
     .eq("id", userId)
     .single();
 
@@ -49,6 +51,7 @@ export async function getEmployeeUser(): Promise<EmployeeUser | null> {
     name: data.name,
     hireDate: data.hire_date,
     annualLeaveDays: data.annual_leave_days,
+    leaveAdjustmentDays: data.leave_adjustment_days,
   };
 }
 
@@ -64,7 +67,7 @@ export async function listEmployees(): Promise<EmployeeRow[]> {
   const { data, error } = await supabaseAdmin
     .from("employees")
     .select(
-      "id, username, name, phone, email, hire_date, status, annual_leave_days, created_at",
+      "id, username, name, phone, email, hire_date, status, annual_leave_days, leave_adjustment_days, created_at",
     )
     .order("created_at", { ascending: true });
 

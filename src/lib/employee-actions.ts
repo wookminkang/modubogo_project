@@ -122,16 +122,21 @@ export async function rejectEmployeeAction(formData: FormData) {
   revalidatePath("/admin/employees");
 }
 
-/** 직원 연차(연간 부여일수) 수정 (관리자 전용). */
+/**
+ * 직원 연차(연간 부여일수 + 수동 보정치) 수정 (관리자 전용).
+ * 보정치는 수습기간 제외·주말 출근 대체휴가 등 자동 공식(computeEntitledLeaveDays)으로
+ * 표현 안 되는 회사별 예외를 관리자가 +/- 로 직접 맞추는 값이다.
+ */
 export async function updateLeaveQuotaAction(formData: FormData) {
   if (!(await isAdmin())) throw new Error("권한이 없습니다.");
   const id = String(formData.get("id") ?? "");
   const days = Number(formData.get("annualLeaveDays"));
-  if (!id || !Number.isFinite(days) || days < 0) return;
+  const adjustment = Number(formData.get("leaveAdjustmentDays") ?? 0);
+  if (!id || !Number.isFinite(days) || days < 0 || !Number.isFinite(adjustment)) return;
 
   const { error } = await supabaseAdmin
     .from("employees")
-    .update({ annual_leave_days: days })
+    .update({ annual_leave_days: days, leave_adjustment_days: adjustment })
     .eq("id", id);
   if (error) throw new Error(`연차 수정 실패: ${error.message}`);
 

@@ -15,6 +15,7 @@ create table if not exists public.employees (
   password_hash text not null,
   status        text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
   annual_leave_days numeric not null default 15,
+  leave_adjustment_days numeric not null default 0,
   created_at    timestamptz not null default now(),
   approved_at   timestamptz
 );

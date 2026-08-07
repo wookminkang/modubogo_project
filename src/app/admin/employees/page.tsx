@@ -112,11 +112,12 @@ export default async function AdminEmployeesPage() {
           <ul className="flex flex-col gap-2">
             {others.map((emp) => {
               const used = usedDaysById.get(emp.id) ?? 0;
-              const entitled = computeEntitledLeaveDays(
+              const autoEntitled = computeEntitledLeaveDays(
                 emp.hire_date,
                 emp.annual_leave_days,
                 today,
               );
+              const entitled = autoEntitled + emp.leave_adjustment_days;
               const remaining = entitled - used;
               return (
                 <li
@@ -142,7 +143,7 @@ export default async function AdminEmployeesPage() {
                   {emp.status === "approved" && (
                     <form
                       action={updateLeaveQuotaAction}
-                      className="flex items-center gap-2 border-t border-gray-100 pt-3"
+                      className="flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3"
                     >
                       <input type="hidden" name="id" value={emp.id} />
                       <span className="text-xs text-gray-400 shrink-0">정규 연차(1년 후)</span>
@@ -154,16 +155,31 @@ export default async function AdminEmployeesPage() {
                         defaultValue={emp.annual_leave_days}
                         className="h-8 w-16 px-2 rounded-lg border border-gray-200 text-xs text-gray-700 outline-none focus:border-[#0e299c]"
                       />
-                      <span className="text-xs text-gray-400 shrink-0">
-                        일 · 현재 부여 {entitled}일 · {thisYear}년 {used}일 사용 ({remaining}일
-                        남음)
+                      <span className="text-xs text-gray-400 shrink-0">일</span>
+                      <span
+                        className="text-xs text-gray-400 shrink-0"
+                        title="수습기간 제외, 주말 출근 대체휴가 등 자동 계산식으로 표현 안 되는 예외를 +/- 로 보정"
+                      >
+                        보정
                       </span>
+                      <input
+                        type="number"
+                        name="leaveAdjustmentDays"
+                        step={0.5}
+                        defaultValue={emp.leave_adjustment_days}
+                        className="h-8 w-16 px-2 rounded-lg border border-gray-200 text-xs text-gray-700 outline-none focus:border-[#0e299c]"
+                      />
+                      <span className="text-xs text-gray-400 shrink-0">일</span>
                       <button
                         type="submit"
-                        className="ml-auto text-xs font-medium text-[#0e299c] border border-[#0e299c]/20 px-3 py-1.5 rounded-lg hover:bg-[#0e299c]/5 transition-colors shrink-0"
+                        className="text-xs font-medium text-[#0e299c] border border-[#0e299c]/20 px-3 py-1.5 rounded-lg hover:bg-[#0e299c]/5 transition-colors shrink-0"
                       >
                         저장
                       </button>
+                      <span className="w-full text-xs text-gray-400">
+                        자동 {autoEntitled}일{emp.leave_adjustment_days !== 0 && ` + 보정 ${emp.leave_adjustment_days}일`} = 현재 부여{" "}
+                        {entitled}일 · {thisYear}년 {used}일 사용 ({remaining}일 남음)
+                      </span>
                     </form>
                   )}
                 </li>

@@ -44,11 +44,9 @@ export default async function EmployeeLeavePage({ searchParams }: Props) {
   const usedDays = requests
     .filter((r) => r.status === "approved" && r.start_date.startsWith(thisYear))
     .reduce((sum, r) => sum + leaveAmount(r), 0);
-  const entitledDays = computeEntitledLeaveDays(
-    employee.hireDate,
-    employee.annualLeaveDays,
-    today,
-  );
+  const entitledDays =
+    computeEntitledLeaveDays(employee.hireDate, employee.annualLeaveDays, today) +
+    employee.leaveAdjustmentDays;
   const remainingDays = entitledDays - usedDays;
   const monthsWorked = employee.hireDate ? monthsBetween(employee.hireDate, today) : null;
   const isFirstYear = monthsWorked !== null && monthsWorked < 12;
