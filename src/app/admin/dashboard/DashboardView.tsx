@@ -39,9 +39,11 @@ function getLast6Months(currentMonth: string): string[] {
 export default function DashboardView({
   currentMonth,
   nowMs,
+  isSuper = false,
 }: {
   currentMonth: string;
   nowMs: number;
+  isSuper?: boolean;
 }) {
   const { data: reports } = useSuspenseQuery(dashboardRawQuery());
 
@@ -106,6 +108,14 @@ export default function DashboardView({
             >
               색상 설정
             </Link>
+            {isSuper && (
+              <Link
+                href="/admin/accounts"
+                className="text-sm text-gray-500 bg-white px-3 py-2 rounded-xl shadow-sm"
+              >
+                메뉴 권한
+              </Link>
+            )}
             <Link
               href="/report"
               className="text-sm text-gray-500 bg-white px-3 py-2 rounded-xl shadow-sm"

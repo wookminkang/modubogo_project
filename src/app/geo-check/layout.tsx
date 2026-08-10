@@ -14,7 +14,7 @@ export default async function GeoCheckLayout({
     <div className="flex min-h-screen flex-col">
       <Header
         showNav={!!user}
-        user={user && { name: user.name, role: user.role }}
+        user={user && { name: user.name, role: user.role, allowedMenus: user.allowed_menus }}
       />
       <main className="flex flex-1 flex-col pt-14">{children}</main>
       <Footer />

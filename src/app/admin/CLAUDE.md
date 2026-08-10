@@ -14,6 +14,7 @@
 | `/admin/dashboard` | `dashboard/page.tsx` | KPI 카드, 월별 광고비 트렌드(바차트), 만료 임박 계약(D-day) | 필수 |
 | `/admin/alimtalk-logs` | `alimtalk-logs/page.tsx` | 알림톡 발송 이력 (성공/실패 탭, `?status=`) | 필수 |
 | `/admin/category-colors` | `category-colors/page.tsx` | 카테고리 배경/텍스트 색상 CRUD | 필수 |
+| `/admin/accounts` | `accounts/page.tsx` | 관리자 계정별 메뉴 권한 토글 (현재: 진료일정) | 슈퍼 전용 |
 | `/admin/employees` | `employees/page.tsx` | 직원 가입 승인/거절, 전체 직원 목록 | 필수 |
 | `/admin/employees/worklogs` | `employees/worklogs/page.tsx` | 전체 직원 업무일지 모아보기(직원/월 필터) | 필수 |
 | `/admin/employees/leave` | `employees/leave/page.tsx` | 휴가신청 승인/거절 — 승인 시 직원 캘린더에 반영 | 필수 |
@@ -60,6 +61,13 @@ report/ledger 등은 건드리지 않음 — **직원 관련 화면만** 요청�
 - `getAlimtalkLogs()` — 알림톡 로그 전체 (최신순)
 - `getCategoryColorsFromDB()` / `upsertCategoryColor()` — 카테고리 색상
 - `getAllWorkLogsForAdmin()` — 전체 직원 업무일지(직원/월 필터), `employees/worklogs`에서 사용
+
+## 메뉴별 권한 (`admin_users.allowed_menus`)
+
+- 헤더의 제한 메뉴(현재 `holiday` = 진료일정)는 super는 항상, staff는 `allowed_menus`에 키가 있어야 접근 가능.
+- 판정은 `@/lib/admin`의 `canAccessMenu(user, menu)` 하나로 통일 — 페이지 가드·서버 액션·헤더 탭 필터가 모두 이 함수를 쓴다.
+- 새 메뉴를 제한하려면: ① `MenuKey`에 키 추가, ② `Header.tsx` TABS의 해당 탭에 `menu` 키 지정, ③ 해당 페이지/액션 가드를 `canAccessMenu`로 교체, ④ `accounts/MenuPermissionEditor.tsx`의 `MENUS`에 토글 추가.
+- SQL: `sql/admin_users_allowed_menus.sql`
 
 ## 작업 시 주의
 

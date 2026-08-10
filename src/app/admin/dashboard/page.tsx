@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
-import { isAdmin } from "@/lib/admin";
+import { getAdminUser } from "@/lib/admin";
 import { getQueryClient } from "@/hooks/get-query-client";
 import { dashboardRawQuery } from "@/lib/queries";
 import { CardSkeleton } from "@/components/ListSkeleton";
@@ -14,8 +14,8 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<{ month?: string }>;
 }) {
-  const admin = await isAdmin();
-  if (!admin) redirect("/admin/login");
+  const me = await getAdminUser();
+  if (!me) redirect("/admin/login");
 
   const now = new Date();
   const defaultMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -35,7 +35,11 @@ export default async function DashboardPage({
           </div>
         }
       >
-        <DashboardView currentMonth={currentMonth} nowMs={now.getTime()} />
+        <DashboardView
+          currentMonth={currentMonth}
+          nowMs={now.getTime()}
+          isSuper={me.role === "super"}
+        />
       </Suspense>
     </HydrationBoundary>
   );

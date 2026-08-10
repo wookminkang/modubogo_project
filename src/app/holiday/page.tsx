@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import dayjs from "@/lib/dayjs";
-import { isAdmin } from "@/lib/admin";
+import { getAdminUser, canAccessMenu } from "@/lib/admin";
 import { getPublicHolidays } from "@/lib/publicHoliday";
 import {
   getCompaniesSummaryFromDB,
@@ -30,7 +30,9 @@ export default async function HolidayRepliesListPage({
 }: {
   searchParams: Promise<{ month?: string; status?: string }>;
 }) {
-  if (!(await isAdmin())) redirect("/admin/login");
+  const me = await getAdminUser();
+  if (!me) redirect("/admin/login");
+  if (!canAccessMenu(me, "holiday")) redirect("/report");
 
   const { month: monthParam, status: statusParam } = await searchParams;
   const activeStatus: StatusKey =

@@ -21,7 +21,7 @@ export default async function HospitalLayout({
     <div className="flex min-h-screen flex-col">
       <Header
         showNav={!!user}
-        user={user && { name: user.name, role: user.role }}
+        user={user && { name: user.name, role: user.role, allowedMenus: user.allowed_menus }}
       />
       <main className="flex flex-1 flex-col pt-14">
         <div className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col">

@@ -50,7 +50,7 @@ export default async function LedgerCompanyPage({ params }: Props) {
 
   return (
     <>
-      <Header showNav user={{ name: me.name, role: me.role }} />
+      <Header showNav user={{ name: me.name, role: me.role, allowedMenus: me.allowed_menus }} />
       <div className="flex-1 overflow-x-clip bg-[#F0F4FA] py-6 px-4">
         <div className="mx-auto max-w-[1080px]">
           <div className="mb-5 flex items-center justify-between gap-3">

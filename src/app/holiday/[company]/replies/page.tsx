@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, ArrowRight, ChevronDown } from "lucide-react";
 import dayjs from "@/lib/dayjs";
-import { getAdminUser } from "@/lib/admin";
+import { getAdminUser, canAccessMenu } from "@/lib/admin";
 import { getPublicHolidays } from "@/lib/publicHoliday";
 import {
   getHolidaySchedules,
@@ -171,6 +171,7 @@ export default async function HolidayRepliesPage({ params, searchParams }: Props
     getHolidaySubmissions(hospitalName, monthKey),
   ]);
   if (!me) redirect("/admin/login");
+  if (!canAccessMenu(me, "holiday")) redirect("/report");
 
   const scheduleMap = new Map(schedules.map((s) => [s.date, s]));
   const respondedCount = holidays.filter((h) => scheduleMap.has(h.date)).length;

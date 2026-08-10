@@ -24,7 +24,7 @@ export default async function LedgerHubPage() {
 
   return (
     <>
-      <Header showNav user={{ name: me.name, role: me.role }} />
+      <Header showNav user={{ name: me.name, role: me.role, allowedMenus: me.allowed_menus }} />
       <div className="flex-1 overflow-x-clip bg-[#F0F4FA] py-6 px-4">
         <div className="mx-auto max-w-[1200px]">
         <h1 className="mb-1 text-2xl font-bold text-gray-900">입금·소진 관리내역</h1>

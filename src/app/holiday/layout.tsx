@@ -8,7 +8,7 @@ export default async function HolidayLayout({
 }) {
   const user = await getAdminUser();
   return (
-    <HolidayChrome user={user && { name: user.name, role: user.role }}>
+    <HolidayChrome user={user && { name: user.name, role: user.role, allowedMenus: user.allowed_menus }}>
       {children}
     </HolidayChrome>
   );

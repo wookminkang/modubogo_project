@@ -5,11 +5,26 @@ import { supabaseAdmin } from "./supabaseAdmin";
 
 export type AdminRole = "super" | "staff";
 
+/** 메뉴별 권한 제어 대상 키. 새 메뉴를 제한하려면 여기에 추가. */
+export type MenuKey = "holiday";
+
 export interface AdminUser {
   id: string;
   username: string;
   name: string;
   role: AdminRole;
+  /** staff에게 허용된 제한 메뉴 목록 (null이면 없음). super는 항상 전체 접근. */
+  allowed_menus: string[] | null;
+}
+
+/** 제한 메뉴 접근 가능 여부. super는 무조건 허용, staff는 allowed_menus에 있어야 허용. */
+export function canAccessMenu(
+  user: Pick<AdminUser, "role" | "allowed_menus"> | null,
+  menu: MenuKey
+): boolean {
+  if (!user) return false;
+  if (user.role === "super") return true;
+  return (user.allowed_menus ?? []).includes(menu);
 }
 
 /**
@@ -23,7 +38,7 @@ export async function getAdminUser(): Promise<AdminUser | null> {
 
   const { data, error } = await supabaseAdmin
     .from("admin_users")
-    .select("id, username, name, role")
+    .select("id, username, name, role, allowed_menus")
     .eq("id", userId)
     .single();
 

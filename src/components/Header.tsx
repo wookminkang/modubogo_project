@@ -4,11 +4,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 
-const TABS = [
+// menu 키가 있는 탭은 제한 메뉴 — super이거나 allowedMenus에 키가 있어야 노출된다.
+const TABS: { href: string; label: string; menu?: string }[] = [
   { href: "/ledger", label: "입금·소진 관리" },
   { href: "/hospital", label: "병원목록" },
   { href: "/report", label: "보고서" },
-  { href: "/holiday", label: "진료일정" },
+  { href: "/holiday", label: "진료일정", menu: "holiday" },
   // { href: "/intakes", label: "준비자료" },
   { href: "/outsource", label: "외주 관리" },
   { href: "/site-analysis", label: "사이트 분석" },
@@ -19,6 +20,7 @@ const TABS = [
 export interface HeaderUser {
   name: string;
   role: "super" | "staff";
+  allowedMenus?: string[] | null;
 }
 
 /**
@@ -35,6 +37,12 @@ export default function Header({
   user?: HeaderUser | null;
 }) {
   const pathname = usePathname();
+  const tabs = TABS.filter(
+    (tab) =>
+      !tab.menu ||
+      user?.role === "super" ||
+      (user?.allowedMenus ?? []).includes(tab.menu)
+  );
 
   return (
     <header className="fixed top-0 left-0 w-full bg-white border-b border-gray-100 z-15">
@@ -57,7 +65,7 @@ export default function Header({
         <div className="flex items-center gap-4">
           {showNav ? (
             <nav className="flex h-14 items-stretch gap-6">
-              {TABS.map((tab) => {
+              {tabs.map((tab) => {
                 const active = pathname.startsWith(tab.href);
                 return (
                   <Link
