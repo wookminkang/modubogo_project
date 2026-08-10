@@ -1,5 +1,16 @@
 import { supabase } from "./supabase";
 import { generateCompanyNanoid } from "./nanoid";
+import { pad } from "./utils";
+
+/**
+ * 'YYYY-MM' → 다음 달 1일 'YYYY-MM-DD'.
+ * 월별 date 범위 조회의 상한(미만 비교)용 — `${month}-31` 같은 하드코딩은
+ * 30일까지인 달에서 "date out of range" 에러를 내므로 쓰지 않는다.
+ */
+export function nextMonthStart(monthPrefix: string): string {
+  const [y, m] = monthPrefix.split("-").map(Number);
+  return m === 12 ? `${y + 1}-01-01` : `${y}-${pad(m + 1)}-01`;
+}
 
 // ── 회사 URL 식별자(nanoid) ─────────────────────────────────
 // URL 단축용. company_settings.nanoid 컬럼이 없으면 모든 함수가 무해하게
@@ -796,7 +807,7 @@ export async function getHolidaySchedules(
     )
     .eq("company", company)
     .gte("date", `${monthPrefix}-01`)
-    .lte("date", `${monthPrefix}-31`);
+    .lt("date", nextMonthStart(monthPrefix));
   return (data as HolidayScheduleRow[] | null) ?? [];
 }
 
@@ -851,7 +862,7 @@ export async function getHolidayReplyCompanies(
       .from("holiday_schedules")
       .select("company, date")
       .gte("date", `${monthPrefix}-01`)
-      .lte("date", `${monthPrefix}-31`),
+      .lt("date", nextMonthStart(monthPrefix)),
     supabase
       .from("holiday_submissions")
       .select("company, submitted_at")

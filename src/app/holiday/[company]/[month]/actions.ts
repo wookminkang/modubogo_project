@@ -1,6 +1,7 @@
 "use server";
 
 import { supabase } from "@/lib/supabase";
+import { nextMonthStart } from "@/lib/db";
 
 export interface HolidayScheduleItem {
   date: string; // YYYY-MM-DD
@@ -49,7 +50,7 @@ export async function submitHolidaySchedule(
     .delete()
     .eq("company", company)
     .gte("date", `${month}-01`)
-    .lte("date", `${month}-31`);
+    .lt("date", nextMonthStart(month));
   if (delErr) throw delErr;
 
   // 2) 제출된 항목 삽입
