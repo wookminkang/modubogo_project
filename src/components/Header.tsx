@@ -8,7 +8,7 @@ const TABS = [
   { href: "/ledger", label: "입금·소진 관리" },
   { href: "/hospital", label: "병원목록" },
   { href: "/report", label: "보고서" },
-  // { href: "/holiday", label: "진료일정" },
+  { href: "/holiday", label: "진료일정" },
   // { href: "/intakes", label: "준비자료" },
   { href: "/outsource", label: "외주 관리" },
   { href: "/site-analysis", label: "사이트 분석" },
