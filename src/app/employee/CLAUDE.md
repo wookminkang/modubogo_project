@@ -15,7 +15,7 @@
 | `/employee` | `page.tsx` + `WorkLogCalendar.tsx` | 업무일지 — **월 캘린더 그리드**, 날짜 클릭 시 옆 패널에서 자유 텍스트 작성·저장 | 직원, `force-dynamic` |
 | `/employee/leave` | `leave/page.tsx` | 휴가신청 — 기간(시작일~종료일)+사유 신청 폼 + 내 신청 목록(대기중/승인됨/거절됨) | 직원, `force-dynamic` |
 
-- `layout.tsx`: 관리자 `Header`를 쓰지 않는 독립 레이아웃. **로그인 상태면 좌측 사이드바**(`EmployeeSidebar.tsx`, 업무일지/휴가신청 2개 메뉴만) + **상단바**(`EmployeeTopBar.tsx`, 아바타+이름 프로필과 로그아웃 — 참고 디자인의 상단 우측 프로필 자리를 재현), 비로그인(로그인/가입 화면)은 단순 센터 레이아웃.
+- `layout.tsx`: 관리자 `Header`를 쓰지 않는 독립 레이아웃. **로그인 상태면 좌측 사이드바**(`EmployeeSidebar.tsx`, 기본 업무일지/휴가신청 2개 + `employees.allowed_menus` 권한별 확장 메뉴 — 현재 `holiday`=진료일정, `sql/employees_allowed_menus.sql`) + **상단바**(`EmployeeTopBar.tsx`, 아바타+이름 프로필과 로그아웃 — 참고 디자인의 상단 우측 프로필 자리를 재현), 비로그인(로그인/가입 화면)은 단순 센터 레이아웃. 확장 메뉴 권한은 슈퍼관리자가 `/admin/accounts`에서 토글, `/holiday` 가드는 `@/lib/menu-access` 참고.
 - 참고 디자인(사이드바+캘린더 대시보드)의 검색창/알림종/아바타는 실제 기능이 없어 **의도적으로 만들지 않았다** — 페이지 타이틀만 노출.
 - 관리자 쪽 승인/조회 화면은 `/admin/employees`, `/admin/employees/worklogs`, `/admin/employees/leave` (해당 폴더는 `src/app/admin/CLAUDE.md` 참고).
 

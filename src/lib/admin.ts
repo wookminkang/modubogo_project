@@ -5,8 +5,16 @@ import { supabaseAdmin } from "./supabaseAdmin";
 
 export type AdminRole = "super" | "staff";
 
-/** 메뉴별 권한 제어 대상 키. 새 메뉴를 제한하려면 여기에 추가. */
-export type MenuKey = "holiday";
+/** 메뉴별 권한 제어 대상 키 (헤더 탭 전체). staff는 부여받은 메뉴만 접근 가능. */
+export type MenuKey =
+  | "ledger"
+  | "hospital"
+  | "report"
+  | "holiday"
+  | "outsource"
+  | "site-analysis"
+  | "geo-check"
+  | "employees";
 
 export interface AdminUser {
   id: string;

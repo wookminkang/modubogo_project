@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { isAdmin } from "@/lib/admin";
+import { getAdminUser, canAccessMenu } from "@/lib/admin";
 import SiteAnalysisForm from "./SiteAnalysisForm";
 
 export const dynamic = "force-dynamic";
@@ -7,8 +7,9 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 export default async function SiteAnalysisPage() {
-  const admin = await isAdmin();
-  if (!admin) redirect("/admin/login");
+  const me = await getAdminUser();
+  if (!me) redirect("/admin/login");
+  if (!canAccessMenu(me, "site-analysis")) redirect("/admin/dashboard");
 
   return (
     <div className="mx-auto w-full max-w-6xl px-6 py-10">

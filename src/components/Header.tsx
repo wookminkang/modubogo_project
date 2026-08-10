@@ -4,17 +4,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 
-// menu 키가 있는 탭은 제한 메뉴 — super이거나 allowedMenus에 키가 있어야 노출된다.
-const TABS: { href: string; label: string; menu?: string }[] = [
-  { href: "/ledger", label: "입금·소진 관리" },
-  { href: "/hospital", label: "병원목록" },
-  { href: "/report", label: "보고서" },
+// 모든 탭이 권한 제어 대상 — super는 전부, staff는 allowedMenus에 있는 것만 노출된다.
+const TABS: { href: string; label: string; menu: string }[] = [
+  { href: "/ledger", label: "입금·소진 관리", menu: "ledger" },
+  { href: "/hospital", label: "병원목록", menu: "hospital" },
+  { href: "/report", label: "보고서", menu: "report" },
   { href: "/holiday", label: "진료일정", menu: "holiday" },
   // { href: "/intakes", label: "준비자료" },
-  { href: "/outsource", label: "외주 관리" },
-  { href: "/site-analysis", label: "사이트 분석" },
-  { href: "/geo-check", label: "GEO 체크" },
-  { href: "/admin/employees", label: "직원 관리" },
+  { href: "/outsource", label: "외주 관리", menu: "outsource" },
+  { href: "/site-analysis", label: "사이트 분석", menu: "site-analysis" },
+  { href: "/geo-check", label: "GEO 체크", menu: "geo-check" },
+  { href: "/admin/employees", label: "직원 관리", menu: "employees" },
 ];
 
 export interface HeaderUser {
@@ -39,9 +39,7 @@ export default function Header({
   const pathname = usePathname();
   const tabs = TABS.filter(
     (tab) =>
-      !tab.menu ||
-      user?.role === "super" ||
-      (user?.allowedMenus ?? []).includes(tab.menu)
+      user?.role === "super" || (user?.allowedMenus ?? []).includes(tab.menu)
   );
 
   return (

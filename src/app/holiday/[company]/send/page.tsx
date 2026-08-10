@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import dayjs from "@/lib/dayjs";
-import { getAdminUser, canAccessMenu } from "@/lib/admin";
+import { getHolidayAccess } from "@/lib/menu-access";
 import { getPublicHolidays } from "@/lib/publicHoliday";
 import { getCompanySettings, resolveCompanyParam } from "@/lib/db";
 import HolidayClient from "./HolidayClient";
@@ -16,9 +16,10 @@ export default async function Holiday({
   params,
   searchParams,
 }: CompanyParamsType) {
-  const me = await getAdminUser();
-  if (!me) redirect("/admin/login");
-  if (!canAccessMenu(me, "holiday")) redirect("/report");
+  const access = await getHolidayAccess();
+  if (access.kind === "guest") redirect("/admin/login");
+  if (access.kind === "denied")
+    redirect(access.from === "admin" ? "/admin/dashboard" : "/employee");
 
   const { company } = await params;
   const { month: monthParam } = await searchParams;

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { isAdmin } from "@/lib/admin";
+import { getAdminUser, canAccessMenu } from "@/lib/admin";
 import {
   listDesignRequests,
   listDesigners,
@@ -14,8 +14,9 @@ export const dynamic = "force-dynamic";
 const IMG_RE = /\.(png|jpe?g|gif|webp|svg|avif)$/i;
 
 export default async function OutsourcePage() {
-  const admin = await isAdmin();
-  if (!admin) redirect("/admin/login");
+  const me = await getAdminUser();
+  if (!me) redirect("/admin/login");
+  if (!canAccessMenu(me, "outsource")) redirect("/admin/dashboard");
 
   const [requests, partners, posts, payments] = await Promise.all([
     listDesignRequests(),

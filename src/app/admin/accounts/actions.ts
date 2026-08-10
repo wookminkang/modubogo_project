@@ -32,3 +32,32 @@ export async function toggleMenuPermission(
   revalidatePath("/admin/accounts");
   return { ok: true };
 }
+
+/** 직원 계정의 확장 메뉴 권한(진료일정 등)을 켜거나 끈다 (슈퍼관리자 전용). */
+export async function toggleEmployeeMenuPermission(
+  employeeId: string,
+  menu: string,
+  granted: boolean
+): Promise<{ ok: boolean; error?: string }> {
+  await requireSuperAdmin();
+
+  const { data, error: fetchError } = await supabaseAdmin
+    .from("employees")
+    .select("allowed_menus")
+    .eq("id", employeeId)
+    .single();
+  if (fetchError || !data) return { ok: false, error: "직원을 찾을 수 없습니다." };
+
+  const current = new Set<string>(data.allowed_menus ?? []);
+  if (granted) current.add(menu);
+  else current.delete(menu);
+
+  const { error } = await supabaseAdmin
+    .from("employees")
+    .update({ allowed_menus: Array.from(current) })
+    .eq("id", employeeId);
+  if (error) return { ok: false, error: "저장에 실패했습니다." };
+
+  revalidatePath("/admin/accounts");
+  return { ok: true };
+}

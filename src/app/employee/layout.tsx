@@ -43,7 +43,7 @@ export default async function EmployeeLayout({
 
   return (
     <div className="min-h-screen bg-[#F0F4FA] flex">
-      <EmployeeSidebar />
+      <EmployeeSidebar allowedMenus={user.allowedMenus} />
       <div className="flex flex-1 min-w-0 flex-col">
         <EmployeeTopBar user={user} />
         <main className="flex-1 min-w-0 px-8 py-8">{children}</main>

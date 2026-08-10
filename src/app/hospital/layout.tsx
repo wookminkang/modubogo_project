@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { getAdminUser } from "@/lib/admin";
+import { getAdminUser, canAccessMenu } from "@/lib/admin";
 
 export const metadata: Metadata = {
   title: "병원 목록 · 모두보고",
@@ -17,6 +18,8 @@ export default async function HospitalLayout({
   children: React.ReactNode;
 }>) {
   const user = await getAdminUser();
+  // 비로그인(공개) 접근은 기존대로 허용, 로그인한 staff만 메뉴 권한 검사
+  if (user && !canAccessMenu(user, "hospital")) redirect("/admin/dashboard");
   return (
     <div className="flex min-h-screen flex-col">
       <Header

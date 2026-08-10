@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getAdminUser } from "@/lib/admin";
+import { getAdminUser, canAccessMenu } from "@/lib/admin";
 import AdminEmployeesSidebar from "./AdminEmployeesSidebar";
 import AdminEmployeesTopBar from "./AdminEmployeesTopBar";
 
@@ -19,6 +19,7 @@ export default async function AdminEmployeesLayout({
 }) {
   const user = await getAdminUser();
   if (!user) redirect("/admin/login");
+  if (!canAccessMenu(user, "employees")) redirect("/admin/dashboard");
 
   return (
     <div className="fixed inset-0 z-30 flex bg-[#F0F4FA]">

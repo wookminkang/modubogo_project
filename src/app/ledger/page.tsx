@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
-import { getAdminUser } from "@/lib/admin";
+import { getAdminUser, canAccessMenu } from "@/lib/admin";
 import { getLedgerCompanies } from "@/lib/db";
 import { getQueryClient } from "@/hooks/get-query-client";
 import { hospitalsInfiniteQuery } from "@/lib/queries";
@@ -14,6 +14,7 @@ export const dynamic = "force-dynamic";
 export default async function LedgerHubPage() {
   const me = await getAdminUser();
   if (!me) redirect("/admin/login");
+  if (!canAccessMenu(me, "ledger")) redirect("/admin/dashboard");
 
   const queryClient = getQueryClient();
   // 내역이 입력된 병원만 노출하기 위해 ledger 보유 회사 목록을 함께 조회한다.

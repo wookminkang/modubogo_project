@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, ArrowRight, ChevronDown } from "lucide-react";
 import dayjs from "@/lib/dayjs";
-import { getAdminUser, canAccessMenu } from "@/lib/admin";
+import { getHolidayAccess } from "@/lib/menu-access";
 import { getPublicHolidays } from "@/lib/publicHoliday";
 import {
   getHolidaySchedules,
@@ -164,14 +164,15 @@ export default async function HolidayRepliesPage({ params, searchParams }: Props
 
   // 인증을 데이터 조회와 병렬로 실행해 Supabase 왕복 1회를 줄인다.
   // (비관리자는 redirect로 즉시 차단되므로 조회 결과는 버려진다)
-  const [me, holidays, schedules, submissions] = await Promise.all([
-    getAdminUser(),
+  const [access, holidays, schedules, submissions] = await Promise.all([
+    getHolidayAccess(),
     getPublicHolidays(year, month),
     getHolidaySchedules(hospitalName, monthKey),
     getHolidaySubmissions(hospitalName, monthKey),
   ]);
-  if (!me) redirect("/admin/login");
-  if (!canAccessMenu(me, "holiday")) redirect("/report");
+  if (access.kind === "guest") redirect("/admin/login");
+  if (access.kind === "denied")
+    redirect(access.from === "admin" ? "/admin/dashboard" : "/employee");
 
   const scheduleMap = new Map(schedules.map((s) => [s.date, s]));
   const respondedCount = holidays.filter((h) => scheduleMap.has(h.date)).length;

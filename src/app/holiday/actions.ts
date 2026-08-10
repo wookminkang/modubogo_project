@@ -1,7 +1,7 @@
 "use server";
 
 import dayjs from "@/lib/dayjs";
-import { getAdminUser, canAccessMenu } from "@/lib/admin";
+import { hasHolidayAccess } from "@/lib/menu-access";
 import { getPublicHolidays } from "@/lib/publicHoliday";
 import { getCompanySettings } from "@/lib/db";
 import { sendHolidayAlimtalk } from "@/lib/bizgo";
@@ -21,8 +21,7 @@ export async function sendBulkHolidayAlimtalk(
   companies: string[],
   monthKey: string
 ): Promise<BulkSendResult> {
-  if (!canAccessMenu(await getAdminUser(), "holiday"))
-    throw new Error("권한이 없습니다.");
+  if (!(await hasHolidayAccess())) throw new Error("권한이 없습니다.");
 
   const targets = Array.from(new Set(companies.filter(Boolean)));
   if (targets.length === 0) return { sent: [], failed: [] };

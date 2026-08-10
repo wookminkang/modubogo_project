@@ -62,12 +62,13 @@ report/ledger 등은 건드리지 않음 — **직원 관련 화면만** 요청�
 - `getCategoryColorsFromDB()` / `upsertCategoryColor()` — 카테고리 색상
 - `getAllWorkLogsForAdmin()` — 전체 직원 업무일지(직원/월 필터), `employees/worklogs`에서 사용
 
-## 메뉴별 권한 (`admin_users.allowed_menus`)
+## 메뉴별 권한 (두 계정 체계)
 
-- 헤더의 제한 메뉴(현재 `holiday` = 진료일정)는 super는 항상, staff는 `allowed_menus`에 키가 있어야 접근 가능.
-- 판정은 `@/lib/admin`의 `canAccessMenu(user, menu)` 하나로 통일 — 페이지 가드·서버 액션·헤더 탭 필터가 모두 이 함수를 쓴다.
-- 새 메뉴를 제한하려면: ① `MenuKey`에 키 추가, ② `Header.tsx` TABS의 해당 탭에 `menu` 키 지정, ③ 해당 페이지/액션 가드를 `canAccessMenu`로 교체, ④ `accounts/MenuPermissionEditor.tsx`의 `MENUS`에 토글 추가.
-- SQL: `sql/admin_users_allowed_menus.sql`
+- **관리자**(`admin_users.allowed_menus`): 헤더 탭 8개 전부 권한 대상. super는 항상 전부, staff는 부여받은 키만 노출·접근. 판정은 `@/lib/admin`의 `canAccessMenu(user, menu)` 하나로 통일 — 각 메뉴 페이지 가드와 헤더 탭 필터가 모두 이 함수를 쓴다. 권한 없으면 `/admin/dashboard`로 리다이렉트. `/hospital`은 비로그인 공개 접근은 기존대로 두고 로그인한 staff만 검사.
+- **직원**(`employees.allowed_menus`): 직원 사이드바 확장 메뉴(현재 `holiday`). 권한 있으면 `EmployeeSidebar`에 진료일정이 추가되고 `/holiday` 접근 허용.
+- `/holiday` 가드는 두 체계를 모두 받는 `@/lib/menu-access`의 `getHolidayAccess()`/`hasHolidayAccess()`를 쓴다 (관리자 or 권한 있는 직원).
+- 토글 UI: `/admin/accounts` (super 전용) — 관리자 섹션(8개 메뉴) + 직원 섹션(진료일정).
+- SQL: `sql/admin_users_allowed_menus.sql`, `sql/employees_allowed_menus.sql`
 
 ## 작업 시 주의
 

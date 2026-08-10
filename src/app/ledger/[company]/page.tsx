@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, Eye } from "lucide-react";
-import { getAdminUser } from "@/lib/admin";
+import { getAdminUser, canAccessMenu } from "@/lib/admin";
 import {
   resolveCompanyParam,
   getLedgerEntries,
@@ -27,6 +27,7 @@ interface Props {
 export default async function LedgerCompanyPage({ params }: Props) {
   const me = await getAdminUser();
   if (!me) redirect("/admin/login");
+  if (!canAccessMenu(me, "ledger")) redirect("/admin/dashboard");
 
   const { company } = await params;
   const decoded = await resolveCompanyParam(company);

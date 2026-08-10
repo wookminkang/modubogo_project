@@ -13,6 +13,8 @@ export interface EmployeeUser {
   hireDate: string | null;
   annualLeaveDays: number;
   leaveAdjustmentDays: number;
+  /** 직원에게 열어준 확장 메뉴 (현재 키: 'holiday'). 사이드바 노출·접근 가드 공용. */
+  allowedMenus: string[];
 }
 
 export interface EmployeeRow {
@@ -40,7 +42,7 @@ export async function getEmployeeUser(): Promise<EmployeeUser | null> {
 
   const { data, error } = await supabaseAdmin
     .from("employees")
-    .select("id, username, name, status, hire_date, annual_leave_days, leave_adjustment_days")
+    .select("id, username, name, status, hire_date, annual_leave_days, leave_adjustment_days, allowed_menus")
     .eq("id", userId)
     .single();
 
@@ -52,6 +54,7 @@ export async function getEmployeeUser(): Promise<EmployeeUser | null> {
     hireDate: data.hire_date,
     annualLeaveDays: data.annual_leave_days,
     leaveAdjustmentDays: data.leave_adjustment_days,
+    allowedMenus: (data.allowed_menus as string[] | null) ?? [],
   };
 }
 

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { isAdmin } from "@/lib/admin";
+import { getAdminUser, canAccessMenu } from "@/lib/admin";
 import { CardTitle } from "@/components/CardTitle";
 import { listGeoTargets, listGeoRuns } from "@/lib/geo-db";
 import TargetForm from "./_components/TargetForm";
@@ -8,7 +8,9 @@ import TargetForm from "./_components/TargetForm";
 export const dynamic = "force-dynamic";
 
 export default async function GeoCheckPage() {
-  if (!(await isAdmin())) redirect("/admin/login");
+  const me = await getAdminUser();
+  if (!me) redirect("/admin/login");
+  if (!canAccessMenu(me, "geo-check")) redirect("/admin/dashboard");
 
   const targets = await listGeoTargets();
   // 대상마다 최근 실행 2건 — 노출률과 직전 회차 대비 변화를 카드에 보여주기 위함.

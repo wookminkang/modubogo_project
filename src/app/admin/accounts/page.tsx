@@ -2,20 +2,31 @@ import Link from "next/link";
 import { requireSuperAdmin } from "@/lib/admin";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { ArrowLeft } from "lucide-react";
-import MenuPermissionEditor, { type AccountRow } from "./MenuPermissionEditor";
+import MenuPermissionEditor, {
+  type AccountRow,
+  type EmployeeAccountRow,
+} from "./MenuPermissionEditor";
 
 export const dynamic = "force-dynamic";
 
-/** 관리자 계정별 메뉴 권한 설정 (슈퍼관리자 전용). */
+/** 관리자·직원 계정별 메뉴 권한 설정 (슈퍼관리자 전용). */
 export default async function AdminAccountsPage() {
   await requireSuperAdmin();
 
-  const { data } = await supabaseAdmin
-    .from("admin_users")
-    .select("id, username, name, role, allowed_menus")
-    .order("role", { ascending: false })
-    .order("name");
+  const [{ data }, { data: empData }] = await Promise.all([
+    supabaseAdmin
+      .from("admin_users")
+      .select("id, username, name, role, allowed_menus")
+      .order("role", { ascending: false })
+      .order("name"),
+    supabaseAdmin
+      .from("employees")
+      .select("id, username, name, allowed_menus")
+      .eq("status", "approved")
+      .order("name"),
+  ]);
   const accounts = (data ?? []) as AccountRow[];
+  const employees = (empData ?? []) as EmployeeAccountRow[];
 
   return (
     <div className="min-h-screen bg-[#F0F4FA]">
@@ -36,7 +47,7 @@ export default async function AdminAccountsPage() {
           </Link>
         </div>
 
-        <MenuPermissionEditor accounts={accounts} />
+        <MenuPermissionEditor accounts={accounts} employees={employees} />
       </div>
     </div>
   );
