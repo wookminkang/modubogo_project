@@ -1327,6 +1327,155 @@ export async function deleteLeaveRequest(
   if (error) throw new Error(`휴가신청 취소 실패: ${error.message}`);
 }
 
+// ── 직원 업무 할당 (tasks) ────────────────────────────────────
+// leave_requests 와 동일 컨벤션: 비밀정보 없어 anon 클라이언트, RLS 없음, 테이블 없으면 폴백.
+// 권한 방향은 반대 — 관리자가 생성/배정하고 직원은 상태만 전환한다.
+// employees join 금지(RLS) — 관리자 화면은 listEmployees()(service-role)로 이름 매칭.
+
+export type TaskPriority = "high" | "normal" | "low";
+export type TaskStatus = "todo" | "in_progress" | "done";
+
+export interface TaskRow {
+  id: string;
+  employee_id: string;
+  title: string;
+  body: string;
+  priority: TaskPriority;
+  status: TaskStatus;
+  created_at: string;
+  completed_at: string | null;
+}
+
+const TASK_SELECT =
+  "id, employee_id, title, body, priority, status, created_at, completed_at";
+
+// 공통 정렬: 상태(대기→처리중→완료) → 우선순위(높음→낮음) → 최신 배정순
+const TASK_STATUS_RANK: Record<TaskStatus, number> = {
+  todo: 0,
+  in_progress: 1,
+  done: 2,
+};
+const TASK_PRIORITY_RANK: Record<TaskPriority, number> = {
+  high: 0,
+  normal: 1,
+  low: 2,
+};
+
+function sortTasks(rows: TaskRow[]): TaskRow[] {
+  return rows.sort(
+    (a, b) =>
+      TASK_STATUS_RANK[a.status] - TASK_STATUS_RANK[b.status] ||
+      TASK_PRIORITY_RANK[a.priority] - TASK_PRIORITY_RANK[b.priority] ||
+      b.created_at.localeCompare(a.created_at),
+  );
+}
+
+/** 특정 직원에게 배정된 업무 전체. 테이블 없으면 빈 배열. */
+export async function getTasksByEmployee(
+  employeeId: string,
+): Promise<TaskRow[]> {
+  const { data, error } = await supabase
+    .from("tasks")
+    .select(TASK_SELECT)
+    .eq("employee_id", employeeId);
+  if (error) return [];
+  return sortTasks((data ?? []) as TaskRow[]);
+}
+
+/** 특정 시각 이후 배정된(새) 업무 수. seenAt 이 null 이면 전체가 새 업무. 테이블 없으면 0. */
+export async function countTasksAssignedAfter(
+  employeeId: string,
+  seenAt: string | null,
+): Promise<number> {
+  let query = supabase
+    .from("tasks")
+    .select("id", { count: "exact", head: true })
+    .eq("employee_id", employeeId);
+  if (seenAt) query = query.gt("created_at", seenAt);
+
+  const { count, error } = await query;
+  if (error) return 0;
+  return count ?? 0;
+}
+
+/** [관리자] 전체 업무 (필터: 직원). 상태 필터·카운트는 호출부 메모리에서. 테이블 없으면 빈 배열. */
+export async function getAllTasksForAdmin(filters?: {
+  employeeId?: string;
+}): Promise<TaskRow[]> {
+  let query = supabase.from("tasks").select(TASK_SELECT);
+  if (filters?.employeeId) query = query.eq("employee_id", filters.employeeId);
+
+  const { data, error } = await query;
+  if (error) return [];
+  return sortTasks((data ?? []) as TaskRow[]);
+}
+
+/** [관리자] 업무 등록. */
+export async function createTask(input: {
+  employeeId: string;
+  title: string;
+  body: string;
+  priority: TaskPriority;
+  assignedBy: string;
+}): Promise<void> {
+  const { error } = await supabase.from("tasks").insert({
+    employee_id: input.employeeId,
+    title: input.title,
+    body: input.body,
+    priority: input.priority,
+    assigned_by: input.assignedBy,
+    status: "todo",
+  });
+  if (error) throw new Error(`업무 등록 실패: ${error.message}`);
+}
+
+/** [관리자] 업무 수정 (담당자/제목/내용/우선순위 — 상태는 직원 소유라 건드리지 않음). */
+export async function updateTask(
+  id: string,
+  input: {
+    employeeId: string;
+    title: string;
+    body: string;
+    priority: TaskPriority;
+  },
+): Promise<void> {
+  const { error } = await supabase
+    .from("tasks")
+    .update({
+      employee_id: input.employeeId,
+      title: input.title,
+      body: input.body,
+      priority: input.priority,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  if (error) throw new Error(`업무 수정 실패: ${error.message}`);
+}
+
+/** 직원 본인 업무 상태 전환. 소유권을 쿼리 조건에 밀어넣어 타인 업무는 매칭 0건. */
+export async function updateTaskStatus(
+  id: string,
+  employeeId: string,
+  status: TaskStatus,
+): Promise<void> {
+  const { error } = await supabase
+    .from("tasks")
+    .update({
+      status,
+      completed_at: status === "done" ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .eq("employee_id", employeeId);
+  if (error) throw new Error(`업무 상태 변경 실패: ${error.message}`);
+}
+
+/** [관리자] 업무 삭제. */
+export async function deleteTask(id: string): Promise<void> {
+  const { error } = await supabase.from("tasks").delete().eq("id", id);
+  if (error) throw new Error(`업무 삭제 실패: ${error.message}`);
+}
+
 // ── 외주 디자이너 작업 요청서 (design_requests) ─────────────────
 // 관리자가 브리프를 작성하고 디자이너는 공개 링크(/design/{nanoid})로 읽는다.
 // 브리프 텍스트/선택 값은 content(jsonb), 첨부 리소스 메타는 files(jsonb).

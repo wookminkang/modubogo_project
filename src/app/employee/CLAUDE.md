@@ -16,7 +16,7 @@
 | `/employee/leave` | `leave/page.tsx` | 휴가신청 — 기간(시작일~종료일)+사유 신청 폼 + 내 신청 목록(대기중/승인됨/거절됨) | 직원, `force-dynamic` |
 
 - `layout.tsx`: 관리자 `Header`를 쓰지 않는 독립 레이아웃. **로그인 상태면 좌측 사이드바**(`EmployeeSidebar.tsx`, 기본 업무일지/휴가신청 2개 + `employees.allowed_menus` 권한별 확장 메뉴 — 현재 `holiday`=진료일정, `sql/employees_allowed_menus.sql`) + **상단바**(`EmployeeTopBar.tsx`, 아바타+이름 프로필과 로그아웃 — 참고 디자인의 상단 우측 프로필 자리를 재현), 비로그인(로그인/가입 화면)은 단순 센터 레이아웃. 확장 메뉴 권한은 슈퍼관리자가 `/admin/accounts`에서 토글, `/holiday` 가드는 `@/lib/menu-access` 참고.
-- 참고 디자인(사이드바+캘린더 대시보드)의 검색창/알림종/아바타는 실제 기능이 없어 **의도적으로 만들지 않았다** — 페이지 타이틀만 노출.
+- 참고 디자인(사이드바+캘린더 대시보드)의 검색창은 실제 기능이 없어 **의도적으로 만들지 않았다**. 알림종은 이후 실제 기능(새 할당 업무 배지)이 생겨 `TaskAlarmBell.tsx`로 추가됨 — 아래 "할당 업무" 참고.
 - 관리자 쪽 승인/조회 화면은 `/admin/employees`, `/admin/employees/worklogs`, `/admin/employees/leave` (해당 폴더는 `src/app/admin/CLAUDE.md` 참고).
 
 ## 인증 흐름 (admin.ts 미러링, 완전 별도 구현)
@@ -45,6 +45,15 @@
 - 승인/거절: `approveLeaveRequestAction`/`rejectLeaveRequestAction`(관리자 전용, `isAdmin()` 가드) — **승인된 휴가만** `/employee` 캘린더에 "휴가" 칩으로 표시된다(`status==='approved'`인 것만 필터해서 `WorkLogCalendar`에 `leaveRanges`로 넘김).
 - 되돌리기: `revertLeaveRequestAction` — 관리자가 승인/거절을 잘못 눌렀을 때 `status`를 `pending`으로 되돌린다(`decided_at`도 null로 리셋).
 - ⚠️ 관리자 화면(`/admin/employees/leave`)에서 직원 이름을 표시할 때 **`employees`를 anon 클라이언트로 join하면 안 된다** — `employees`는 RLS로 잠겨 있어 이름이 비게 된다(업무일지 관리자 화면에서 실제로 겪은 버그). 반드시 `listEmployees()`(service-role) 결과를 employee_id→name Map으로 만들어 매칭할 것.
+
+## 할당 업무 (tasks)
+
+- 테이블: `tasks` (`sql/tasks.sql`). leave_requests와 동일 컨벤션(RLS 없음, anon 클라이언트, 테이블 없으면 조회 폴백 `[]`). 권한 방향은 반대 — **관리자가 생성/배정하고 직원은 상태만 전환**한다.
+- 상태 3단계: `todo`(대기) → `in_progress`(처리중) → `done`(처리완료, `completed_at` 기록). 우선순위 `high/normal/low`. 마감일·댓글 없음(의도적 스코프 제한).
+- 직원 화면 `/employee/tasks`: 본인 업무만 (`getTasksByEmployee`), **지라 스타일 칸반 보드**(`EmployeeTaskBoard.tsx` — 대기/처리중/처리완료 3컬럼). 카드를 **드래그**해 컬럼 간 이동하면 상태가 바뀌고(HTML5 DnD, 낙관적 오버라이드+실패 롤백+Toast), 터치 등 드래그 불가 환경용으로 카드 하단에 컴팩트 세그먼트도 있다 — 두 경로 모두 `changeStatus()` 한 곳을 지난다. **상태 변경의 employeeId는 세션(`getEmployeeUser()`)에서만** — `updateTaskStatus`가 `.eq("employee_id", ...)`로 소유권을 쿼리에 밀어넣어 타인 업무는 매칭 0건. 관리자 진행 현황 보드는 **보기 전용**(드래그 없음)으로 의도적으로 다르다 — 상태 전환 권한은 직원에게만.
+- **새 업무 알림 배지**: 상단바(`EmployeeTopBar`)의 종 아이콘 `TaskAlarmBell.tsx`("use client") — `employees.tasks_seen_at`(`sql/employees_tasks_seen.sql`, 별도 마이그레이션, **실행 완료**) 이후 `created_at`인 본인 tasks가 있으면 빨간 **N 배지**를 띄운다. 조회는 `getUnseenTaskCountAction`(60초 폴링 + 포커스 재조회, TanStack Query), `/employee/tasks`에 들어오면 `markTasksSeenAction`이 `tasks_seen_at`을 갱신해 배지가 사라진다(종 클릭 시 이 페이지로 이동). 카운트 계산은 `countTasksAssignedAfter`(`@/lib/db`), `tasks_seen_at`이 null이면 전체를 새 업무로 취급. 컬럼 조회가 에러면 0을 돌려줘 마이그레이션 전 배포에도 안전.
+- 관리자 화면 `/admin/employees/tasks`: 등록/인라인 수정(`?edit=<id>`)/삭제(ConfirmToast), 상태 카운트, 직원·상태 필터. 생성/수정/삭제 가드는 `task-actions.ts`의 `requireEmployeesAdmin()`(직원 관리 메뉴 권한). 직원 이름은 `listEmployees()` Map 매칭(anon join 금지).
+- 정렬은 `db.ts`의 `sortTasks()` 한 곳에서: 상태(대기→처리중→완료) → 우선순위(높음→낮음) → 최신 배정순.
 
 ## 연차(휴가 잔여일수) 관리
 

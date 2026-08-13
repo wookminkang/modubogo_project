@@ -1,10 +1,12 @@
 import { logoutEmployee } from "@/lib/employee-actions";
 import type { EmployeeUser } from "@/lib/employee";
+import TaskAlarmBell from "./TaskAlarmBell";
 
-/** 메인 영역 상단바 — 프로필(아바타+이름)과 로그아웃. 참고 디자인의 상단 우측 프로필 영역 자리. */
+/** 메인 영역 상단바 — 알림 종(새 할당 업무 배지)·프로필(아바타+이름)·로그아웃. */
 export default function EmployeeTopBar({ user }: { user: EmployeeUser }) {
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center justify-end gap-3 border-b border-gray-100 bg-white px-6">
+      <TaskAlarmBell />
       <div className="flex items-center gap-2.5">
         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0e299c]/10 text-sm font-bold text-[#0e299c]">
           {user.name.slice(0, 1)}

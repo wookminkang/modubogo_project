@@ -3,11 +3,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Calendar, Plane, Stethoscope } from "lucide-react";
+import { Calendar, Plane, Stethoscope, ListTodo } from "lucide-react";
 
 const NAV = [
   { href: "/employee", label: "업무일지", icon: Calendar },
   { href: "/employee/leave", label: "휴가신청", icon: Plane },
+  { href: "/employee/tasks", label: "할당 업무", icon: ListTodo },
 ];
 
 // employees.allowed_menus 키에 따라 추가 노출되는 확장 메뉴

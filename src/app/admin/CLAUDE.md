@@ -18,6 +18,8 @@
 | `/admin/employees` | `employees/page.tsx` | 직원 가입 승인/거절, 전체 직원 목록 | 필수 |
 | `/admin/employees/worklogs` | `employees/worklogs/page.tsx` | 전체 직원 업무일지 모아보기(직원/월 필터) | 필수 |
 | `/admin/employees/leave` | `employees/leave/page.tsx` | 휴가신청 승인/거절 — 승인 시 직원 캘린더에 반영 | 필수 |
+| `/admin/employees/tasks` | `employees/tasks/page.tsx` | 직원 업무 배정 — 등록 폼 중심 + 배정한 업무 수정/삭제(`AssignedTaskList.tsx`: 제목·내용·담당자 즉시 검색, 직원 필터, 완료 건 접힘). 상태 카운트·상태별 조회는 진행 현황이 담당. 진행 현황 각 행의 "수정"이 `?edit=&#task-` 딥링크로 들어온다 | 필수 |
+| `/admin/employees/progress` | `employees/progress/page.tsx` | 진행 현황 — 지라 스타일 칸반 보드(`AdminTaskBoard.tsx`, 보기 전용·드래그 없음). 직원 필터 칩 즉시 반영, 카드 "수정"은 할당 페이지 딥링크 | 필수 |
 
 - `dashboard`, `alimtalk-logs`는 `export const dynamic = "force-dynamic"` (항상 최신 데이터).
 - `layout.tsx`: 최대 너비 600px, 모바일 우선 레이아웃. **단, `employees/layout.tsx`는 예외** — 아래 참고.
@@ -49,7 +51,7 @@ report/ledger 등은 건드리지 않음 — **직원 관련 화면만** 요청�
 
 - `@/lib/admin`의 `isAdmin()`로 검증. 미인증 시 `/admin/login`으로 리다이렉트.
 - `@/lib/admin-actions`의 `loginAdmin()`/`logoutAdmin()` 서버 액션.
-- 쿠키 `admin_session`(httpOnly, 7일)에 `admin_users.id`를 서명해 저장. 비밀번호는 `@/lib/auth-crypto`의
+- 쿠키 `admin_session`(httpOnly)에 `admin_users.id`를 서명해 저장. 로그인 폼의 "로그인 상태 유지" 체크 시 5일 유지, 미체크 시 세션 쿠키(브라우저 종료 시 만료). 비밀번호는 `@/lib/auth-crypto`의
   scrypt 해시(`hashPassword`/`verifyPassword`)로 검증 — 평문 비교 아님.
 - `employees`(직원 업무일지)는 **완전히 별도 계정 체계**(`admin_users`와 무관). 인증은
   `@/lib/employee`·`employee-actions.ts`, 쿠키는 `employee_session`으로 분리되어 있다.

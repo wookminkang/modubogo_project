@@ -42,6 +42,14 @@ export default async function AdminLoginPage({ searchParams }: Props) {
             autoComplete="current-password"
             className="w-full h-11 px-4 rounded-xl border border-gray-200 text-gray-900 text-sm outline-none focus:border-[#0e299c] focus:ring-2 focus:ring-[#0e299c]/20"
           />
+          <label className="flex items-center gap-2 px-1 py-0.5 cursor-pointer select-none w-fit">
+            <input
+              type="checkbox"
+              name="remember"
+              className="h-4 w-4 rounded border-gray-300 accent-[#0e299c]"
+            />
+            <span className="text-sm text-gray-600">로그인 상태 유지</span>
+          </label>
           {error && (
             <p className="text-xs text-red-500">
               아이디 또는 비밀번호가 올바르지 않습니다.
