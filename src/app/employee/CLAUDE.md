@@ -49,7 +49,8 @@
 ## 할당 업무 (tasks)
 
 - 테이블: `tasks` (`sql/tasks.sql`). leave_requests와 동일 컨벤션(RLS 없음, anon 클라이언트, 테이블 없으면 조회 폴백 `[]`). 권한 방향은 반대 — **관리자가 생성/배정하고 직원은 상태만 전환**한다.
-- 상태 3단계: `todo`(대기) → `in_progress`(처리중) → `done`(처리완료, `completed_at` 기록). 우선순위 `high/normal/low`. 마감일·댓글 없음(의도적 스코프 제한).
+- 상태 3단계: `todo`(대기) → `in_progress`(처리중) → `done`(처리완료, `completed_at` 기록). 우선순위 `high/normal/low`. 마감일·댓글 스레드 없음(의도적 스코프 제한).
+- **직원 메모**: `tasks.employee_memo`(text, 기본 '', `sql/tasks_employee_memo.sql` — 별도 마이그레이션, **`TASK_SELECT`에 포함되므로 배포 전 필수 실행**). 직원이 칸반 카드에서 인라인으로 작성/수정(`updateTaskMemoAction` — employeeId 는 세션에서만, 1,000자 제한, 낙관적 반영+롤백), 관리자 진행 현황 보드·할당 목록에는 "직원 메모" 앰버 블록으로 **읽기 전용** 표시. 업무당 1개 자유 텍스트(댓글 스레드 아님).
 - 직원 화면 `/employee/tasks`: 본인 업무만 (`getTasksByEmployee`), **지라 스타일 칸반 보드**(`EmployeeTaskBoard.tsx` — 대기/처리중/처리완료 3컬럼). 카드를 **드래그**해 컬럼 간 이동하면 상태가 바뀌고(HTML5 DnD, 낙관적 오버라이드+실패 롤백+Toast), 터치 등 드래그 불가 환경용으로 카드 하단에 컴팩트 세그먼트도 있다 — 두 경로 모두 `changeStatus()` 한 곳을 지난다. **상태 변경의 employeeId는 세션(`getEmployeeUser()`)에서만** — `updateTaskStatus`가 `.eq("employee_id", ...)`로 소유권을 쿼리에 밀어넣어 타인 업무는 매칭 0건. 관리자 진행 현황 보드는 **보기 전용**(드래그 없음)으로 의도적으로 다르다 — 상태 전환 권한은 직원에게만.
 - **새 업무 알림 배지**: 상단바(`EmployeeTopBar`)의 종 아이콘 `TaskAlarmBell.tsx`("use client") — `employees.tasks_seen_at`(`sql/employees_tasks_seen.sql`, 별도 마이그레이션, **실행 완료**) 이후 `created_at`인 본인 tasks가 있으면 빨간 **N 배지**를 띄운다. 조회는 `getUnseenTaskCountAction`(60초 폴링 + 포커스 재조회, TanStack Query), `/employee/tasks`에 들어오면 `markTasksSeenAction`이 `tasks_seen_at`을 갱신해 배지가 사라진다(종 클릭 시 이 페이지로 이동). 카운트 계산은 `countTasksAssignedAfter`(`@/lib/db`), `tasks_seen_at`이 null이면 전체를 새 업무로 취급. 컬럼 조회가 에러면 0을 돌려줘 마이그레이션 전 배포에도 안전.
 - 관리자 화면 `/admin/employees/tasks`: 등록/인라인 수정(`?edit=<id>`)/삭제(ConfirmToast), 상태 카운트, 직원·상태 필터. 생성/수정/삭제 가드는 `task-actions.ts`의 `requireEmployeesAdmin()`(직원 관리 메뉴 권한). 직원 이름은 `listEmployees()` Map 매칭(anon join 금지).

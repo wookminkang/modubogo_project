@@ -7,6 +7,7 @@ import {
   createTask,
   updateTask,
   updateTaskStatus,
+  updateTaskEmployeeMemo,
   deleteTask,
   type TaskPriority,
   type TaskStatus,
@@ -81,6 +82,33 @@ export async function deleteTaskAction(
   }
   revalidatePath(ADMIN_PATH);
   revalidatePath(EMPLOYEE_PATH);
+  return { ok: true };
+}
+
+/**
+ * [직원] 본인 업무 메모 저장. 상태 전환과 동일 원칙 —
+ * employeeId 는 세션에서만, 소유권은 쿼리 조건으로 강제.
+ */
+export async function updateTaskMemoAction(
+  id: string,
+  memo: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const employee = await getEmployeeUser();
+  if (!employee) return { ok: false, error: "로그인이 필요합니다." };
+  if (!id) return { ok: false, error: "잘못된 요청입니다." };
+
+  const trimmed = memo.trim();
+  if (trimmed.length > 1000)
+    return { ok: false, error: "메모는 1,000자까지 저장할 수 있어요." };
+
+  try {
+    await updateTaskEmployeeMemo(id, employee.id, trimmed);
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "저장 실패" };
+  }
+  revalidatePath(EMPLOYEE_PATH);
+  revalidatePath(ADMIN_PATH);
+  revalidatePath("/admin/employees/progress");
   return { ok: true };
 }
 

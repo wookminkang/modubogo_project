@@ -117,6 +117,16 @@ export default function AdminTaskBoard({
                           {t.body}
                         </p>
                       )}
+                      {t.employee_memo && (
+                        <div className="mt-2 rounded-lg bg-amber-50 border border-amber-100 px-2.5 py-2">
+                          <span className="block text-[10px] font-bold text-amber-600">
+                            직원 메모
+                          </span>
+                          <span className="block text-xs text-gray-700 mt-0.5 whitespace-pre-wrap">
+                            {t.employee_memo}
+                          </span>
+                        </div>
+                      )}
                       <div className="mt-2.5 flex items-center gap-1.5">
                         <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#0e299c]/10 text-[#0e299c] text-[10px] font-bold shrink-0">
                           {(nameById.get(t.employee_id) ?? "?").charAt(0)}

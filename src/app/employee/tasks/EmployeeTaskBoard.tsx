@@ -8,7 +8,10 @@ import {
   TASK_PRIORITY_LABEL as PRIORITY_LABEL,
   TASK_PRIORITY_CLASS as PRIORITY_CLASS,
 } from "@/lib/task-ui";
-import { updateTaskStatusAction } from "@/lib/task-actions";
+import {
+  updateTaskStatusAction,
+  updateTaskMemoAction,
+} from "@/lib/task-actions";
 import Toast from "@/components/Toast";
 
 const COLUMNS: { status: TaskStatus; dot: string }[] = [
@@ -32,7 +35,30 @@ export default function EmployeeTaskBoard({ tasks }: { tasks: TaskRow[] }) {
   const [toast, setToast] = useState("");
   const [, startTransition] = useTransition();
 
+  // 메모 — 편집 중인 카드 id + 입력값 + 낙관적 오버라이드 (상태와 동일 패턴)
+  const [memoEditId, setMemoEditId] = useState<string | null>(null);
+  const [memoDraft, setMemoDraft] = useState("");
+  const [memoOverrides, setMemoOverrides] = useState<Record<string, string>>({});
+
   const statusOf = (t: TaskRow): TaskStatus => overrides[t.id] ?? t.status;
+  const memoOf = (t: TaskRow): string => memoOverrides[t.id] ?? t.employee_memo;
+
+  const saveMemo = (t: TaskRow) => {
+    const prev = memoOf(t);
+    const next = memoDraft.trim();
+    setMemoEditId(null);
+    if (next === prev) return;
+    setMemoOverrides((o) => ({ ...o, [t.id]: next })); // 낙관적 반영
+    startTransition(async () => {
+      const result = await updateTaskMemoAction(t.id, next);
+      if (result.ok) {
+        setToast(next ? "메모를 저장했어요" : "메모를 지웠어요");
+      } else {
+        setMemoOverrides((o) => ({ ...o, [t.id]: prev })); // 실패 시 롤백
+        setToast(result.error ?? "메모 저장에 실패했어요");
+      }
+    });
+  };
 
   const changeStatus = (taskId: string, prev: TaskStatus, next: TaskStatus) => {
     if (next === prev) return;
@@ -92,10 +118,12 @@ export default function EmployeeTaskBoard({ tasks }: { tasks: TaskRow[] }) {
                 ) : (
                   list.map((t) => {
                     const current = statusOf(t);
+                    const memo = memoOf(t);
+                    const editingMemo = memoEditId === t.id;
                     return (
                       <li
                         key={t.id}
-                        draggable
+                        draggable={!editingMemo}
                         onDragStart={(e) => {
                           e.dataTransfer.setData("text/plain", t.id);
                           e.dataTransfer.effectAllowed = "move";
@@ -129,6 +157,65 @@ export default function EmployeeTaskBoard({ tasks }: { tasks: TaskRow[] }) {
                             {t.body}
                           </p>
                         )}
+
+                        {/* 직원 메모 — 카드에서 바로 작성/수정 */}
+                        {editingMemo ? (
+                          <div className="mt-2 flex flex-col gap-1.5">
+                            <textarea
+                              value={memoDraft}
+                              onChange={(e) => setMemoDraft(e.target.value)}
+                              rows={3}
+                              maxLength={1000}
+                              autoFocus
+                              placeholder="진행 상황이나 특이사항을 메모하세요"
+                              className="w-full px-2.5 py-2 rounded-lg border border-gray-200 text-xs text-gray-700 outline-none focus:border-[#0e299c] resize-y"
+                            />
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => setMemoEditId(null)}
+                                className="h-6 px-2 rounded-md text-[11px] font-semibold text-gray-400 hover:text-gray-600 transition-colors"
+                              >
+                                취소
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => saveMemo(t)}
+                                className="h-6 px-2.5 rounded-md text-[11px] font-semibold text-white bg-[#0e299c] hover:bg-[#0b2180] transition-colors"
+                              >
+                                저장
+                              </button>
+                            </div>
+                          </div>
+                        ) : memo ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMemoDraft(memo);
+                              setMemoEditId(t.id);
+                            }}
+                            className="mt-2 w-full text-left rounded-lg bg-amber-50 border border-amber-100 px-2.5 py-2 hover:border-amber-200 transition-colors"
+                          >
+                            <span className="block text-[10px] font-bold text-amber-600">
+                              메모
+                            </span>
+                            <span className="block text-xs text-gray-700 mt-0.5 whitespace-pre-wrap">
+                              {memo}
+                            </span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMemoDraft("");
+                              setMemoEditId(t.id);
+                            }}
+                            className="mt-2 text-[11px] font-semibold text-gray-400 hover:text-[#0e299c] transition-colors"
+                          >
+                            + 메모 추가
+                          </button>
+                        )}
+
                         {/* 드래그 대체 경로 — 터치/키보드용 컴팩트 상태 전환 */}
                         <div className="mt-2.5 flex items-center gap-0.5 rounded-lg bg-gray-50 p-0.5 w-fit">
                           {COLUMNS.map(({ status: s }) => (

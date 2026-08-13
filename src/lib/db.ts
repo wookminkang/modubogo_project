@@ -1342,12 +1342,14 @@ export interface TaskRow {
   body: string;
   priority: TaskPriority;
   status: TaskStatus;
+  /** 직원이 남기는 자유 메모 (sql/tasks_employee_memo.sql). 빈 문자열 = 없음 */
+  employee_memo: string;
   created_at: string;
   completed_at: string | null;
 }
 
 const TASK_SELECT =
-  "id, employee_id, title, body, priority, status, created_at, completed_at";
+  "id, employee_id, title, body, priority, status, employee_memo, created_at, completed_at";
 
 // 공통 정렬: 상태(대기→처리중→완료) → 우선순위(높음→낮음) → 최신 배정순
 const TASK_STATUS_RANK: Record<TaskStatus, number> = {
@@ -1468,6 +1470,20 @@ export async function updateTaskStatus(
     .eq("id", id)
     .eq("employee_id", employeeId);
   if (error) throw new Error(`업무 상태 변경 실패: ${error.message}`);
+}
+
+/** 직원 본인 업무 메모 저장. 상태 전환과 동일하게 소유권을 쿼리 조건에 밀어넣는다. */
+export async function updateTaskEmployeeMemo(
+  id: string,
+  employeeId: string,
+  memo: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from("tasks")
+    .update({ employee_memo: memo, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("employee_id", employeeId);
+  if (error) throw new Error(`업무 메모 저장 실패: ${error.message}`);
 }
 
 /** [관리자] 업무 삭제. */
