@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireSuperAdmin, type MenuKey } from "@/lib/admin";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { isEmployeeMenuKey } from "@/lib/employee-menus";
 
 /** 관리자 계정의 제한 메뉴 권한을 켜거나 끈다 (슈퍼관리자 전용). */
 export async function toggleMenuPermission(
@@ -30,6 +31,7 @@ export async function toggleMenuPermission(
   if (error) return { ok: false, error: "저장에 실패했습니다." };
 
   revalidatePath("/admin/accounts");
+  revalidatePath("/admin/employees");
   return { ok: true };
 }
 
@@ -40,6 +42,7 @@ export async function toggleEmployeeMenuPermission(
   granted: boolean
 ): Promise<{ ok: boolean; error?: string }> {
   await requireSuperAdmin();
+  if (!isEmployeeMenuKey(menu)) return { ok: false, error: "알 수 없는 메뉴입니다." };
 
   const { data, error: fetchError } = await supabaseAdmin
     .from("employees")
@@ -59,5 +62,6 @@ export async function toggleEmployeeMenuPermission(
   if (error) return { ok: false, error: "저장에 실패했습니다." };
 
   revalidatePath("/admin/accounts");
+  revalidatePath("/admin/employees");
   return { ok: true };
 }

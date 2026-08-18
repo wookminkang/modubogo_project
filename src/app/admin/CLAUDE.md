@@ -15,7 +15,7 @@
 | `/admin/alimtalk-logs` | `alimtalk-logs/page.tsx` | 알림톡 발송 이력 (성공/실패 탭, `?status=`) | 필수 |
 | `/admin/category-colors` | `category-colors/page.tsx` | 카테고리 배경/텍스트 색상 CRUD | 필수 |
 | `/admin/accounts` | `accounts/page.tsx` | 관리자 계정별 메뉴 권한 토글 (현재: 진료일정) | 슈퍼 전용 |
-| `/admin/employees` | `employees/page.tsx` | 직원 가입 승인/거절, 전체 직원 목록 | 필수 |
+| `/admin/employees` | `employees/page.tsx` | 직원 가입 승인/거절, 전체 직원 목록(연차 보정 + **메뉴 권한 체크박스** `EmployeeMenuCheckboxes.tsx`) | 필수 |
 | `/admin/employees/worklogs` | `employees/worklogs/page.tsx` | 전체 직원 업무일지 모아보기(직원/월 필터) | 필수 |
 | `/admin/employees/leave` | `employees/leave/page.tsx` | 휴가신청 승인/거절 — 승인 시 직원 캘린더에 반영 | 필수 |
 | `/admin/employees/tasks` | `employees/tasks/page.tsx` | 직원 업무 배정 — 등록 폼 중심 + 배정한 업무 수정/삭제(`AssignedTaskList.tsx`: 제목·내용·담당자 즉시 검색, 직원 필터, 완료 건 접힘). 상태 카운트·상태별 조회는 진행 현황이 담당. 진행 현황 각 행의 "수정"이 `?edit=&#task-` 딥링크로 들어온다 | 필수 |
@@ -70,6 +70,8 @@ report/ledger 등은 건드리지 않음 — **직원 관련 화면만** 요청�
 - **직원**(`employees.allowed_menus`): 직원 사이드바 확장 메뉴(현재 `holiday`). 권한 있으면 `EmployeeSidebar`에 진료일정이 추가되고 `/holiday` 접근 허용.
 - `/holiday` 가드는 두 체계를 모두 받는 `@/lib/menu-access`의 `getHolidayAccess()`/`hasHolidayAccess()`를 쓴다 (관리자 or 권한 있는 직원).
 - 토글 UI: `/admin/accounts` (super 전용) — 관리자 섹션(8개 메뉴) + 직원 섹션(진료일정).
+- 직원 권한은 **`/admin/employees` 직원 카드의 체크박스**로도 설정 가능(`EmployeeMenuCheckboxes.tsx`, 체크 즉시 저장·실패 롤백). 가드는 `setEmployeeMenusAction`(`@/lib/employee-actions`)의 `canAccessMenu(admin, "employees")` — 직원 관리 권한이 있는 staff도 가능(accounts 쪽은 super 전용). 두 화면 모두 같은 `employees.allowed_menus`를 쓰고 서로 revalidate한다.
+- 직원 메뉴 키 정의는 `@/lib/employee-menus`의 `EMPLOYEE_MENUS`가 **단일 출처** — 새 직원 메뉴를 열려면 여기에 추가 + `EmployeeSidebar.tsx` EXTRA_NAV에 경로/아이콘 매칭 + 해당 페이지 가드 추가.
 - SQL: `sql/admin_users_allowed_menus.sql`, `sql/employees_allowed_menus.sql`
 
 ## 작업 시 주의

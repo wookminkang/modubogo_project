@@ -27,6 +27,8 @@ export interface EmployeeRow {
   status: EmployeeStatus;
   annual_leave_days: number;
   leave_adjustment_days: number;
+  /** 직원에게 열어준 확장 메뉴 키 목록 (`@/lib/employee-menus` EMPLOYEE_MENUS 참고). */
+  allowed_menus: string[];
   created_at: string;
 }
 
@@ -70,10 +72,12 @@ export async function listEmployees(): Promise<EmployeeRow[]> {
   const { data, error } = await supabaseAdmin
     .from("employees")
     .select(
-      "id, username, name, phone, email, hire_date, status, annual_leave_days, leave_adjustment_days, created_at",
+      "id, username, name, phone, email, hire_date, status, annual_leave_days, leave_adjustment_days, allowed_menus, created_at",
     )
     .order("created_at", { ascending: true });
 
   if (error || !data) return [];
-  return data as EmployeeRow[];
+  return (data as (Omit<EmployeeRow, "allowed_menus"> & { allowed_menus: string[] | null })[]).map(
+    (row) => ({ ...row, allowed_menus: row.allowed_menus ?? [] }),
+  );
 }

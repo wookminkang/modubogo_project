@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Toast from "@/components/Toast";
 import type { MenuKey } from "@/lib/admin";
+import { EMPLOYEE_MENUS } from "@/lib/employee-menus";
 import { toggleMenuPermission, toggleEmployeeMenuPermission } from "./actions";
 
 export interface AccountRow {
@@ -30,11 +31,6 @@ const ADMIN_MENUS: { key: MenuKey; label: string }[] = [
   { key: "site-analysis", label: "사이트 분석" },
   { key: "geo-check", label: "GEO 체크" },
   { key: "employees", label: "직원 관리" },
-];
-
-// 직원 사이드바 확장 메뉴 — EmployeeSidebar.tsx EXTRA_NAV와 키를 맞춘다.
-const EMPLOYEE_MENUS: { key: string; label: string }[] = [
-  { key: "holiday", label: "진료일정" },
 ];
 
 function ToggleSwitch({

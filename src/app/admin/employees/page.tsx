@@ -8,6 +8,7 @@ import {
 } from "@/lib/employee-actions";
 import { getAllLeaveRequestsForAdmin } from "@/lib/db";
 import { leaveAmount, computeEntitledLeaveDays } from "@/lib/utils";
+import EmployeeMenuCheckboxes from "./EmployeeMenuCheckboxes";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +48,7 @@ export default async function AdminEmployeesPage() {
       <div>
         <h1 className="text-2xl font-bold text-[#0e299c]">직원 승인</h1>
         <p className="text-sm text-gray-400 mt-0.5">
-          직원 가입을 승인하고 연차를 관리할 수 있어요
+          직원 가입을 승인하고 연차·메뉴 권한을 관리할 수 있어요
         </p>
       </div>
 
@@ -181,6 +182,14 @@ export default async function AdminEmployeesPage() {
                         {entitled}일 · {thisYear}년 {used}일 사용 ({remaining}일 남음)
                       </span>
                     </form>
+                  )}
+
+                  {emp.status === "approved" && (
+                    <EmployeeMenuCheckboxes
+                      employeeId={emp.id}
+                      employeeName={emp.name}
+                      initialMenus={emp.allowed_menus}
+                    />
                   )}
                 </li>
               );

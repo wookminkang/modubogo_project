@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { hashPassword, verifyPassword, signSession } from "./auth-crypto";
 import { supabaseAdmin } from "./supabaseAdmin";
-import { isAdmin } from "./admin";
+import { isAdmin, getAdminUser, canAccessMenu } from "./admin";
+import { isEmployeeMenuKey } from "./employee-menus";
 
 /**
  * 직원 회원가입. username 중복이면 에러로 되돌아간다.
@@ -141,4 +142,32 @@ export async function updateLeaveQuotaAction(formData: FormData) {
   if (error) throw new Error(`연차 수정 실패: ${error.message}`);
 
   revalidatePath("/admin/employees");
+}
+
+/**
+ * 직원 확장 메뉴 권한을 통째로 저장한다 (직원 관리 메뉴 권한이 있는 관리자).
+ * `/admin/employees` 카드의 체크박스에서 호출 — 알 수 없는 키는 걸러내고 정의된 키만 저장.
+ * (슈퍼관리자 전용 토글은 `src/app/admin/accounts/actions.ts` 참고 — 같은 컬럼을 다룬다.)
+ */
+export async function setEmployeeMenusAction(
+  employeeId: string,
+  menus: string[],
+): Promise<{ ok: boolean; error?: string }> {
+  const admin = await getAdminUser();
+  if (!admin || !canAccessMenu(admin, "employees")) {
+    return { ok: false, error: "권한이 없습니다." };
+  }
+  if (!employeeId) return { ok: false, error: "직원을 찾을 수 없습니다." };
+
+  const cleaned = Array.from(new Set(menus.filter(isEmployeeMenuKey)));
+  const { error } = await supabaseAdmin
+    .from("employees")
+    .update({ allowed_menus: cleaned })
+    .eq("id", employeeId)
+    .eq("status", "approved");
+  if (error) return { ok: false, error: "저장에 실패했습니다." };
+
+  revalidatePath("/admin/employees");
+  revalidatePath("/admin/accounts");
+  return { ok: true };
 }
