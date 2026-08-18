@@ -1279,6 +1279,101 @@ export async function getAllLeaveRequestsForAdmin(filters?: {
   );
 }
 
+// ───────────────────────── 팀 캘린더 일정 (team_events) ─────────────────────────
+
+export type TeamEventCategory = "meeting" | "client" | "important" | "etc";
+
+export interface TeamEvent {
+  id: string;
+  title: string;
+  event_date: string; // 'YYYY-MM-DD'
+  start_time: string | null; // 'HH:mm'
+  end_time: string | null;
+  category: TeamEventCategory;
+  memo: string;
+  created_by: string; // employees.id
+  created_at: string;
+  updated_at: string;
+}
+
+const TEAM_EVENT_SELECT =
+  "id, title, event_date, start_time, end_time, category, memo, created_by, created_at, updated_at";
+
+/** 특정 월(YYYY-MM)의 팀 일정 전체 (날짜→시작시간 순). 테이블 없으면 빈 배열. */
+export async function getTeamEventsForMonth(month: string): Promise<TeamEvent[]> {
+  const [y, m] = month.split("-").map(Number);
+  const start = `${month}-01`;
+  const end = `${month}-${pad(new Date(y, m, 0).getDate())}`;
+  const { data, error } = await supabase
+    .from("team_events")
+    .select(TEAM_EVENT_SELECT)
+    .gte("event_date", start)
+    .lte("event_date", end)
+    .order("event_date", { ascending: true })
+    .order("start_time", { ascending: true, nullsFirst: true })
+    .order("created_at", { ascending: true });
+  if (error) return [];
+  return (data ?? []) as TeamEvent[];
+}
+
+export interface TeamEventInput {
+  title: string;
+  eventDate: string;
+  startTime: string | null;
+  endTime: string | null;
+  category: TeamEventCategory;
+  memo: string;
+}
+
+export async function createTeamEvent(createdBy: string, input: TeamEventInput): Promise<void> {
+  const { error } = await supabase.from("team_events").insert({
+    title: input.title,
+    event_date: input.eventDate,
+    start_time: input.startTime,
+    end_time: input.endTime,
+    category: input.category,
+    memo: input.memo,
+    created_by: createdBy,
+  });
+  if (error) throw new Error(`팀 일정 등록 실패: ${error.message}`);
+}
+
+/** 작성자 본인 것만 수정 — created_by 를 쿼리 조건으로 강제 (타인 일정은 매칭 0건). */
+export async function updateTeamEvent(
+  id: string,
+  createdBy: string,
+  input: TeamEventInput,
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("team_events")
+    .update({
+      title: input.title,
+      event_date: input.eventDate,
+      start_time: input.startTime,
+      end_time: input.endTime,
+      category: input.category,
+      memo: input.memo,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .eq("created_by", createdBy)
+    .select("id");
+  if (error) throw new Error(`팀 일정 수정 실패: ${error.message}`);
+  return (data?.length ?? 0) > 0;
+}
+
+/** 작성자 본인 것만 삭제. */
+export async function deleteTeamEvent(id: string, createdBy: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("team_events")
+    .delete()
+    .eq("id", id)
+    .eq("created_by", createdBy)
+    .select("id");
+  if (error) throw new Error(`팀 일정 삭제 실패: ${error.message}`);
+  return (data?.length ?? 0) > 0;
+}
+
 /** 휴가신청 등록. */
 export async function createLeaveRequest(
   employeeId: string,

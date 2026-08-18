@@ -14,9 +14,9 @@
 | `/employee/login` | `login/page.tsx` | 로그인. pending/rejected 상태면 별도 에러 메시지 | 공개 |
 | `/employee` | `page.tsx` + `WorkLogCalendar.tsx` | 업무일지 — **월 캘린더 그리드**, 날짜 클릭 시 옆 패널에서 자유 텍스트 작성·저장 | 직원, `force-dynamic` |
 | `/employee/leave` | `leave/page.tsx` | 휴가신청 — 기간(시작일~종료일)+사유 신청 폼 + 내 신청 목록(대기중/승인됨/거절됨) | 직원, `force-dynamic` |
-| `/employee/team-leave` | `team-leave/page.tsx` + `TeamLeaveCalendar.tsx` | **팀 휴가** — 전 직원 휴가 월 캘린더(읽기 전용, 서버 컴포넌트). 승인=직원별 색 칩, 대기=점선 회색 칩, 반차 표기, 내 휴가 테두리 강조. 우측에 이번 달 목록. **사유는 노출하지 않음**(개인정보). 이름은 `listEmployees()` Map 매칭(anon join 금지 규칙 동일) | 직원, `force-dynamic` |
+| `/employee/team-calendar` | `team-calendar/page.tsx` + `TeamCalendar.tsx`("use client") + `team-calendar-types.ts` | **팀 캘린더** — 전 직원 휴가(주 단위 연속 막대) + 팀 일정(회의/미팅/중요/기타 칩). 날짜 클릭 → 우측 사이드 패널에 그날 휴가·일정, 일정 등록/수정/삭제(작성자만). 아래 "팀 캘린더" 참고 | 직원, `force-dynamic` |
 
-- `layout.tsx`: 관리자 `Header`를 쓰지 않는 독립 레이아웃. **로그인 상태면 좌측 사이드바**(`EmployeeSidebar.tsx`, 기본 업무일지/휴가신청/팀 휴가/할당 업무 4개 + `employees.allowed_menus` 권한별 확장 메뉴 — 현재 `holiday`=진료일정, `sql/employees_allowed_menus.sql`) + **상단바**(`EmployeeTopBar.tsx`, 아바타+이름 프로필과 로그아웃 — 참고 디자인의 상단 우측 프로필 자리를 재현), 비로그인(로그인/가입 화면)은 단순 센터 레이아웃. 확장 메뉴 권한은 슈퍼관리자가 `/admin/accounts`에서 토글하거나, 직원 관리 권한 관리자가 `/admin/employees` 직원 카드 체크박스로 설정(`EmployeeMenuCheckboxes.tsx`). 메뉴 키 정의는 `@/lib/employee-menus`(EMPLOYEE_MENUS) 단일 출처. `/holiday` 가드는 `@/lib/menu-access` 참고.
+- `layout.tsx`: 관리자 `Header`를 쓰지 않는 독립 레이아웃. **로그인 상태면 좌측 사이드바**(`EmployeeSidebar.tsx`, 기본 업무일지/휴가신청/팀 캘린더/할당 업무 4개 + `employees.allowed_menus` 권한별 확장 메뉴 — 현재 `holiday`=진료일정, `sql/employees_allowed_menus.sql`) + **상단바**(`EmployeeTopBar.tsx`, 아바타+이름 프로필과 로그아웃 — 참고 디자인의 상단 우측 프로필 자리를 재현), 비로그인(로그인/가입 화면)은 단순 센터 레이아웃. 확장 메뉴 권한은 슈퍼관리자가 `/admin/accounts`에서 토글하거나, 직원 관리 권한 관리자가 `/admin/employees` 직원 카드 체크박스로 설정(`EmployeeMenuCheckboxes.tsx`). 메뉴 키 정의는 `@/lib/employee-menus`(EMPLOYEE_MENUS) 단일 출처. `/holiday` 가드는 `@/lib/menu-access` 참고.
 - 참고 디자인(사이드바+캘린더 대시보드)의 검색창은 실제 기능이 없어 **의도적으로 만들지 않았다**. 알림종은 이후 실제 기능(새 할당 업무 배지)이 생겨 `TaskAlarmBell.tsx`로 추가됨 — 아래 "할당 업무" 참고.
 - 관리자 쪽 승인/조회 화면은 `/admin/employees`, `/admin/employees/worklogs`, `/admin/employees/leave` (해당 폴더는 `src/app/admin/CLAUDE.md` 참고).
 
@@ -56,6 +56,15 @@
 - **새 업무 알림 배지**: 상단바(`EmployeeTopBar`)의 종 아이콘 `TaskAlarmBell.tsx`("use client") — `employees.tasks_seen_at`(`sql/employees_tasks_seen.sql`, 별도 마이그레이션, **실행 완료**) 이후 `created_at`인 본인 tasks가 있으면 빨간 **N 배지**를 띄운다. 조회는 `getUnseenTaskCountAction`(60초 폴링 + 포커스 재조회, TanStack Query), `/employee/tasks`에 들어오면 `markTasksSeenAction`이 `tasks_seen_at`을 갱신해 배지가 사라진다(종 클릭 시 이 페이지로 이동). 카운트 계산은 `countTasksAssignedAfter`(`@/lib/db`), `tasks_seen_at`이 null이면 전체를 새 업무로 취급. 컬럼 조회가 에러면 0을 돌려줘 마이그레이션 전 배포에도 안전.
 - 관리자 화면 `/admin/employees/tasks`: 등록/인라인 수정(`?edit=<id>`)/삭제(ConfirmToast), 상태 카운트, 직원·상태 필터. 생성/수정/삭제 가드는 `task-actions.ts`의 `requireEmployeesAdmin()`(직원 관리 메뉴 권한). 직원 이름은 `listEmployees()` Map 매칭(anon join 금지).
 - 정렬은 `db.ts`의 `sortTasks()` 한 곳에서: 상태(대기→처리중→완료) → 우선순위(높음→낮음) → 최신 배정순.
+
+## 팀 캘린더 (team_events + 휴가 통합 보기)
+
+- 테이블: `team_events` (`sql/team_events.sql`) — 제목/날짜/시작·종료시간(`HH:mm` text, 없으면 종일)/카테고리(`meeting|client|important|etc`)/메모/`created_by`(employees.id). leave_requests 와 동일 컨벤션(RLS 없음, anon 클라이언트, 테이블 없으면 조회 폴백 `[]`).
+- 조회: `getTeamEventsForMonth(month)`(`@/lib/db`) — 월 단위만. 휴가는 `getAllLeaveRequestsForAdmin()`에서 거절 제외·이번 달 겹침만 필터해 `TeamLeaveItem`으로 변환(사유는 클라이언트에 **안 넘김**).
+- 액션(`@/lib/team-event-actions`, `"use server"`): `createTeamEventAction`/`updateTeamEventAction`/`deleteTeamEventAction` — 작성자는 세션 직원, **수정/삭제는 `created_by` 를 DB 쿼리 조건으로 강제**(타인 일정은 매칭 0건 → "본인이 등록한 일정만" 에러). 값 검증(`normalize`)은 서버에서: 제목 100자, 메모 1,000자, 종료<시작 거부, 시작 없으면 종료 무시.
+- UI(`TeamCalendar.tsx`): 휴가는 주 단위 CSS grid 연속 막대(주 넘김 시 "(이어짐)", 겹치면 레인 자동 배정), 일정은 날짜 칸 안 칩(최대 3개 + "+N개 더"). 날짜 버튼 클릭 → 사이드 패널(view/create/edit 모드), 삭제는 `ConfirmToast`, 결과는 `Toast`. 저장 후 `revalidatePath` 로 서버 데이터가 갱신되며 선택 날짜는 폼의 날짜로 이동.
+- 색상: 휴가 막대는 직원 인덱스별 PALETTE 순환, 일정 카테고리 색은 `team-calendar-types.ts` `CATEGORY_META` 한 곳에서 관리.
+- 관리자 쪽 팀 캘린더 화면은 아직 없다(스코프 밖). 필요하면 같은 컴포넌트를 `/admin/employees` 아래에 재사용하되, 액션의 세션 가드(직원 전용)를 관리자도 통과하도록 넓혀야 한다.
 
 ## 연차(휴가 잔여일수) 관리
 
