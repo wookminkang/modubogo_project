@@ -14,8 +14,9 @@
 | `/employee/login` | `login/page.tsx` | 로그인. pending/rejected 상태면 별도 에러 메시지 | 공개 |
 | `/employee` | `page.tsx` + `WorkLogCalendar.tsx` | 업무일지 — **월 캘린더 그리드**, 날짜 클릭 시 옆 패널에서 자유 텍스트 작성·저장 | 직원, `force-dynamic` |
 | `/employee/leave` | `leave/page.tsx` | 휴가신청 — 기간(시작일~종료일)+사유 신청 폼 + 내 신청 목록(대기중/승인됨/거절됨) | 직원, `force-dynamic` |
+| `/employee/team-leave` | `team-leave/page.tsx` + `TeamLeaveCalendar.tsx` | **팀 휴가** — 전 직원 휴가 월 캘린더(읽기 전용, 서버 컴포넌트). 승인=직원별 색 칩, 대기=점선 회색 칩, 반차 표기, 내 휴가 테두리 강조. 우측에 이번 달 목록. **사유는 노출하지 않음**(개인정보). 이름은 `listEmployees()` Map 매칭(anon join 금지 규칙 동일) | 직원, `force-dynamic` |
 
-- `layout.tsx`: 관리자 `Header`를 쓰지 않는 독립 레이아웃. **로그인 상태면 좌측 사이드바**(`EmployeeSidebar.tsx`, 기본 업무일지/휴가신청 2개 + `employees.allowed_menus` 권한별 확장 메뉴 — 현재 `holiday`=진료일정, `sql/employees_allowed_menus.sql`) + **상단바**(`EmployeeTopBar.tsx`, 아바타+이름 프로필과 로그아웃 — 참고 디자인의 상단 우측 프로필 자리를 재현), 비로그인(로그인/가입 화면)은 단순 센터 레이아웃. 확장 메뉴 권한은 슈퍼관리자가 `/admin/accounts`에서 토글하거나, 직원 관리 권한 관리자가 `/admin/employees` 직원 카드 체크박스로 설정(`EmployeeMenuCheckboxes.tsx`). 메뉴 키 정의는 `@/lib/employee-menus`(EMPLOYEE_MENUS) 단일 출처. `/holiday` 가드는 `@/lib/menu-access` 참고.
+- `layout.tsx`: 관리자 `Header`를 쓰지 않는 독립 레이아웃. **로그인 상태면 좌측 사이드바**(`EmployeeSidebar.tsx`, 기본 업무일지/휴가신청/팀 휴가/할당 업무 4개 + `employees.allowed_menus` 권한별 확장 메뉴 — 현재 `holiday`=진료일정, `sql/employees_allowed_menus.sql`) + **상단바**(`EmployeeTopBar.tsx`, 아바타+이름 프로필과 로그아웃 — 참고 디자인의 상단 우측 프로필 자리를 재현), 비로그인(로그인/가입 화면)은 단순 센터 레이아웃. 확장 메뉴 권한은 슈퍼관리자가 `/admin/accounts`에서 토글하거나, 직원 관리 권한 관리자가 `/admin/employees` 직원 카드 체크박스로 설정(`EmployeeMenuCheckboxes.tsx`). 메뉴 키 정의는 `@/lib/employee-menus`(EMPLOYEE_MENUS) 단일 출처. `/holiday` 가드는 `@/lib/menu-access` 참고.
 - 참고 디자인(사이드바+캘린더 대시보드)의 검색창은 실제 기능이 없어 **의도적으로 만들지 않았다**. 알림종은 이후 실제 기능(새 할당 업무 배지)이 생겨 `TaskAlarmBell.tsx`로 추가됨 — 아래 "할당 업무" 참고.
 - 관리자 쪽 승인/조회 화면은 `/admin/employees`, `/admin/employees/worklogs`, `/admin/employees/leave` (해당 폴더는 `src/app/admin/CLAUDE.md` 참고).
 
