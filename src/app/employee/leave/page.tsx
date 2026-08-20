@@ -106,9 +106,10 @@ export default async function EmployeeLeavePage({ searchParams }: Props) {
                       ({r.unit === "full" ? `${leaveAmount(r)}일` : UNIT_LABEL[r.unit]})
                     </span>
                   </p>
-                  {r.reason && (
-                    <p className="text-xs text-gray-400 mt-0.5 truncate">{r.reason}</p>
-                  )}
+                  <p className="text-xs text-gray-400 mt-0.5 truncate">
+                    {new Date(r.created_at).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" })}{" "}
+                    신청{r.reason && ` · ${r.reason}`}
+                  </p>
                 </div>
                 {r.status === "pending" ? (
                   <form action={cancelLeaveRequestAction} className="shrink-0">
