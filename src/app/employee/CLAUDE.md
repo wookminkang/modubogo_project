@@ -14,6 +14,7 @@
 | `/employee/login` | `login/page.tsx` | 로그인. pending/rejected 상태면 별도 에러 메시지 | 공개 |
 | `/employee` | `page.tsx` + `WorkLogCalendar.tsx` | 업무일지 — **월 캘린더 그리드**, 날짜 클릭 시 옆 패널에서 자유 텍스트 작성·저장 | 직원, `force-dynamic` |
 | `/employee/leave` | `leave/page.tsx` | 휴가신청 — 기간(시작일~종료일)+사유 신청 폼 + 내 신청 목록(대기중/승인됨/거절됨) | 직원, `force-dynamic` |
+| `/employee/todo` | `todo/page.tsx` + `TodoBoard.tsx`("use client") | **투두리스트** — 직원 본인 전용 셀프 투두 칸반(대기/처리중/완료). tasks(관리자 배정)와 별개 테이블 `employee_todos`(`sql/employee_todos.sql`). 본인이 직접 추가(대기 컬럼 상단 인라인 폼)/수정/삭제/드래그, 우선순위·마감일(지나면 빨간 "지남"), done 진입 시 completed_at. 소유권은 서버 액션(`@/lib/todo-actions`)이 세션 employee_id 쿼리 조건으로 강제 | 직원, `force-dynamic` |
 | `/employee/team-calendar` | `team-calendar/page.tsx` + `TeamCalendar.tsx`("use client") + `team-calendar-types.ts` | **팀 캘린더** — 전 직원 휴가(주 단위 연속 막대) + 팀 일정(회의/미팅/중요/기타 칩). 날짜 클릭 → 우측 사이드 패널에 그날 휴가·일정, 일정 등록/수정/삭제(작성자만). 아래 "팀 캘린더" 참고 | 직원, `force-dynamic` |
 
 - `layout.tsx`: 관리자 `Header`를 쓰지 않는 독립 레이아웃. **로그인 상태면 좌측 사이드바**(`EmployeeSidebar.tsx`, 기본 업무일지/휴가신청/팀 캘린더/할당 업무 4개 + `employees.allowed_menus` 권한별 확장 메뉴 — 현재 `holiday`=진료일정, `sql/employees_allowed_menus.sql`) + **상단바**(`EmployeeTopBar.tsx`, 아바타+이름 프로필과 로그아웃 — 참고 디자인의 상단 우측 프로필 자리를 재현), 비로그인(로그인/가입 화면)은 단순 센터 레이아웃. 확장 메뉴 권한은 슈퍼관리자가 `/admin/accounts`에서 토글하거나, 직원 관리 권한 관리자가 `/admin/employees` 직원 카드 체크박스로 설정(`EmployeeMenuCheckboxes.tsx`). 메뉴 키 정의는 `@/lib/employee-menus`(EMPLOYEE_MENUS) 단일 출처. `/holiday` 가드는 `@/lib/menu-access` 참고.

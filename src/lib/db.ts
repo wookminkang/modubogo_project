@@ -1279,6 +1279,89 @@ export async function getAllLeaveRequestsForAdmin(filters?: {
   );
 }
 
+// ───────────────────────── 직원 개인 투두 (employee_todos) ─────────────────────────
+
+export interface EmployeeTodo {
+  id: string;
+  employee_id: string;
+  title: string;
+  memo: string;
+  status: TaskStatus; // tasks 와 동일 3단계 (todo/in_progress/done)
+  priority: TaskPriority;
+  due_date: string | null; // 'YYYY-MM-DD'
+  created_at: string;
+  completed_at: string | null;
+}
+
+const TODO_SELECT =
+  "id, employee_id, title, memo, status, priority, due_date, created_at, completed_at";
+
+/** 본인 투두 전체. 정렬은 tasks 와 동일 규칙(상태→우선순위→최신). 테이블 없으면 빈 배열. */
+export async function getTodosByEmployee(employeeId: string): Promise<EmployeeTodo[]> {
+  const { data, error } = await supabase
+    .from("employee_todos")
+    .select(TODO_SELECT)
+    .eq("employee_id", employeeId);
+  if (error) return [];
+  const rows = (data ?? []) as EmployeeTodo[];
+  const statusOrder: Record<TaskStatus, number> = { todo: 0, in_progress: 1, done: 2 };
+  const prioOrder: Record<TaskPriority, number> = { high: 0, normal: 1, low: 2 };
+  return rows.sort(
+    (a, b) =>
+      statusOrder[a.status] - statusOrder[b.status] ||
+      prioOrder[a.priority] - prioOrder[b.priority] ||
+      b.created_at.localeCompare(a.created_at),
+  );
+}
+
+export async function createEmployeeTodo(
+  employeeId: string,
+  input: { title: string; memo: string; priority: TaskPriority; dueDate: string | null },
+): Promise<void> {
+  const { error } = await supabase.from("employee_todos").insert({
+    employee_id: employeeId,
+    title: input.title,
+    memo: input.memo,
+    priority: input.priority,
+    due_date: input.dueDate,
+  });
+  if (error) throw new Error(`투두 등록 실패: ${error.message}`);
+}
+
+/** 본인 것만 — employee_id 를 쿼리 조건으로 강제 (tasks 상태 전환과 동일 원칙). */
+export async function updateEmployeeTodo(
+  id: string,
+  employeeId: string,
+  patch: Partial<{
+    title: string;
+    memo: string;
+    priority: TaskPriority;
+    due_date: string | null;
+    status: TaskStatus;
+    completed_at: string | null;
+  }>,
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("employee_todos")
+    .update(patch)
+    .eq("id", id)
+    .eq("employee_id", employeeId)
+    .select("id");
+  if (error) throw new Error(`투두 수정 실패: ${error.message}`);
+  return (data?.length ?? 0) > 0;
+}
+
+export async function deleteEmployeeTodo(id: string, employeeId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("employee_todos")
+    .delete()
+    .eq("id", id)
+    .eq("employee_id", employeeId)
+    .select("id");
+  if (error) throw new Error(`투두 삭제 실패: ${error.message}`);
+  return (data?.length ?? 0) > 0;
+}
+
 // ───────────────────────── 팀 캘린더 일정 (team_events) ─────────────────────────
 
 export type TeamEventCategory = "meeting" | "client" | "important" | "etc";
