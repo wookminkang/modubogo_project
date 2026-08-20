@@ -24,6 +24,12 @@ _components/
   KeywordManager.tsx       키워드 여러 줄 등록 / 활성 토글 / 삭제
 ```
 
+공개 리포트 (`src/app/geo-report/[targetId]/`, 링크만 있으면 열람 — ledger view 방식):
+
+- `page.tsx` — 단일 점검일 체크리스트 공개 뷰 (기존)
+- `compare/page.tsx` + `compare/CompareCharts.tsx` — **두 점검일 비교 성과 리포트** (`?from=&to=`). 요약 카드(노출률 전/후·델타·신규/이탈 수) + 노출률 추이 라인차트 + 두 날짜 바차트(recharts) + 키워드별 O/X 비교표(변화 큰 순 정렬: 신규 노출 → 이탈 → 유지). 행 매칭은 keywordId 기준(삭제된 키워드는 keywordText 스냅샷으로 보존), 어느 쪽에도 결과 없는 키워드는 제외. 날짜별 노출률은 `listGeoDailySummaries()`(geo-db, 같은 날 여러 실행이면 최신 기준).
+- 관리자 `[targetId]` 화면의 `CompareLinkButton.tsx` 에서 두 점검일을 골라 링크 복사/미리보기 (점검 2회 미만이면 숨김).
+
 관련 lib (`src/lib/`):
 
 | 파일 | 역할 |

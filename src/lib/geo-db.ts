@@ -411,6 +411,21 @@ export async function listGeoRunDates(targetId: string): Promise<string[]> {
   return [...new Set(runs.map((r) => kstDate(r.startedAt)))];
 }
 
+/** 날짜별 노출 요약 (오래된 날짜부터). 같은 날 여러 실행이면 최신 실행 기준 — 추이 그래프용. */
+export async function listGeoDailySummaries(
+  targetId: string,
+): Promise<{ date: string; found: number; total: number }[]> {
+  const runs = await listGeoRuns(targetId, 200); // 최신순
+  const byDate = new Map<string, GeoRun>();
+  for (const r of runs) {
+    const d = kstDate(r.startedAt);
+    if (!byDate.has(d)) byDate.set(d, r); // 최신순이라 첫 매치가 그날의 최신
+  }
+  return [...byDate.entries()]
+    .map(([date, r]) => ({ date, found: r.foundCount, total: r.totalCount }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
 /** 특정 날짜(한국 기준)의 점검 결과. 그날 실행이 없으면 null. */
 export async function getGeoRunDetailForDate(
   targetId: string,
