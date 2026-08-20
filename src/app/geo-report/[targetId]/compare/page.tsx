@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import {
   getGeoTarget,
   listGeoKeywords,
@@ -239,15 +238,6 @@ export default async function GeoCompareReport({
               </tbody>
             </table>
           </div>
-        </div>
-
-        <div className="mt-5 flex items-center justify-center">
-          <Link
-            href={`/geo-report/${targetId}?date=${to}`}
-            className="text-xs font-semibold text-[#0e299c] hover:underline"
-          >
-            {to} 상세 체크리스트(답변 원문) 보기 →
-          </Link>
         </div>
 
         <p className="mt-6 text-center text-xs text-gray-400">
