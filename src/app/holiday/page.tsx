@@ -63,11 +63,16 @@ export default async function HolidayRepliesListPage({
   const replyMap = new Map(replies.map((r) => [r.company, r]));
   const sendMap = new Map(sends.map((s) => [s.company, s]));
   const regionMap = new Map(companies.map((c) => [c.company, c.region]));
-  const allCompanies = new Set<string>([
-    ...companies.map((c) => c.company),
-    ...replies.map((r) => r.company),
-    ...sends.map((s) => s.company),
-  ]);
+  // 탈퇴한 병원은 과거 회신·발송 기록이 있어도 목록에서 제외한다
+  // (report/CompanyList.tsx, hospital/HospitalList.tsx와 동일한 판정 방식).
+  const hospitalTypeMap = new Map(companies.map((c) => [c.company, c.hospitalType]));
+  const allCompanies = new Set<string>(
+    [
+      ...companies.map((c) => c.company),
+      ...replies.map((r) => r.company),
+      ...sends.map((s) => s.company),
+    ].filter((company) => hospitalTypeMap.get(company) !== "탈퇴"),
+  );
   const rowMap = new Map<string, Row>();
   for (const company of allCompanies) {
     const r = replyMap.get(company);

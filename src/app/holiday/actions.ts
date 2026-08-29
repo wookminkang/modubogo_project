@@ -3,7 +3,7 @@
 import dayjs from "@/lib/dayjs";
 import { hasHolidayAccess } from "@/lib/menu-access";
 import { getPublicHolidays } from "@/lib/publicHoliday";
-import { getCompanySettings } from "@/lib/db";
+import { getCompanySettings, getCompanyHospitalType } from "@/lib/db";
 import { sendHolidayAlimtalk } from "@/lib/bizgo";
 
 export interface BulkSendResult {
@@ -41,6 +41,10 @@ export async function sendBulkHolidayAlimtalk(
 
   const results = await Promise.allSettled(
     targets.map(async (company) => {
+      // 목록 화면에서 걸러지지만, 서버 액션이 직접 호출될 경우를 대비한 방어 가드.
+      const hospitalType = await getCompanyHospitalType(company);
+      if (hospitalType === "탈퇴") throw new Error("탈퇴한 병원입니다.");
+
       const settings = await getCompanySettings(company);
       const recipients = [
         settings?.recipient1,
