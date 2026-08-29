@@ -3,12 +3,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { UserCheck, ClipboardList, Plane, ListTodo, Activity } from "lucide-react";
+import { UserCheck, ClipboardList, Plane, ListTodo, Activity, CalendarDays } from "lucide-react";
 
 const NAV = [
   { href: "/admin/employees", label: "직원 승인", icon: UserCheck },
   { href: "/admin/employees/worklogs", label: "업무일지", icon: ClipboardList },
   { href: "/admin/employees/leave", label: "휴가 승인", icon: Plane },
+  { href: "/admin/employees/calendar", label: "휴가 캘린더", icon: CalendarDays },
   { href: "/admin/employees/tasks", label: "업무 할당", icon: ListTodo },
   { href: "/admin/employees/progress", label: "진행 현황", icon: Activity },
 ];
