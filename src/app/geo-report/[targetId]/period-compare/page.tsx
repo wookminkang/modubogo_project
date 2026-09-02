@@ -74,7 +74,7 @@ export default async function GeoPeriodCompareReport({
             return (
               <PeriodColumn
                 key={date}
-                label={idx === 0 ? "최근 점검" : `${arr.length - idx}번째 이전 점검`}
+                label={idx === 0 ? "최근 점검" : `${idx}번째 이전 점검`}
                 date={date}
                 detail={detail}
                 compareDetail={compareDetail}
