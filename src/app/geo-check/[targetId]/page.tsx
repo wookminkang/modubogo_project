@@ -16,6 +16,7 @@ import KeywordManager from "../_components/KeywordManager";
 import RunPanel from "../_components/RunPanel";
 import ShareLinkButton from "../_components/ShareLinkButton";
 import CompareLinkButton from "../_components/CompareLinkButton";
+import PeriodReportLinkButton from "../_components/PeriodReportLinkButton";
 
 export const dynamic = "force-dynamic";
 // 키워드 여러 개를 web_search 로 돌리므로 실행 시간을 넉넉히 잡는다.
@@ -66,6 +67,7 @@ export default async function GeoTargetPage({
         </Link>
         <div className="flex items-center gap-2">
           <CompareLinkButton targetId={targetId} runDates={runDates} />
+          <PeriodReportLinkButton targetId={targetId} runDates={runDates} />
           <ShareLinkButton targetId={targetId} />
         </div>
       </div>

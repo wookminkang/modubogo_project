@@ -436,3 +436,41 @@ export async function getGeoRunDetailForDate(
   if (!run) return null;
   return getGeoRunDetail(run.id);
 }
+
+/** 지정한 날짜들(KST)에 대해 "그날의 최신 실행 + 키워드별 결과"를 한 번에 가져온다.
+ *  period-compare 대시보드처럼 여러 날짜를 한 화면에 그릴 때, 날짜마다 getGeoRunDetailForDate
+ *  를 반복 호출하면 그 안의 listGeoRuns 쿼리가 매번 중복 실행되므로 배치로 처리한다.
+ *  요청한 날짜에 실행이 없으면 Map 에 키가 없다 (그날 미점검이라는 뜻). */
+export async function getGeoRunDetailsForDates(
+  targetId: string,
+  dates: string[],
+): Promise<Map<string, GeoRunDetail>> {
+  const wanted = new Set(dates);
+  const runs = await listGeoRuns(targetId, 200); // 최신순, 1회 조회
+  const byDate = new Map<string, GeoRun>();
+  for (const r of runs) {
+    const d = kstDate(r.startedAt);
+    if (!wanted.has(d) || byDate.has(d)) continue; // 최신순이라 첫 매치가 그날의 최신
+    byDate.set(d, r);
+  }
+  const runIds = [...byDate.values()].map((r) => r.id);
+  if (runIds.length === 0) return new Map();
+
+  const { data, error } = await supabase
+    .from("geo_run_results")
+    .select("*")
+    .in("run_id", runIds)
+    .order("created_at", { ascending: true });
+  const results = error || !data ? [] : (data as RawResult[]).map(mapResult);
+
+  const byRunId = new Map<string, GeoRunResult[]>();
+  for (const r of results) {
+    const arr = byRunId.get(r.runId) ?? [];
+    arr.push(r);
+    byRunId.set(r.runId, arr);
+  }
+
+  const out = new Map<string, GeoRunDetail>();
+  for (const [date, run] of byDate) out.set(date, { run, results: byRunId.get(run.id) ?? [] });
+  return out;
+}
