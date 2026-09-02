@@ -80,7 +80,7 @@ export default function PeriodColumn({
       <p className="text-sm font-bold text-[#333d4b]">{label}</p>
       <p className="mt-0.5 text-xs text-[#8b95a1]">{date}</p>
 
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="mt-3 grid grid-cols-2 gap-2">
         <StatTile label="노출률" value={thisRate === null ? "—" : `${thisRate}%`} />
         <StatTile
           label="노출 키워드"
