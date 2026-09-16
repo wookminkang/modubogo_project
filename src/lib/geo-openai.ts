@@ -10,13 +10,18 @@ import type { GeoCitation, GeoVerdict } from "./geo-db";
 //  2) 판정(judgeAnswer) — 검색 없이, 수집된 답변 텍스트만 놓고 등장 여부를 판단한다.
 
 /**
- * 답변 수집용. 일반 사용자가 흔히 쓰는 세대(5.5)에 맞춘다.
- * (최신 5.6 도 있지만 일반 사용자 기준으로 측정하기 위해 5.5 로 둔다.)
+ * 답변 수집용. **chatgpt.com 의 무료·Go 기본 모델**에 맞춘다.
+ * 측정 대상이 "일반 사용자가 ChatGPT 에 물었을 때 우리가 보이나" 이므로,
+ * 성능이 가장 좋은 모델이 아니라 **가장 많은 사람이 실제로 받는 답변**을 재야 한다.
  *
- * 참고: chatgpt.com 을 그대로 추종하는 `-chat-latest` 별칭은 5.3 에서 멈춰 있어
- * 5.5/5.6 세대에는 그 별칭이 없다. 세대를 바꾸려면 이 상수만 고치면 된다.
+ * 2026-08 부터 무료·Go 기본값이 5.5 → 5.6 Luna 로 바뀌어 여기도 맞췄다.
+ * (Sol·Terra 는 유료 구독자용이라 다수 사용자 기준이 아니다.)
+ *
+ * 참고: chatgpt.com 을 그대로 추종하던 `-chat-latest` 별칭은 5.3 이 마지막이고
+ * 그마저 deprecated 되어 Responses API 에서 호출되지 않는다. 그래서 별칭 대신
+ * 그때그때의 무료 기본 모델을 직접 지정한다. 기본값이 또 바뀌면 이 상수만 고치면 된다.
  */
-export const COLLECT_MODEL = "gpt-5.5";
+export const COLLECT_MODEL = "gpt-5.6-luna";
 /** 판정용. 텍스트만 보고 판단하는 짧은 작업이라 작은 모델로 충분하다. */
 export const JUDGE_MODEL = "gpt-5.4-mini";
 

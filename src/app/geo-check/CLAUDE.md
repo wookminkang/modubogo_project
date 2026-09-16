@@ -90,7 +90,7 @@ Vercel `maxDuration=300`이 절대 제약이라 순차 실행은 키워드 10개
   `geo_targets.region`을 `user_location` 힌트로 넘기지만 그것만으로는 부족하니 키워드에 "광주 둥촌동"처럼 명시하게 안내한다.
 - 측정 대상은 chatgpt.com 화면이 아니라 **OpenAI API + web_search** 결과다. 근사치로는 충분하지만 100% 동일하진 않다.
   광고주 리포트로 내보낼 땐 이 점을 표기할 것.
-- 모델은 `geo-openai.ts` 상단 `COLLECT_MODEL`/`JUDGE_MODEL` 상수로 관리한다. 수집은 ChatGPT 사용자 경험에 가까운 `-chat-latest` 계열을 쓴다.
+- 모델은 `geo-openai.ts` 상단 `COLLECT_MODEL`/`JUDGE_MODEL` 상수로 관리한다. 수집은 **chatgpt.com 의 무료·Go 기본 모델**에 맞춘다(2026-09 기준 `gpt-5.6-luna`). 성능 최상위 모델이 아니라 다수 사용자가 실제로 받는 답변을 재는 게 목적이다. `-chat-latest` 별칭은 5.3 이 마지막이고 deprecated 되어 쓸 수 없다.
 
 ## 결과가 매번 흔들린다 (중요)
 

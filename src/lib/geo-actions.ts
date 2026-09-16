@@ -14,8 +14,9 @@ import type { GeoMatchBy, GeoRunDetail, GeoRunStatus } from "./geo-db";
 
 export type GeoResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
-/** 한 번에 등록/실행할 수 있는 키워드 상한. */
-const MAX_KEYWORDS = 30;
+/** 한 번에 등록/실행할 수 있는 활성 키워드 상한. 비활성 키워드는 세지 않는다
+ *  — 상한의 근거가 1회 실행 예산(BUDGET_MS)이고, 실행 대상은 활성 키워드뿐이기 때문. */
+const MAX_KEYWORDS = 100;
 /** 동시 실행 수. web_search 는 자체 레이트리밋이 있어 올릴수록 429 로 오히려 느려진다. */
 const CONCURRENCY = 4;
 /** 키워드 1건 제한시간. reasoning=low 로 보통 ~30초지만 간헐적 지연을 감안해 여유를 둔다. */
@@ -114,10 +115,11 @@ export async function addGeoKeywords(
 
   try {
     const existing = await db.listGeoKeywords(targetId);
-    if (existing.length + keywords.length > MAX_KEYWORDS) {
+    const activeCount = existing.filter((k) => k.active).length;
+    if (activeCount + keywords.length > MAX_KEYWORDS) {
       return {
         ok: false,
-        error: `키워드는 대상당 최대 ${MAX_KEYWORDS}개까지 등록할 수 있습니다. (현재 ${existing.length}개)`,
+        error: `활성 키워드는 대상당 최대 ${MAX_KEYWORDS}개까지 등록할 수 있습니다. (현재 활성 ${activeCount}개)`,
       };
     }
     // 이미 등록된 키워드는 건너뛴다.
