@@ -10,8 +10,9 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
  *   - import 처는 인증 모듈(admin.ts / admin-actions.ts / employee.ts / employee-actions.ts)로만 한정한다.
  *     (db.ts / bizgo.ts / supabase.ts / "use client" 파일에서 import 금지)
  *
- * 현재 용도: admin_users, employees 테이블 접근(로그인 검증·세션 유저 조회). 이 테이블들은
- * RLS on + 정책 없음이라 anon 키로는 접근 불가, service_role 만 통과한다.
+ * 현재 용도: admin_users, employees 테이블 접근(로그인 검증·세션 유저 조회), GEO 병원 정보 폼
+ * (geo_intakes — geo-intake-db.ts, FTP·CAFE24 계정 정보 포함). 이 테이블들은 RLS on + 정책 없음이라
+ * anon 키로는 접근 불가, service_role 만 통과한다.
  *
  * 지연 초기화: env(SUPABASE_SERVICE_ROLE_KEY)가 빌드 시점엔 없어도 모듈 평가가
  * 실패하지 않도록, 실제 사용(런타임)할 때 클라이언트를 생성한다.

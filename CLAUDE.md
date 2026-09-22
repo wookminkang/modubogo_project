@@ -20,6 +20,7 @@ Claude Code가 이 저장소에서 작업할 때 따르는 지침. **작업 시�
 | 병원 목록 (작업 중)                    | `src/app/hospital/CLAUDE.md` |
 | **보고서 (메인 기능)**                 | `src/app/report/CLAUDE.md`   |
 | GEO 노출 체크 (ChatGPT O/X)            | `src/app/geo-check/CLAUDE.md` |
+| GEO 병원 정보 폼 (퍼널, 병원별 링크)   | `src/app/geo-check/CLAUDE.md` |
 | GEO 키워드 리포트 (환자 검색어 추리)   | `src/app/keyword/CLAUDE.md`  |
 | 직원 업무일지 (회원가입·로그인·일지)   | `src/app/employee/CLAUDE.md` |
 | UI·디자인 시스템                       | `context/design-system.md`   |
