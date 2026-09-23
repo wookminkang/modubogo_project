@@ -111,7 +111,11 @@ export default function GeoIntakeForm({ nanoid, company }: { nanoid: string; com
 
   // 브라우저 뒤로/앞으로가 단계를 오가도록: 마운트 시 URL 정렬 + popstate 동기화.
   useEffect(() => {
-    if (readStepFromUrl() !== screen) window.history.replaceState(null, "", stepUrl(screen));
+    // 링크를 열자마자 중간 단계부터 시작하는 경우(임시저장 복구, ?step= 링크 공유)에는
+    // 뒤로 갈 기록이 없다. 그냥 두면 뒤로가기가 폼 밖(빈 화면)으로 나가버리므로,
+    // 지나온 단계를 히스토리에 깔아 둬서 한 단계씩 되짚어갈 수 있게 한다.
+    window.history.replaceState(null, "", stepUrl(0));
+    for (let i = 1; i <= screen; i++) window.history.pushState(null, "", stepUrl(i));
     const onPop = () => setScreen(readStepFromUrl() ?? 0);
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);

@@ -378,10 +378,13 @@ export function parseDoctors(value: string | undefined): DoctorEntry[] {
   }
 }
 
-/** 목록 → 저장값. 성함이 빈 줄은 버린다 (추가만 해두고 안 적은 칸) */
+/**
+ * 목록 → 저장값. **한 칸이라도 적은 카드는 남긴다** (성함만 보고 버리면, 직함·경력을 먼저 적은 분의
+ * 입력이 단계를 넘어갔다 오는 순간 사라진다). 아무것도 안 적은 카드만 버린다.
+ */
 export function stringifyDoctors(list: DoctorEntry[]): string {
-  const kept = list.filter((d) => d.name.trim()).slice(0, DOCTOR_MAX);
-  return kept.length ? JSON.stringify(kept) : "";
+  const kept = list.filter((d) => d.name.trim() || d.title.trim() || d.license.trim() || d.career.trim());
+  return kept.length ? JSON.stringify(kept.slice(0, DOCTOR_MAX)) : "";
 }
 
 /** 관리자·확인 화면용 한 줄 — "홍길동 · 대표원장 · 면허 123456 · OO대 졸업" */
