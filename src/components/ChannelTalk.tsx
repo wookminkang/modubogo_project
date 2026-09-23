@@ -38,7 +38,8 @@ function loadChannelIO() {
 }
 
 // 채널톡을 숨길 경로 (디자이너 공개 뷰 등 외부 노출 화면)
-const HIDDEN_PREFIXES = ["/design"];
+// /geo-intake: 병원이 채우는 퍼널 폼. 휴대폰에서 채널톡 버튼이 하단 고정 CTA("다음"·"제출하기")를 가린다.
+const HIDDEN_PREFIXES = ["/design", "/geo-intake"];
 
 /**
  * 채널톡 상담 위젯. 루트 레이아웃에 마운트되어 전역에 표시된다.
