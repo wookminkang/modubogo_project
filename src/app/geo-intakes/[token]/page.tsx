@@ -3,7 +3,18 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { getAdminUser, canAccessMenu } from "@/lib/admin";
 import { getGeoIntakeByNanoid } from "@/lib/geo-intake-db";
-import { FIELD_BY_KEY, KEYWORD_MONTH_MIN, STEPS, displayValue, isVisible, keywordList } from "@/lib/geo-intake-fields";
+import {
+  DAYS,
+  FIELD_BY_KEY,
+  KEYWORD_MONTH_MIN,
+  STEPS,
+  dayLine,
+  displayValue,
+  doctorLine,
+  isVisible,
+  lineList,
+  parseDoctors,
+} from "@/lib/geo-intake-fields";
 import dayjs from "@/lib/dayjs";
 import CopyButton from "./CopyButton";
 import SecretValue from "./SecretValue";
@@ -27,7 +38,6 @@ export default async function GeoIntakeDetailPage({ params }: { params: Promise<
   if (!intake) notFound();
 
   const a = intake.answers;
-  const keywords = keywordList(a.keywords);
 
   return (
     <div className={`flex-1 ${PAGE} px-4 py-6`}>
@@ -55,27 +65,72 @@ export default async function GeoIntakeDetailPage({ params }: { params: Promise<
             <section key={step.title} className={`rounded-2xl ${CARD} px-5 py-4 shadow-sm`}>
               <h2 className={`mb-2 text-sm font-bold ${FG_SUB}`}>{step.title}</h2>
 
-              {step.keys.map((key) => {
+              {/* 진료시간은 요일 한 줄씩 — 점심시간까지 한 줄에 붙여서 */}
+              {step.id === "hours" &&
+                DAYS.map((day) => {
+                  const line = dayLine(day, a);
+                  return (
+                    <div key={day.hours} className={`flex items-start justify-between gap-4 py-3 ${ROW}`}>
+                      <span className={`shrink-0 text-sm font-semibold ${FG}`}>{day.label}</span>
+                      <span className={`text-right text-sm ${line ? FG : FG_SUB}`}>{line || "—"}</span>
+                    </div>
+                  );
+                })}
+
+              {step.id === "hours" ? null : step.keys.map((key) => {
                 const def = FIELD_BY_KEY.get(key)!;
                 if (!isVisible(def, a)) return null;
                 const value = displayValue(def, a[key]);
 
-                // 키워드: 번호 목록 + 개수 + 한 번에 복사
-                if (key === "keywords") {
+                // 의료진: 한 분씩 줄로
+                if (def.group) {
+                  const doctors = parseDoctors(a[key]);
                   return (
                     <div key={key} className={`py-3 ${ROW}`}>
                       <div className="mb-2 flex items-center justify-between">
                         <span className={`text-sm font-semibold ${FG}`}>
                           {def.label}{" "}
-                          <span className={keywords.length >= KEYWORD_MONTH_MIN ? "text-[#0e299c]" : FG_SUB}>
-                            {keywords.length}개
+                          <span className={doctors.length ? "text-[#0e299c]" : FG_SUB}>
+                            {doctors.length}
+                            {def.group.unit}
                           </span>
                         </span>
-                        {keywords.length > 0 && <CopyButton text={keywords.join("\n")} label="전체 복사" />}
+                        {doctors.length > 0 && (
+                          <CopyButton text={doctors.map(doctorLine).join("\n")} label="전체 복사" />
+                        )}
                       </div>
-                      {keywords.length ? (
+                      {doctors.length ? (
                         <ol className={`list-decimal pl-6 text-sm leading-7 ${FG}`}>
-                          {keywords.map((k, i) => (
+                          {doctors.map((d, i) => (
+                            <li key={i}>{doctorLine(d)}</li>
+                          ))}
+                        </ol>
+                      ) : (
+                        <p className={`text-sm ${FG_SUB}`}>—</p>
+                      )}
+                    </div>
+                  );
+                }
+
+                // 칸을 나눠 받은 문항(키워드·보유 장비): 번호 목록 + 개수 + 한 번에 복사
+                if (def.repeat) {
+                  const items = lineList(a[key]);
+                  const enough = key === "keywords" ? items.length >= KEYWORD_MONTH_MIN : items.length > 0;
+                  return (
+                    <div key={key} className={`py-3 ${ROW}`}>
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className={`text-sm font-semibold ${FG}`}>
+                          {def.label}{" "}
+                          <span className={enough ? "text-[#0e299c]" : FG_SUB}>
+                            {items.length}
+                            {def.repeat.unit}
+                          </span>
+                        </span>
+                        {items.length > 0 && <CopyButton text={items.join("\n")} label="전체 복사" />}
+                      </div>
+                      {items.length ? (
+                        <ol className={`list-decimal pl-6 text-sm leading-7 ${FG}`}>
+                          {items.map((k, i) => (
                             <li key={i}>{k}</li>
                           ))}
                         </ol>
