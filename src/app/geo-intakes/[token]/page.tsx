@@ -31,7 +31,7 @@ const ROW = "border-b border-[var(--seed-color-stroke-neutral-muted)] last:borde
 export default async function GeoIntakeDetailPage({ params }: { params: Promise<{ token: string }> }) {
   const me = await getAdminUser();
   if (!me) redirect("/admin/login");
-  if (!canAccessMenu(me, "geo-check")) redirect("/admin/dashboard");
+  if (!canAccessMenu(me, "geo-intake")) redirect("/admin/dashboard");
 
   const { token } = await params;
   const intake = await getGeoIntakeByNanoid(decodeURIComponent(token));
@@ -47,7 +47,7 @@ export default async function GeoIntakeDetailPage({ params }: { params: Promise<
           className={`mb-4 inline-flex items-center gap-1.5 text-sm font-semibold ${FG_SUB} transition-colors hover:text-[#0e299c]`}
         >
           <ArrowLeft size={18} />
-          병원 정보 폼
+          GEO 병원조사
         </Link>
 
         <div className="mb-5">

@@ -9,7 +9,7 @@ import { sanitizeAnswers, validateSubmission } from "./geo-intake-fields";
 // GEO 병원 정보 폼 서버 액션. geo-actions.ts 의 패턴을 따른다
 // (권한 확인 → 입력 검증 → 판별 유니온 반환 → try/catch 로 에러 문자열화).
 //
-// 관리자 액션은 GEO 체크 메뉴 권한까지 확인한다 — 이 폼의 관리 화면이 GEO 체크에 딸려 있어서.
+// 관리자 액션은 "GEO 병원조사"(geo-intake) 메뉴 권한까지 확인한다.
 // 공개 제출(submitGeoIntake)은 인증이 없으므로 클라이언트 입력을 전부 다시 검증한다.
 
 export type GeoIntakeResult<T> = { ok: true; data: T } | { ok: false; error: string };
@@ -22,7 +22,7 @@ function fail(e: unknown, prefix: string): { ok: false; error: string } {
 async function guard(): Promise<{ name: string } | string> {
   const me = await getAdminUser();
   if (!me) return "권한이 없습니다. 관리자로 로그인해 주세요.";
-  if (!canAccessMenu(me, "geo-check")) return "GEO 체크 메뉴 권한이 없습니다.";
+  if (!canAccessMenu(me, "geo-intake")) return "GEO 병원조사 메뉴 권한이 없습니다.";
   return { name: me.name };
 }
 

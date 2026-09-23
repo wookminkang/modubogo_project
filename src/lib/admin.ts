@@ -14,6 +14,7 @@ export type MenuKey =
   | "outsource"
   | "site-analysis"
   | "geo-check"
+  | "geo-intake"
   | "employees";
 
 export interface AdminUser {

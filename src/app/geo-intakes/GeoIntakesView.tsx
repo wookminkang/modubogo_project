@@ -87,7 +87,7 @@ export default function GeoIntakesView({ intakes }: { intakes: GeoIntakeListItem
         <div className="mb-5">
           <h1 className={`flex items-center gap-2 text-xl font-bold ${FG}`}>
             <ClipboardList size={22} className={FG} />
-            병원 정보 폼
+            GEO 병원조사
           </h1>
           <p className={`mt-1 text-sm ${FG_SUB}`}>
             GEO·홈페이지 작업을 시작할 병원에 보낼 정보 요청 링크를 만들고 제출 현황을 확인해요.

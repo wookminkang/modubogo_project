@@ -24,14 +24,6 @@ export default async function GeoCheckPage() {
       <CardTitle
         title="GEO 체크"
         description="ChatGPT에 키워드를 물었을 때 우리 병원이 답변에 등장하는지 O/X로 확인합니다."
-        right={
-          <Link
-            href="/geo-intakes"
-            className="rounded-lg border border-[#0e299c] px-3 py-1.5 text-xs font-semibold text-[#0e299c] transition-colors hover:bg-[#0e299c]/5"
-          >
-            병원 정보 폼
-          </Link>
-        }
       />
 
       <TargetForm />

@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export default async function GeoIntakesPage() {
   const me = await getAdminUser();
   if (!me) redirect("/admin/login");
-  if (!canAccessMenu(me, "geo-check")) redirect("/admin/dashboard");
+  if (!canAccessMenu(me, "geo-intake")) redirect("/admin/dashboard");
 
   // 목록에는 계정 정보가 필요 없으므로 응답 본문은 내려보내지 않는다.
   const intakes = (await listGeoIntakes()).map((it) => ({

@@ -30,6 +30,7 @@ const ADMIN_MENUS: { key: MenuKey; label: string }[] = [
   { key: "outsource", label: "외주 관리" },
   { key: "site-analysis", label: "사이트 분석" },
   { key: "geo-check", label: "GEO 체크" },
+  { key: "geo-intake", label: "GEO 병원조사" },
   { key: "employees", label: "직원 관리" },
 ];
 
