@@ -22,6 +22,7 @@ import { ActionButton } from "seed-design/ui/action-button";
 import { MonthPicker } from "@/components/ui/month-picker";
 import { DatePicker } from "@/components/ui/date-picker";
 import { OrderStepper } from "@/components/ui/order-stepper";
+import { ContractLinks } from "@/components/ui/contract-links";
 import { AmountInput } from "@/components/ui/amount-input";
 import { Trash2, ArrowLeft } from "lucide-react";
 import { Text } from "seed-design/ui/text";
@@ -584,14 +585,20 @@ export default function EditForm({
                         className={rowInputClass}
                       />
                     </div>
-                    <div className="flex items-center px-4 py-2.5 gap-3">
-                      <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
+                    <div className="flex items-start px-4 py-2.5 gap-3">
+                      <span className="w-20 shrink-0 pt-2 text-sm text-[var(--seed-color-fg-neutral-muted)]">
                         링크
                       </span>
-                      <Input
-                        {...register(`contracts.${index}.link`)}
-                        placeholder="보고서 링크 URL"
-                        className={rowInputClass}
+                      <Controller
+                        control={control}
+                        name={`contracts.${index}.link`}
+                        render={({ field }) => (
+                          <ContractLinks
+                            value={field.value}
+                            onChange={field.onChange}
+                            inputClassName={rowInputClass}
+                          />
+                        )}
                       />
                     </div>
                     <div className="flex items-center px-4 py-2.5 gap-3">

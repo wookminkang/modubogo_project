@@ -20,8 +20,46 @@ export interface ContractItem {
   category: string;
   name: string;
   keyword: string;
+  /** 링크 여러 개를 한 칸에 담는다 — 아래 parseContractLinks 참고 */
   link: string;
   sort_order?: number;
+}
+
+// ── 계약 항목의 링크 ────────────────────────────────────────
+// 계약 하나에 보고서 링크가 여러 개 달린다 (네이버 리포트·데이블 리포트 …).
+// DB 는 contract_items.link 텍스트 한 칸이라, 한 줄에 하나씩 "이름|주소" 로 담는다.
+// 이름은 생략할 수 있고(주소만 있는 줄), 예전에 저장된 주소 한 줄짜리도 그대로 읽힌다.
+
+export interface ContractLink {
+  label: string;
+  url: string;
+}
+
+export function parseContractLinks(raw: string | undefined): ContractLink[] {
+  return (raw ?? "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const at = line.indexOf("|");
+      if (at === -1) return { label: "", url: line };
+      return { label: line.slice(0, at).trim(), url: line.slice(at + 1).trim() };
+    })
+    .filter((l) => l.url);
+}
+
+export function stringifyContractLinks(links: ContractLink[]): string {
+  return links
+    .map(({ label, url }) => ({ label: label.trim().replace(/\|/g, " "), url: url.trim() }))
+    .filter((l) => l.url)
+    .map((l) => (l.label ? `${l.label}|${l.url}` : l.url))
+    .join("\n");
+}
+
+/** 버튼에 쓸 이름 — 이름을 안 적었으면 링크가 하나일 땐 "리포트 보기", 여럿이면 "링크 N" */
+export function contractLinkLabel(link: ContractLink, index: number, total: number): string {
+  if (link.label) return link.label;
+  return total > 1 ? `링크 ${index + 1}` : "리포트 보기";
 }
 
 export interface Report {
