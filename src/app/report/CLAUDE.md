@@ -13,7 +13,7 @@
 | `/report` | `page.tsx` + `CompanyList.tsx` | 전체 회사 목록 (유형 탭 필터 + 검색 300ms 디바운스) | Admin, `force-dynamic` |
 | `/report/new` | `new/page.tsx` + `NewReportForm.tsx` | 신규 보고서 작성 (status="작성중") | Admin |
 | `/report/[company]` | `[company]/page.tsx` | 회사별 월별 보고서 목록 + 설정/알림톡/삭제 버튼 | Admin |
-| `/report/[company]/[month]` | `[company]/[month]/page.tsx` | **보고서 상세 (공개 뷰)** — 차트·계약·심의 | 비밀번호 옵션 |
+| `/report/[company]/[month]` | `[company]/[month]/page.tsx` | **보고서 상세 (공개 뷰)** — 탭 2개: 이번 달 보고서(차트·계약·심의) / 히스토리 | 비밀번호 옵션 |
 | `/report/[company]/[month]/edit` | `edit/EditForm.tsx` | 보고서 수정 (status="완료") + 삭제 | Admin |
 
 - `report/layout.tsx`: 앱 공통 `Header` + `Footer`(`@/components`) 래핑. (헤더 nav: 병원목록/보고서/진료일정)
@@ -28,6 +28,16 @@
 
 - "이전 달 보고서 불러오기" → `loadLatestReportData()` (`@/lib/copy-actions`) → `reset(data)`.
 - 저장: `upsertReport()` (`@/lib/db`)가 3개 자식 테이블을 함께 저장.
+
+## 병원별 히스토리 (공개 뷰의 "히스토리" 탭)
+
+그동안 한 작업을 날짜순으로 쌓아 두는 곳. **월이 아니라 병원(company) 단위**라 어느 달 보고서에서 열어도 같은 내역이 보인다.
+
+- 테이블 `company_histories` (날짜·제목·내용·작성자) — 스키마 `sql/company_histories.sql`
+- 읽기 `src/lib/history-db.ts` · 쓰기 `src/lib/history-actions.ts`(보고서 메뉴 권한 확인)
+- 화면: `ReportTabs`(탭 전환) + `HistoryPanel`(목록/작성). **원장님은 읽기만, 관리자는 같은 자리에 추가·수정·삭제 버튼이 함께 보인다**(`canEdit={admin}`)
+- 탭 두 쪽 모두 서버에서 그려 넘기고 `hidden` 으로 감춘다 — 전환할 때 서버를 다시 부르지 않고 스크롤·입력 중 내용이 유지된다
+- 테이블이 아직 없어도 `listCompanyHistories` 가 빈 배열을 돌려줘 보고서 화면은 깨지지 않는다 (SQL 실행 전 배포 대비)
 
 ## 외부 API 연동 (주의 깊게)
 

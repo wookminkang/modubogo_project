@@ -16,6 +16,9 @@ import { isAdmin } from "@/lib/admin";
 import { logoutAdmin } from "@/lib/admin-actions";
 import PasswordGate from "@/components/PasswordGate";
 import ScrollNav from "@/components/ScrollNav";
+import ReportTabs from "@/components/ReportTabs";
+import HistoryPanel from "@/components/HistoryPanel";
+import { listCompanyHistories } from "@/lib/history-db";
 import { getTotalAmount } from "@/lib/mockData";
 import { DEFAULT_COLORS } from "@/lib/categoryColors";
 import MonthCompareChart from "@/components/MonthCompareChart";
@@ -153,6 +156,9 @@ export default async function ReportPage({
   const uniqueAgencies = new Set(
     categories.map((c: { agency: string }) => c.agency),
   ).size;
+
+  // 병원별 히스토리 — 월이 아니라 회사 단위라 어느 달 보고서에서도 같은 내역이 보인다.
+  const histories = await listCompanyHistories(decoded);
 
   // 전월 비교
   const prevMonthStr = dayjs(month, "YYYY-MM")
@@ -388,7 +394,13 @@ export default async function ReportPage({
             </div>
           </header>
 
-          <div className="px-4 py-6 flex flex-col gap-5 bg-[#F0F4FA] -mt-5">
+          <ReportTabs
+            historyCount={histories.length}
+            history={
+              <HistoryPanel company={decoded} initial={histories} canEdit={admin} />
+            }
+            report={
+          <div className="px-4 py-6 flex flex-col gap-5 bg-[#F0F4FA]">
             <div className="bg-white rounded-2xl p-5 shadow-sm mb-1">
               {/* 날짜 */}
               <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-3">
@@ -623,6 +635,8 @@ export default async function ReportPage({
             {/* 첨부자료 — 이미지는 확대, 그 외는 새 탭 */}
             <ReportAttachments attachments={attachments} />
           </div>
+            }
+          />
 
           <Script id="channeltalk" strategy="afterInteractive">{`
         (function(){var w=window;if(w.ChannelIO){return w.console.error("ChannelIO script included twice.");}var ch=function(){ch.c(arguments);};ch.q=[];ch.c=function(args){ch.q.push(args);};w.ChannelIO=ch;function l(){if(w.ChannelIOInitialized){return;}w.ChannelIOInitialized=true;var s=document.createElement("script");s.type="text/javascript";s.async=true;s.src="https://cdn.channel.io/plugin/ch-plugin-web.js";var x=document.getElementsByTagName("script")[0];if(x.parentNode){x.parentNode.insertBefore(s,x);}}if(document.readyState==="complete"){l();}else{w.addEventListener("DOMContentLoaded",l);w.addEventListener("load",l);}})();
