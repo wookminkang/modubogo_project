@@ -213,6 +213,41 @@ export async function listGeoKeywords(targetId: string): Promise<GeoKeyword[]> {
   return (data as RawKeyword[]).map(mapKeyword);
 }
 
+/**
+ * 비고의 "원고 발행 YYYY-MM-DD" 날짜 — 없으면 null.
+ *
+ * 키워드를 미리 등록해 두고 원고가 나가는 날부터 점검에 넣는 운영 방식이라,
+ * 비고에 적어둔 발행일이 곧 "이 날부터 점검 대상" 이라는 뜻이다.
+ */
+export function publishDateFromMemo(memo: string | null | undefined): string | null {
+  return memo?.match(/\d{4}-\d{2}-\d{2}/)?.[0] ?? null;
+}
+
+/**
+ * 발행일이 지났는데 꺼져 있는 키워드를 켠다. 켠 개수를 돌려준다.
+ *
+ * 발행 전에는 꺼둔 채로 등록해 두고, 발행일이 되면 사람이 일일이 토글하던 일을 없앤다
+ * (실제로 9/21~30 발행분 34개가 꺼진 채 방치돼 점검에서 빠졌었다).
+ * 발행일을 안 적은 키워드는 건드리지 않는다 — 사람이 의도적으로 끈 것으로 본다.
+ */
+export async function activateDueKeywords(targetId: string): Promise<number> {
+  const keywords = await listGeoKeywords(targetId);
+  const today = todayKst();
+  const due = keywords.filter((k) => {
+    if (k.active) return false;
+    const publishOn = publishDateFromMemo(k.memo);
+    return !!publishOn && publishOn <= today;
+  });
+  if (!due.length) return 0;
+
+  const { error } = await supabase
+    .from("geo_keywords")
+    .update({ active: true })
+    .in("id", due.map((k) => k.id));
+  if (error) throw new Error(error.message);
+  return due.length;
+}
+
 export async function insertGeoKeywords(
   targetId: string,
   keywords: string[],

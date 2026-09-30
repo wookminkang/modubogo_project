@@ -40,7 +40,7 @@ export default function KeywordManager({
     <div>
       <CardTitle
         title="체크 키워드"
-        description={`실행 시 활성 키워드 ${activeCount}개를 ChatGPT에 그대로 물어봅니다.`}
+        description={`실행 시 활성 키워드 ${activeCount}개를 ChatGPT에 그대로 물어봅니다. 비고에 "원고 발행 YYYY-MM-DD"를 적어두면 그 날짜가 지났을 때 자동으로 켜집니다.`}
       />
 
       <div className="rounded-xl border border-gray-200 bg-white p-5">

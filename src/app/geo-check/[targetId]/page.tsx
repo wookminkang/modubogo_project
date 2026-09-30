@@ -3,6 +3,7 @@ import Link from "next/link";
 import { isAdmin } from "@/lib/admin";
 import { CardTitle } from "@/components/CardTitle";
 import {
+  activateDueKeywords,
   getGeoTarget,
   listGeoKeywords,
   listGeoRuns,
@@ -47,6 +48,10 @@ export default async function GeoTargetPage({
   // 잘못된 값이나 미래 날짜는 오늘로 되돌린다 (미래 점검은 있을 수 없다).
   const date =
     rawDate && /^\d{4}-\d{2}-\d{2}$/.test(rawDate) && rawDate <= today ? rawDate : today;
+
+  // 발행일이 지났는데 꺼져 있는 키워드를 켠 뒤에 목록을 읽는다.
+  // (원고가 나간 키워드가 꺼진 채로 남아 점검에서 빠지던 문제)
+  await activateDueKeywords(targetId).catch(() => 0);
 
   const [keywords, runs, runDates, detail] = await Promise.all([
     listGeoKeywords(targetId),

@@ -215,6 +215,9 @@ export async function startGeoRun(
     const target = await db.getGeoTarget(targetId);
     if (!target) return { ok: false, error: "대상을 찾을 수 없습니다." };
 
+    // 발행일이 지났는데 꺼져 있던 키워드를 먼저 켠다 — 사람이 토글하는 걸 잊어도 점검에서 빠지지 않게.
+    await db.activateDueKeywords(targetId);
+
     const keywords = (await db.listGeoKeywords(targetId)).filter((k) => k.active);
     if (!keywords.length) return { ok: false, error: "활성 키워드가 없습니다. 먼저 키워드를 등록해 주세요." };
     if (keywords.length > MAX_KEYWORDS) {
