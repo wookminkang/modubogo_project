@@ -8,10 +8,9 @@ import AnswerView from "./AnswerView";
 import { categoryClass } from "./categories";
 
 // O/X 체크리스트. 한눈에 훑을 수 있게 스프레드시트 형태로 짠다.
-// 번호 | 카테고리 | 검색어 | GPT | 제미나이 | 비고
+// 번호 | 카테고리 | 검색어 | GPT | 비고
 //
 // 행(검색어 칸)을 누르면 그 아래로 ChatGPT 답변 원문이 펼쳐진다.
-// 제미나이 열은 아직 수집 수단이 없어 항상 공란이다 — 엔진을 추가하면 채운다.
 
 /** 표의 한 행. 아직 점검 안 한 키워드는 result 가 없어 GPT 칸이 공란으로 남는다. */
 type Row = {
@@ -90,20 +89,19 @@ export default function ChecklistTable({
       {/* 안내 문구는 관리자 화면에서만. 공개 뷰(readOnly)에서는 깔끔하게 숨긴다. */}
       {!readOnly && (
         <p className="border-b border-gray-200 bg-white px-4 py-2 text-[12px] italic text-gray-600">
-          ※ ChatGPT(웹검색·추론 모드) 기준. O=노출 / X=미노출 / 공란=미점검. 제미나이는 미점검.
+          ※ ChatGPT(웹검색·추론 모드) 기준. O=노출 / X=미노출 / 공란=미점검.
           {" "}(전체 {rows.length}개 중 {checkedCount}개 점검)
         </p>
       )}
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[860px] border-collapse text-[13px]">
+        <table className="w-full min-w-[780px] border-collapse text-[13px]">
           <thead>
             <tr className="bg-[#434343] text-white">
               <Th className="w-14">번호</Th>
               <Th className="w-24">카테고리</Th>
               <Th className="text-left">검색어 (프롬프트)</Th>
               <Th className="w-16">GPT</Th>
-              <Th className="w-20">제미나이</Th>
               <Th className="w-52 text-left">비고</Th>
             </tr>
           </thead>
@@ -158,9 +156,6 @@ export default function ChecklistTable({
 
                     <GptCell result={r} />
 
-                    {/* 제미나이 — 수집 수단이 아직 없어 항상 공란 */}
-                    <Td className="bg-[#fafafa] text-center text-gray-300">&nbsp;</Td>
-
                     <Td>
                       {readOnly ? (
                         <span className="text-[13px] text-[#333d4b]">{row.memo || ""}</span>
@@ -181,7 +176,7 @@ export default function ChecklistTable({
 
                   {isOpen && r && (
                     <tr className="border-b border-gray-200">
-                      <td colSpan={6} className="bg-[#f7f8fa] px-4 py-4">
+                      <td colSpan={5} className="bg-[#f7f8fa] px-4 py-4">
                         {(r.matchedText || r.siteCited) && (
                           <p className="mb-3 text-xs text-[#6b7684]">
                             {r.matchedText && (
