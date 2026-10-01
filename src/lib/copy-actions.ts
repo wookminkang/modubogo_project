@@ -27,6 +27,7 @@ interface FormValues {
  * - 비밀번호는 복사하지 않고(앞으로 미사용), 알림톡 발송 횟수는 월별 로그 집계라 애초에 복사 안 됨(새 달 0회).
  * - 이미 이번 달 보고서가 있으면 아무것도 하지 않는다.
  * - 보고서가 하나도 없으면(복사할 원본 없음) 생성하지 않는다.
+ * - **탈퇴한 병원은 만들지 않는다** — 계약이 끝났는데 매달 보고서가 새로 생기면 안 된다.
  * 반환: 새로 만든 달을 포함한 보고서 목록(month 내림차순). 호출부는 이 값을 그대로 렌더에 쓴다.
  *
  * ⚠️ 재조회 금지: 생성 직후 getReportsByCompanyFromDB 를 다시 부르면 Next.js 가
@@ -49,6 +50,9 @@ export async function ensureCurrentMonthReport(
   if (currentMonth <= latest.month) return reports;
 
   const settings = await getCompanySettings(company);
+  // 탈퇴 병원은 승계하지 않는다 (계약 종료 후에도 매달 보고서가 생기는 걸 막는다).
+  if (settings?.hospital_type === "탈퇴") return reports;
+
   const have = new Set(reports.map((r) => r.month));
 
   // 마지막 보고서 다음 달부터 이번 달까지 한 달씩. 직전에 만든 달을 다음 달의 원본으로 쓴다.
