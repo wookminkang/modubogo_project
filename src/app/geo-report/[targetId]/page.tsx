@@ -9,6 +9,11 @@ import {
 import { coreToken } from "@/lib/geo-match";
 import ChecklistTable from "../../geo-check/_components/ChecklistTable";
 import ViewDateNav from "../../geo-check/_components/ViewDateNav";
+import { TabsRoot, TabsList, TabsTrigger, TabsContent } from "seed-design/ui/tabs";
+
+// "아산병원 근처 …", "건국대병원 근처 …" 처럼 큰 병원 이름 + 근처로 시작하는 키워드.
+// 캡처한 병원 이름이 곧 탭 이름이 된다.
+const NEAR_HOSPITAL = /^\s*(\S*병원)\s*근처/;
 
 // GEO 노출 리포트 공개 뷰 — 관리자 로그인 없이 광고주에게 체크리스트만 보여준다.
 // 링크(대상 id)만 있으면 열람 가능하다 (ledger/[company]/view, design/[token] 와 같은 방식).
@@ -46,6 +51,29 @@ export default async function GeoReportView({
   const total = results.length;
   const found = results.filter((r) => r.found === true).length;
   const rate = total ? Math.round((found / total) * 100) : 0;
+
+  // 대학병원별로 키워드를 묶는다. 키워드가 많은 병원부터 탭에 놓는다.
+  const byHospital = new Map<string, typeof keywords>();
+  for (const k of keywords) {
+    const hospital = NEAR_HOSPITAL.exec(k.keyword)?.[1];
+    if (!hospital) continue;
+    byHospital.set(hospital, [...(byHospital.get(hospital) ?? []), k]);
+  }
+  const hospitals = [...byHospital.entries()].sort((a, b) => b[1].length - a[1].length);
+
+  // 탭마다 같은 표를 키워드만 바꿔 그린다.
+  const checklist = (list: typeof keywords) => (
+    <ChecklistTable
+      targetId={targetId}
+      targetName={target.name}
+      highlightTerms={[target.name, ...target.aliases, coreToken(target.name)]}
+      date={date}
+      hasRun={!!detail}
+      results={detail?.results ?? []}
+      keywords={list}
+      readOnly
+    />
+  );
 
   return (
     <>
@@ -101,17 +129,27 @@ export default async function GeoReportView({
             <p className="rounded-lg border border-dashed border-gray-200 bg-white px-6 py-12 text-center text-sm text-gray-400">
               아직 점검 결과가 없습니다.
             </p>
+          ) : hospitals.length === 0 ? (
+            checklist(keywords)
           ) : (
-            <ChecklistTable
-              targetId={targetId}
-              targetName={target.name}
-              highlightTerms={[target.name, ...target.aliases, coreToken(target.name)]}
-              date={date}
-              hasRun={!!detail}
-              results={detail?.results ?? []}
-              keywords={keywords}
-              readOnly
-            />
+            <TabsRoot defaultValue="all" triggerLayout="hug">
+              <TabsList>
+                <TabsTrigger value="all">전체 {keywords.length}</TabsTrigger>
+                {hospitals.map(([hospital, list]) => (
+                  <TabsTrigger key={hospital} value={hospital}>
+                    {hospital} {list.length}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              <TabsContent value="all">
+                <div className="mt-4">{checklist(keywords)}</div>
+              </TabsContent>
+              {hospitals.map(([hospital, list]) => (
+                <TabsContent key={hospital} value={hospital}>
+                  <div className="mt-4">{checklist(list)}</div>
+                </TabsContent>
+              ))}
+            </TabsRoot>
           )}
         </div>
 
