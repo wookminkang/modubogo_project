@@ -7,6 +7,7 @@ import { upsertReport, deleteReport } from "@/lib/db";
 import { clearReportFiles, saveReportSectionOrder } from "@/lib/report-actions";
 import type { ReportSectionKey } from "@/lib/report-sections";
 import SectionOrderEditor from "./SectionOrderEditor";
+import { ReorderList, ReorderItem } from "@/components/ui/reorder-list";
 import { saveReportAttachments } from "@/lib/report-upload";
 import FileAttachments, {
   toNewFiles,
@@ -29,7 +30,6 @@ import { Button } from "@/components/ui/button";
 import { ActionButton } from "seed-design/ui/action-button";
 import { MonthPicker } from "@/components/ui/month-picker";
 import { DatePicker } from "@/components/ui/date-picker";
-import { OrderStepper } from "@/components/ui/order-stepper";
 import { ContractLinks } from "@/components/ui/contract-links";
 import { AmountInput } from "@/components/ui/amount-input";
 import { Trash2, ArrowLeft } from "lucide-react";
@@ -138,7 +138,7 @@ export default function EditForm({
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, move } = useFieldArray({
     control,
     name: "categories",
   });
@@ -146,11 +146,13 @@ export default function EditForm({
     fields: vFields,
     append: vAppend,
     remove: vRemove,
+    move: vMove,
   } = useFieldArray({ control, name: "validity" });
   const {
     fields: cFields,
     append: cAppend,
     remove: cRemove,
+    move: cMove,
   } = useFieldArray({ control, name: "contracts" });
 
   const onSubmit = async (data: FormValues) => {
@@ -166,10 +168,18 @@ export default function EditForm({
       }
     }
 
+    // 항목 순서는 드래그로 정한 화면 순서가 곧 순서 → 0,1,2… 로 매겨 저장
+    // (보고서 상세는 sort_order 로 정렬한다)
+    const byIndex = <T extends { sort_order: string }>(list: T[]) =>
+      list.map((item, i) => ({ ...item, sort_order: String(i) }));
+
     try {
       await upsertReport({
         id: reportId,
         ...data,
+        categories: byIndex(data.categories),
+        contracts: byIndex(data.contracts),
+        validity: byIndex(data.validity),
         status: "완료",
         hospital_type: data.hospital_type || undefined,
       });
@@ -237,149 +247,137 @@ export default function EditForm({
           <CardTitle className="text-[var(--seed-color-fg-neutral)]">집행 항목</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
-          {fields.map((field, index) => (
-            <div
-              key={field.id}
-              className="bg-[var(--seed-color-bg-neutral-weak)] rounded-xl overflow-hidden"
-            >
-              <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--seed-color-stroke-neutral-muted)]">
-                <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 flex items-center justify-center bg-[#0e299c] text-white text-xs font-bold rounded-full">
-                    {index + 1}
-                  </span>
-                  <span className="text-sm font-semibold text-[var(--seed-color-fg-neutral)]">
-                    항목 {index + 1}
-                  </span>
-                </div>
-                {fields.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="xs"
-                    onClick={() => remove(index)}
-                    className="text-[var(--seed-color-fg-critical)] hover:bg-[var(--seed-color-bg-critical-weak)] gap-1"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    삭제
-                  </Button>
-                )}
-              </div>
-              <div className="divide-y divide-[var(--seed-color-stroke-neutral-muted)]">
-                <div className="flex items-center px-4 py-2.5 gap-3">
-                  <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
-                    구분
-                  </span>
-                  <select
-                    {...register(`categories.${index}.category`)}
-                    className={`${rowInputClass} px-2 cursor-pointer`}
-                  >
-                    <option value="">선택</option>
-                    {categoryOptions.map((cat) => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex items-center px-4 py-2.5 gap-3">
-                  <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
-                    채널
-                  </span>
-                  <Input
-                    {...register(`categories.${index}.channel`)}
-                    placeholder="채널"
-                    className={rowInputClass}
-                  />
-                </div>
-                <div className="flex items-center px-4 py-2.5 gap-3">
-                  <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
-                    집행사
-                  </span>
-                  <Input
-                    {...register(`categories.${index}.agency`)}
-                    placeholder="집행사"
-                    className={rowInputClass}
-                  />
-                </div>
-                <div className="flex items-center px-4 py-2.5 gap-3">
-                  <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
-                    순서
-                  </span>
-                  <div className="flex items-center gap-2 flex-1 flex-wrap">
-                    <Controller
-                      control={control}
-                      name={`categories.${index}.sort_order`}
-                      render={({ field }) => (
-                        <OrderStepper
-                          value={field.value}
-                          onChange={field.onChange}
-                        />
+          <ReorderList ids={fields.map((f) => f.id)} onMove={move}>
+            {fields.map((field, index) => (
+              <ReorderItem
+                key={field.id}
+                id={field.id}
+                className="bg-[var(--seed-color-bg-neutral-weak)] rounded-xl overflow-hidden"
+              >
+                {(handle) => (
+                  <>
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--seed-color-stroke-neutral-muted)]">
+                      <div className="flex items-center gap-2">
+                        {handle}
+                        <span className="w-5 h-5 flex items-center justify-center bg-[#0e299c] text-white text-xs font-bold rounded-full">
+                          {index + 1}
+                        </span>
+                        <span className="text-sm font-semibold text-[var(--seed-color-fg-neutral)]">
+                          항목 {index + 1}
+                        </span>
+                      </div>
+                      {fields.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="xs"
+                          onClick={() => remove(index)}
+                          className="text-[var(--seed-color-fg-critical)] hover:bg-[var(--seed-color-bg-critical-weak)] gap-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          삭제
+                        </Button>
                       )}
-                    />
-                    <span className="text-xs text-[var(--seed-color-fg-neutral-muted)]">
-                      숫자가 낮을수록 먼저 집행됩니다.
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center px-4 py-2.5 gap-3">
-                  <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
-                    계약기간(월)
-                  </span>
-                  <Controller
-                    control={control}
-                    name={`categories.${index}.period`}
-                    render={({ field }) => {
-                      const raw = /^\d{4}-\d{2}$/.test(field.value)
-                        ? 1
-                        : parseInt(field.value) || 1;
-                      const num = Math.max(1, raw);
-                      return (
-                        <div className="flex items-center gap-1 bg-[var(--seed-color-bg-neutral-weak)] px-2 py-1 rounded-lg">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              field.onChange(String(Math.max(1, num - 1)))
-                            }
-                            className="w-6 h-6 flex items-center justify-center text-[var(--seed-color-fg-neutral)] hover:bg-[var(--seed-color-bg-neutral-weak-pressed)] rounded font-bold text-base"
-                          >
-                            −
-                          </button>
-                          <span className="w-8 text-center text-sm text-[var(--seed-color-fg-neutral)] font-bold">
-                            {num}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => field.onChange(String(num + 1))}
-                            className="w-6 h-6 flex items-center justify-center text-[var(--seed-color-fg-neutral)] hover:bg-[var(--seed-color-bg-neutral-weak-pressed)] rounded font-bold text-base"
-                          >
-                            +
-                          </button>
-                          <span className="text-xs text-[var(--seed-color-fg-neutral-muted)] font-medium pr-1">
-                            개월
-                          </span>
-                        </div>
-                      );
-                    }}
-                  />
-                </div>
-                <div className="flex items-center px-4 py-2.5 gap-3">
-                  <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
-                    집행금액 (원)
-                  </span>
-                  <Controller
-                    control={control}
-                    name={`categories.${index}.amount`}
-                    render={({ field }) => (
-                      <AmountInput
-                        value={field.value}
-                        onChange={field.onChange}
-                        placeholder="총 계약금액"
-                        className={rowInputClass}
-                      />
-                    )}
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
+                    </div>
+                    <div className="divide-y divide-[var(--seed-color-stroke-neutral-muted)]">
+                      <div className="flex items-center px-4 py-2.5 gap-3">
+                        <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
+                          구분
+                        </span>
+                        <select
+                          {...register(`categories.${index}.category`)}
+                          className={`${rowInputClass} px-2 cursor-pointer`}
+                        >
+                          <option value="">선택</option>
+                          {categoryOptions.map((cat) => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex items-center px-4 py-2.5 gap-3">
+                        <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
+                          채널
+                        </span>
+                        <Input
+                          {...register(`categories.${index}.channel`)}
+                          placeholder="채널"
+                          className={rowInputClass}
+                        />
+                      </div>
+                      <div className="flex items-center px-4 py-2.5 gap-3">
+                        <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
+                          집행사
+                        </span>
+                        <Input
+                          {...register(`categories.${index}.agency`)}
+                          placeholder="집행사"
+                          className={rowInputClass}
+                        />
+                      </div>
+                      <div className="flex items-center px-4 py-2.5 gap-3">
+                        <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
+                          계약기간(월)
+                        </span>
+                        <Controller
+                          control={control}
+                          name={`categories.${index}.period`}
+                          render={({ field }) => {
+                            const raw = /^\d{4}-\d{2}$/.test(field.value)
+                              ? 1
+                              : parseInt(field.value) || 1;
+                            const num = Math.max(1, raw);
+                            return (
+                              <div className="flex items-center gap-1 bg-[var(--seed-color-bg-neutral-weak)] px-2 py-1 rounded-lg">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    field.onChange(String(Math.max(1, num - 1)))
+                                  }
+                                  className="w-6 h-6 flex items-center justify-center text-[var(--seed-color-fg-neutral)] hover:bg-[var(--seed-color-bg-neutral-weak-pressed)] rounded font-bold text-base"
+                                >
+                                  −
+                                </button>
+                                <span className="w-8 text-center text-sm text-[var(--seed-color-fg-neutral)] font-bold">
+                                  {num}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => field.onChange(String(num + 1))}
+                                  className="w-6 h-6 flex items-center justify-center text-[var(--seed-color-fg-neutral)] hover:bg-[var(--seed-color-bg-neutral-weak-pressed)] rounded font-bold text-base"
+                                >
+                                  +
+                                </button>
+                                <span className="text-xs text-[var(--seed-color-fg-neutral-muted)] font-medium pr-1">
+                                  개월
+                                </span>
+                              </div>
+                            );
+                          }}
+                        />
+                      </div>
+                      <div className="flex items-center px-4 py-2.5 gap-3">
+                        <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
+                          집행금액 (원)
+                        </span>
+                        <Controller
+                          control={control}
+                          name={`categories.${index}.amount`}
+                          render={({ field }) => (
+                            <AmountInput
+                              value={field.value}
+                              onChange={field.onChange}
+                              placeholder="총 계약금액"
+                              className={rowInputClass}
+                            />
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </ReorderItem>
+            ))}
+          </ReorderList>
           <button
             type="button"
             onClick={() =>
@@ -406,107 +404,95 @@ export default function EditForm({
           <CardTitle className="text-[var(--seed-color-fg-neutral)]">광고 계약·리포트</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
-          {cFields.map((field, index) => (
-            <div
-              key={field.id}
-              className="bg-[var(--seed-color-bg-neutral-weak)] rounded-xl overflow-hidden"
-            >
-              <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--seed-color-stroke-neutral-muted)]">
-                <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 flex items-center justify-center bg-[#0e299c] text-white text-xs font-bold rounded-full">
-                    {index + 1}
-                  </span>
-                  <span className="text-sm font-semibold text-[var(--seed-color-fg-neutral)]">
-                    항목 {index + 1}
-                  </span>
-                </div>
-                {cFields.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="xs"
-                    onClick={() => cRemove(index)}
-                    className="text-[var(--seed-color-fg-critical)] hover:bg-[var(--seed-color-bg-critical-weak)] gap-1"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    삭제
-                  </Button>
-                )}
-              </div>
-              <div className="divide-y divide-[var(--seed-color-stroke-neutral-muted)]">
-                <div className="flex items-center px-4 py-2.5 gap-3">
-                  <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
-                    구분
-                  </span>
-                  <select
-                    {...register(`contracts.${index}.category`)}
-                    className={`${rowInputClass} px-2 cursor-pointer`}
-                  >
-                    <option value="">선택</option>
-                    {categoryOptions.map((cat) => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex items-center px-4 py-2.5 gap-3">
-                  <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
-                    계약명
-                  </span>
-                  <Input
-                    {...register(`contracts.${index}.name`)}
-                    placeholder="계약명"
-                    className={rowInputClass}
-                  />
-                </div>
-                <div className="flex items-center px-4 py-2.5 gap-3">
-                  <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
-                    키워드
-                  </span>
-                  <Input
-                    {...register(`contracts.${index}.keyword`)}
-                    placeholder="키워드"
-                    className={rowInputClass}
-                  />
-                </div>
-                <div className="flex items-start px-4 py-2.5 gap-3">
-                  <span className="w-20 shrink-0 pt-2 text-sm text-[var(--seed-color-fg-neutral-muted)]">
-                    링크
-                  </span>
-                  <Controller
-                    control={control}
-                    name={`contracts.${index}.link`}
-                    render={({ field }) => (
-                      <ContractLinks
-                        value={field.value}
-                        onChange={field.onChange}
-                        inputClassName={rowInputClass}
-                      />
-                    )}
-                  />
-                </div>
-                <div className="flex items-center px-4 py-2.5 gap-3">
-                  <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
-                    순서
-                  </span>
-                  <div className="flex items-center gap-2 flex-1 flex-wrap">
-                    <Controller
-                      control={control}
-                      name={`contracts.${index}.sort_order`}
-                      render={({ field }) => (
-                        <OrderStepper
-                          value={field.value}
-                          onChange={field.onChange}
-                        />
+          <ReorderList ids={cFields.map((f) => f.id)} onMove={cMove}>
+            {cFields.map((field, index) => (
+              <ReorderItem
+                key={field.id}
+                id={field.id}
+                className="bg-[var(--seed-color-bg-neutral-weak)] rounded-xl overflow-hidden"
+              >
+                {(handle) => (
+                  <>
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--seed-color-stroke-neutral-muted)]">
+                      <div className="flex items-center gap-2">
+                        {handle}
+                        <span className="w-5 h-5 flex items-center justify-center bg-[#0e299c] text-white text-xs font-bold rounded-full">
+                          {index + 1}
+                        </span>
+                        <span className="text-sm font-semibold text-[var(--seed-color-fg-neutral)]">
+                          항목 {index + 1}
+                        </span>
+                      </div>
+                      {cFields.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="xs"
+                          onClick={() => cRemove(index)}
+                          className="text-[var(--seed-color-fg-critical)] hover:bg-[var(--seed-color-bg-critical-weak)] gap-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          삭제
+                        </Button>
                       )}
-                    />
-                    <span className="text-xs text-[var(--seed-color-fg-neutral-muted)]">
-                      숫자가 낮을수록 먼저 집행됩니다.
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+                    </div>
+                    <div className="divide-y divide-[var(--seed-color-stroke-neutral-muted)]">
+                      <div className="flex items-center px-4 py-2.5 gap-3">
+                        <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
+                          구분
+                        </span>
+                        <select
+                          {...register(`contracts.${index}.category`)}
+                          className={`${rowInputClass} px-2 cursor-pointer`}
+                        >
+                          <option value="">선택</option>
+                          {categoryOptions.map((cat) => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex items-center px-4 py-2.5 gap-3">
+                        <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
+                          계약명
+                        </span>
+                        <Input
+                          {...register(`contracts.${index}.name`)}
+                          placeholder="계약명"
+                          className={rowInputClass}
+                        />
+                      </div>
+                      <div className="flex items-center px-4 py-2.5 gap-3">
+                        <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
+                          키워드
+                        </span>
+                        <Input
+                          {...register(`contracts.${index}.keyword`)}
+                          placeholder="키워드"
+                          className={rowInputClass}
+                        />
+                      </div>
+                      <div className="flex items-start px-4 py-2.5 gap-3">
+                        <span className="w-20 shrink-0 pt-2 text-sm text-[var(--seed-color-fg-neutral-muted)]">
+                          링크
+                        </span>
+                        <Controller
+                          control={control}
+                          name={`contracts.${index}.link`}
+                          render={({ field }) => (
+                            <ContractLinks
+                              value={field.value}
+                              onChange={field.onChange}
+                              inputClassName={rowInputClass}
+                            />
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </ReorderItem>
+            ))}
+          </ReorderList>
           <button
             type="button"
             onClick={() =>
@@ -534,96 +520,84 @@ export default function EditForm({
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
-          {vFields.map((field, index) => (
-            <div
-              key={field.id}
-              className="bg-[var(--seed-color-bg-neutral-weak)] rounded-xl overflow-hidden"
-            >
-              <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--seed-color-stroke-neutral-muted)]">
-                <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 flex items-center justify-center bg-[#0e299c] text-white text-xs font-bold rounded-full">
-                    {index + 1}
-                  </span>
-                  <span className="text-sm font-semibold text-[var(--seed-color-fg-neutral)]">
-                    항목 {index + 1}
-                  </span>
-                </div>
-                {vFields.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="xs"
-                    onClick={() => vRemove(index)}
-                    className="text-[var(--seed-color-fg-critical)] hover:bg-[var(--seed-color-bg-critical-weak)] gap-1"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    삭제
-                  </Button>
-                )}
-              </div>
-              <div className="divide-y divide-[var(--seed-color-stroke-neutral-muted)]">
-                <div className="flex items-center px-4 py-2.5 gap-3">
-                  <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
-                    구분
-                  </span>
-                  <select
-                    {...register(`validity.${index}.category`)}
-                    className={`${rowInputClass} px-2 cursor-pointer`}
-                  >
-                    <option value="">선택</option>
-                    {categoryOptions.map((cat) => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex items-center px-4 py-2.5 gap-3">
-                  <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
-                    주제
-                  </span>
-                  <Input
-                    {...register(`validity.${index}.subject`)}
-                    placeholder="주제"
-                    className={rowInputClass}
-                  />
-                </div>
-                <div className="flex items-center px-4 py-2.5 gap-3">
-                  <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
-                    순서
-                  </span>
-                  <div className="flex items-center gap-2 flex-1 flex-wrap">
-                    <Controller
-                      control={control}
-                      name={`validity.${index}.sort_order`}
-                      render={({ field }) => (
-                        <OrderStepper
-                          value={field.value}
-                          onChange={field.onChange}
-                        />
+          <ReorderList ids={vFields.map((f) => f.id)} onMove={vMove}>
+            {vFields.map((field, index) => (
+              <ReorderItem
+                key={field.id}
+                id={field.id}
+                className="bg-[var(--seed-color-bg-neutral-weak)] rounded-xl overflow-hidden"
+              >
+                {(handle) => (
+                  <>
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--seed-color-stroke-neutral-muted)]">
+                      <div className="flex items-center gap-2">
+                        {handle}
+                        <span className="w-5 h-5 flex items-center justify-center bg-[#0e299c] text-white text-xs font-bold rounded-full">
+                          {index + 1}
+                        </span>
+                        <span className="text-sm font-semibold text-[var(--seed-color-fg-neutral)]">
+                          항목 {index + 1}
+                        </span>
+                      </div>
+                      {vFields.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="xs"
+                          onClick={() => vRemove(index)}
+                          className="text-[var(--seed-color-fg-critical)] hover:bg-[var(--seed-color-bg-critical-weak)] gap-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          삭제
+                        </Button>
                       )}
-                    />
-                    <span className="text-xs text-[var(--seed-color-fg-neutral-muted)]">
-                      숫자가 낮을수록 먼저 집행됩니다.
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center px-4 py-2.5 gap-3">
-                  <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
-                    유효기간
-                  </span>
-                  <Controller
-                    control={control}
-                    name={`validity.${index}.expiryDate`}
-                    render={({ field }) => (
-                      <DatePicker
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                    )}
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
+                    </div>
+                    <div className="divide-y divide-[var(--seed-color-stroke-neutral-muted)]">
+                      <div className="flex items-center px-4 py-2.5 gap-3">
+                        <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
+                          구분
+                        </span>
+                        <select
+                          {...register(`validity.${index}.category`)}
+                          className={`${rowInputClass} px-2 cursor-pointer`}
+                        >
+                          <option value="">선택</option>
+                          {categoryOptions.map((cat) => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex items-center px-4 py-2.5 gap-3">
+                        <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
+                          주제
+                        </span>
+                        <Input
+                          {...register(`validity.${index}.subject`)}
+                          placeholder="주제"
+                          className={rowInputClass}
+                        />
+                      </div>
+                      <div className="flex items-center px-4 py-2.5 gap-3">
+                        <span className="w-20 text-sm text-[var(--seed-color-fg-neutral-muted)] shrink-0">
+                          유효기간
+                        </span>
+                        <Controller
+                          control={control}
+                          name={`validity.${index}.expiryDate`}
+                          render={({ field }) => (
+                            <DatePicker
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </ReorderItem>
+            ))}
+          </ReorderList>
           <button
             type="button"
             onClick={() =>

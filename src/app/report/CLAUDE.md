@@ -65,6 +65,7 @@
 - **URL 인코딩 필수**: `company`/`month`는 동적 파라미터. 읽을 때 `decodeURIComponent`, 링크 만들 때 `encodeURIComponent`. 회사명에 특수문자(`/`, 지점명) 가능.
 - **비밀번호 보호**: 쿠키 `report_auth_{reportId}`에 평문 저장. 불일치 시 `<PasswordGate>` 표시. 인증은 `@/lib/actions`.
 - **정렬**: categories/contracts/validity 모두 `sort_order` 숫자 필드로 정렬. 저장 시 `Number(x.sort_order) || 0`.
+  - 수정 화면은 순서 버튼이 없고, 항목 헤더의 ⋮⋮ 손잡이로 드래그(`@/components/ui/reorder-list`) → 저장 시 화면 순서대로 0,1,2… 로 다시 매긴다. 신규 작성 폼(`new/`)은 아직 순서 버튼(`OrderStepper`) 방식
 - **카테고리 색상**: `{ ...DEFAULT_COLORS, ...dbColors }` 머지 (DB 우선). `@/lib/categoryColors`.
 - **금액 합계**: `getTotalAmount()` (`@/lib/mockData`). 네이버 비용은 별도로 더함.
 - 컴포넌트 폭: 상세 `max-w-[420px]`, 목록 `max-w-[600px]`.
