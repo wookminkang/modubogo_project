@@ -3,6 +3,7 @@ import { getReportFromDB, getCategoryColorsFromDB, getCompanySettings, resolveCo
 import { getDesignFileSignedUrl } from "@/lib/design-storage";
 import type { DesignFileMeta } from "@/lib/design-fields";
 import { isAdmin } from "@/lib/admin";
+import { getReportSectionOrder } from "@/lib/report-section-db";
 import EditForm from "./EditForm";
 
 interface Props {
@@ -16,10 +17,11 @@ export default async function ReportEditPage({ params }: Props) {
   if (!admin) redirect('/admin/login');
 
   const decoded = await resolveCompanyParam(company);
-  const [report, dbColors, settings] = await Promise.all([
+  const [report, dbColors, settings, sectionOrder] = await Promise.all([
     getReportFromDB(decoded, month),
     getCategoryColorsFromDB(),
     getCompanySettings(decoded),
+    getReportSectionOrder(),
   ]);
   const categoryOptions = Object.keys(dbColors).sort((a, b) => a.localeCompare(b, "ko"));
 
@@ -41,6 +43,7 @@ export default async function ReportEditPage({ params }: Props) {
       categoryOptions={categoryOptions}
       initialFiles={files}
       initialFileUrls={fileUrls}
+      sectionOrder={sectionOrder}
       defaultValues={{
         company: report.company,
         month: report.month,

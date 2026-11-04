@@ -1,6 +1,6 @@
 "use server";
 
-import { isAdmin } from "./admin";
+import { isAdmin, getAdminUser, canAccessMenu } from "./admin";
 import { getReportFilesById, updateReportFiles } from "./db";
 import type { DesignFiles, DesignFileMeta } from "./design-fields";
 import {
@@ -8,6 +8,8 @@ import {
   deleteReportFiles,
   deleteDesignFilePaths,
 } from "./design-storage";
+import { saveReportSectionOrderToDB } from "./report-section-db";
+import { normalizeSectionOrder } from "./report-sections";
 
 const FILE_KEY = "files";
 
@@ -83,4 +85,22 @@ export async function clearReportFiles(
 ): Promise<void> {
   if (!(await isAdmin())) throw new Error("권한이 없습니다.");
   await deleteReportFiles(reportId).catch(() => {});
+}
+
+/**
+ * [관리자] 보고서 섹션 순서 저장 — 모든 병원 보고서에 공통으로 적용된다.
+ * 전역 설정이라 보고서 메뉴 권한이 있는 관리자만 바꿀 수 있다.
+ */
+export async function saveReportSectionOrder(
+  order: string[],
+): Promise<Result<object>> {
+  try {
+    const me = await getAdminUser();
+    if (!me) throw new Error("권한이 없습니다. 다시 로그인해주세요.");
+    if (!canAccessMenu(me, "report")) throw new Error("보고서 메뉴 권한이 없습니다.");
+    await saveReportSectionOrderToDB(normalizeSectionOrder(order));
+    return { ok: true };
+  } catch (e) {
+    return fail(e);
+  }
 }

@@ -1,7 +1,7 @@
 import dayjs from "@/lib/dayjs";
 import Script from "next/script";
 import Link from "next/link";
-import { Suspense } from "react";
+import { Fragment, Suspense, type ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
 import { cookies } from "next/headers";
@@ -19,6 +19,8 @@ import ScrollNav from "@/components/ScrollNav";
 import ReportTabs from "@/components/ReportTabs";
 import HistoryPanel from "@/components/HistoryPanel";
 import { listCompanyHistories } from "@/lib/history-db";
+import { getReportSectionOrder } from "@/lib/report-section-db";
+import type { ReportSectionKey } from "@/lib/report-sections";
 import { getTotalAmount } from "@/lib/mockData";
 import { DEFAULT_COLORS } from "@/lib/categoryColors";
 import MonthCompareChart from "@/components/MonthCompareChart";
@@ -51,13 +53,15 @@ export default async function ReportPage({
   const { auth_error } = await searchParams;
   const decoded = await resolveCompanyParam(company);
 
-  const [report, allReports, admin, settings, dbColors] = await Promise.all([
-    getReportFromDB(decoded, month),
-    getReportsByCompanyFromDB(decoded),
-    isAdmin(),
-    getCompanySettings(decoded),
-    getCategoryColorsFromDB(),
-  ]);
+  const [report, allReports, admin, settings, dbColors, sectionOrder] =
+    await Promise.all([
+      getReportFromDB(decoded, month),
+      getReportsByCompanyFromDB(decoded),
+      isAdmin(),
+      getCompanySettings(decoded),
+      getCategoryColorsFromDB(),
+      getReportSectionOrder(),
+    ]);
   const colorMap = { ...DEFAULT_COLORS, ...dbColors };
 
   const hasNaverSettings = !!settings?.naver_ad_api_key;
@@ -253,6 +257,46 @@ export default async function ReportPage({
     })
     .sort((a, b) => a.month.localeCompare(b.month));
   const currentMonthNum = month.slice(5);
+
+  // 섹션 순서는 관리자가 수정 화면에서 드래그로 정한다 (모든 병원 공통, app_settings)
+  const reportSections: Record<ReportSectionKey, ReactNode> = {
+    // 집행 항목 — 월별 추이 · 전월 비교 · 카테고리 분포 · 매체별 운영 현황
+    categories: (
+      <>
+        {/* 월별 광고 집행 현황 */}
+        <MonthlyTrendChart data={chartData} currentMonth={currentMonthNum} />
+
+        {/* 전월 대비 광고 비교 */}
+        <MonthCompareChart
+          currentMonth={month}
+          prevMonth={prevMonthStr}
+          currentCategories={categoriesWithNaver}
+          prevCategories={prevCategories}
+          currentTotal={totalWithNaver}
+          prevTotal={prevTotal}
+        />
+
+        {/* 카테고리별 분포 */}
+        <CategoryDonutChart
+          categories={categoriesWithNaver}
+          total={totalWithNaver}
+        />
+
+        {/* 매체별 운영 현황 */}
+        <CategoryTable
+          categories={categories}
+          total={total}
+          naverAdCosts={naverAdCosts}
+          reportMonth={month}
+          colorMap={colorMap}
+        />
+      </>
+    ),
+    // 광고 계약·리포트 현황
+    contracts: <ContractTable contracts={report.contracts} colorMap={colorMap} />,
+    // 광고 심의 및 운영 현황
+    validity: <ValidityTable validity={report.validity} colorMap={colorMap} />,
+  };
 
   return (
     <div className="min-h-screen bg-[#F0F4FA]">
@@ -595,42 +639,10 @@ export default async function ReportPage({
               );
             })()}
 
-            {/* 월별 광고 집행 현황 */}
-            <MonthlyTrendChart
-              data={chartData}
-              currentMonth={currentMonthNum}
-            />
-
-            {/* 전월 대비 광고 비교 */}
-            <MonthCompareChart
-              currentMonth={month}
-              prevMonth={prevMonthStr}
-              currentCategories={categoriesWithNaver}
-              prevCategories={prevCategories}
-              currentTotal={totalWithNaver}
-              prevTotal={prevTotal}
-            />
-
-            {/* 카테고리별 분포 */}
-            <CategoryDonutChart
-              categories={categoriesWithNaver}
-              total={totalWithNaver}
-            />
-
-            {/* 매체별 운영 현황 */}
-            <CategoryTable
-              categories={categories}
-              total={total}
-              naverAdCosts={naverAdCosts}
-              reportMonth={month}
-              colorMap={colorMap}
-            />
-
-            {/* 광고 계약·리포트 현황 */}
-            <ContractTable contracts={report.contracts} colorMap={colorMap} />
-
-            {/* 광고 심의 및 운영 현황 */}
-            <ValidityTable validity={report.validity} colorMap={colorMap} />
+            {/* 집행 항목 · 광고 계약·리포트 · 광고 심의 — 관리자가 정한 순서대로 */}
+            {sectionOrder.map((key) => (
+              <Fragment key={key}>{reportSections[key]}</Fragment>
+            ))}
 
             {/* 첨부자료 — 이미지는 확대, 그 외는 새 탭 */}
             <ReportAttachments attachments={attachments} />

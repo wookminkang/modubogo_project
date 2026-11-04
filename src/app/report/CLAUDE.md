@@ -29,6 +29,15 @@
 - "이전 달 보고서 불러오기" → `loadLatestReportData()` (`@/lib/copy-actions`) → `reset(data)`.
 - 저장: `upsertReport()` (`@/lib/db`)가 3개 자식 테이블을 함께 저장.
 
+## 섹션 순서 (모든 병원 공통)
+
+위 3개 섹션(집행 항목 / 광고 계약·리포트 / 광고 심의)의 **표시 순서**는 병원·월과 상관없는 전역 설정 하나다.
+
+- 수정 화면 "섹션 순서" 카드(`edit/SectionOrderEditor.tsx`, motion `Reorder`)에서 드래그 → **수정 버튼을 눌러야** `saveReportSectionOrder()`(`@/lib/report-actions`, 보고서 메뉴 권한)로 저장
+- 저장소 `app_settings` 테이블의 `report_section_order` (스키마 `sql/app_settings.sql`), 읽기/쓰기 `@/lib/report-section-db`, 키·라벨·보정 `@/lib/report-sections`
+- 수정 화면 카드 순서와 보고서 상세(공개 뷰)의 섹션 순서가 함께 바뀐다. 상세의 "집행 항목"은 월별 추이·전월 비교·도넛·매체별 표 4개 묶음
+- 테이블이 없거나 값이 깨져도 `normalizeSectionOrder`가 기본 순서로 맞춰 화면은 깨지지 않는다. 신규 작성 폼(`new/`)은 기본 순서 그대로
+
 ## 병원별 히스토리 (공개 뷰의 "히스토리" 탭)
 
 그동안 한 작업을 날짜순으로 쌓아 두는 곳. **월이 아니라 병원(company) 단위**라 어느 달 보고서에서 열어도 같은 내역이 보인다.
