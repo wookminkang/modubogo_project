@@ -301,17 +301,9 @@ export default async function ReportPage({
   return (
     <div className="min-h-screen bg-[#F0F4FA]">
       <div className="mx-auto flex w-full max-w-[800px] justify-center gap-6 lg:gap-10">
-        {/* 왼쪽 광고 배너 (데스크탑 전용) — 위/아래 2개 */}
+        {/* 왼쪽 광고 배너 (데스크탑 전용) — 메디로드 */}
         <aside className="hidden lg:block w-[240px] shrink-0 py-6">
           <div className="sticky top-20 flex flex-col gap-3">
-            {/* 위 배너 */}
-            <AdBanner
-              src="/images/report_ad_banner01.png"
-              width={1024}
-              height={1536}
-              alt="광고 배너 1"
-            />
-            {/* 아래 배너 — 메디로드 */}
             <AdBanner
               src="/images/report_ad_banner02.png"
               width={1004}
