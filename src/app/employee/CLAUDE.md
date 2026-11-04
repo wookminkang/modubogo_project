@@ -79,7 +79,11 @@
 - 잔여일수를 초과해 신청해도 **막지 않는다** — `LeaveRequestForm.tsx`에서 초과 시 빨간 경고 문구만 보여주고 제출은 허용(관리자가 승인 단계에서 최종 판단하는 구조).
 - **수동 보정치**: `employees.leave_adjustment_days`(numeric, 기본 0, `sql/employees_leave_adjustment.sql` — 별도 마이그레이션 필요). `computeEntitledLeaveDays()`는 "근속 개월당 1일" 일반 공식만 표현하므로, **수습기간 제외·주말 출근 대체휴가 지급** 등 회사별 예외는 이 값으로 관리자가 직접 +/- 보정한다. 최종 부여일수 = `computeEntitledLeaveDays(...) + leave_adjustment_days` — 두 계산 사이트(`employee/leave/page.tsx`, `admin/employees/page.tsx`) 모두 이 합산 방식을 따른다. `updateLeaveQuotaAction`이 `annualLeaveDays`와 `leaveAdjustmentDays`를 한 폼에서 같이 저장한다.
   - ⚠️ 이 보정치는 **일회성 스냅샷 보정**이지 정책 엔진이 아니다 — 예: 강보영 계정(입사 2026-03-18)은 실제로는 수습 2개월 제외 + 매월 초 기준 적립 + 6·7월 주말 대체휴가 1.5일씩이라는 회사 고유 정책을 따르는데, 우리 자동 공식(입사일 기준 만근 개월)은 이를 표현 못 해서 `leave_adjustment_days=3`으로 오늘 시점 부여일수(7일)를 맞춰놓은 것이다. **다음 달이 되면 자동 계산이 또 어긋날 수 있으니, 이런 예외가 있는 계정은 매달 관리자가 보정치를 다시 확인해야 한다.** 전사적으로 "월 1일 기준일이 입사일이 아니라 매월 1일"이라면, 그건 `computeEntitledLeaveDays` 공식 자체를 바꿔야 하는 문제이니 개별 보정치로 땜질하지 말 것.
-- 카카오 알림톡 연동(신청/승인/거절 알림)과 "업무일지 미작성 직원 파악"은 **의도적으로 스코프 밖**(정책 확정 후 별도 작업).
+- **휴가 신청 알림톡**: 직원이 신청하면 관리자 고정 번호 2개로 카카오 알림톡이 간다. `@/lib/leave-alimtalk`(`server-only` — "use server" 가 아니어서 클라이언트가 직접 못 부름) → `submitLeaveRequest`에서 `after()`로 응답 뒤 발송, 실패해도 신청은 유지되고 `console.error`만 남는다(`alimtalk_logs`에는 안 남김 — 보고서 발송 내역과 섞이지 않게).
+  - BizGo 템플릿 `leaveRequest`(텍스트형 BA/NONE, 발송 msgType `AT`, 카테고리 008002 내부 업무 알림), 변수 `#{직원명}` `#{기간}` `#{종류}` `#{사유}`, 버튼 → `/admin/employees/leave`. 2026-11-04 API로 등록·검수 요청함.
+  - ⚠️ 코드의 `LEAVE_TEMPLATE_TEXT`·버튼은 승인된 템플릿과 글자 하나까지 같아야 한다. 승인 템플릿은 수정 불가 → 문구 변경은 새 코드로 재등록·재검수.
+  - 받는 번호 변경은 `leave-alimtalk.ts`의 `RECIPIENTS`만 고치면 된다. 승인/거절 시 직원에게 보내는 알림은 아직 없음.
+- "업무일지 미작성 직원 파악"은 **의도적으로 스코프 밖**(정책 확정 후 별도 작업).
 - **연차 부여일수는 정적 값이 아니라 근속 기반으로 계산된다** — `computeEntitledLeaveDays(hireDate, annualLeaveDays, asOf)`(`@/lib/utils`, 근로기준법 60조 방식): 입사 1년 미만은 만근 개월당 1일(최대 11일), 1년 이상은 관리자가 설정한 `annual_leave_days`를 그대로 적용. `hire_date`가 없는 레거시 계정은 근속 계산이 불가능하니 바로 연간 한도를 준다. `monthsBetween(start, end)`도 같은 파일에 있다. 이 로직도 `employee/leave/page.tsx`와 `admin/employees/page.tsx` 두 군데서 각각 호출한다 — 계산식을 바꾸면 두 곳 다 고칠 것.
 - 사용일수(`usedDays`)는 여전히 **달력연도** 기준 집계인데, 부여일수(`entitledDays`)는 **입사일 기준 근속**으로 계산되어 기준이 다르다 — 의도적 단순화다(근로기준법의 입사연도 기준 사이클까지 맞추려면 사용일수도 입사일 기준으로 바꿔야 하는데, 아직 안 했음).
 

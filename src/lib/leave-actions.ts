@@ -2,6 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { sendLeaveRequestAlimtalk } from "./leave-alimtalk";
 import {
   createLeaveRequest,
   updateLeaveRequestStatus,
@@ -42,6 +44,23 @@ export async function submitLeaveRequest(formData: FormData) {
   if (overlaps) redirect("/employee/leave?error=overlap");
 
   await createLeaveRequest(employee.id, startDate, endDate, reason, unit);
+
+  // 관리자에게 알림톡 — 응답을 보낸 뒤 실행해 신청 화면이 느려지지 않게 하고,
+  // 발송이 실패해도 신청 자체는 이미 저장됐으므로 로그만 남긴다.
+  after(async () => {
+    try {
+      await sendLeaveRequestAlimtalk({
+        employeeName: employee.name,
+        startDate,
+        endDate,
+        unit,
+        reason,
+      });
+    } catch (e) {
+      console.error("[휴가 신청 알림톡] 발송 실패:", e);
+    }
+  });
+
   revalidatePath("/employee/leave");
   redirect("/employee/leave?submitted=1");
 }
