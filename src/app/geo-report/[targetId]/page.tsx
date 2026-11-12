@@ -12,9 +12,21 @@ import ChecklistTable from "../../geo-check/_components/ChecklistTable";
 import ViewDateNav from "../../geo-check/_components/ViewDateNav";
 import { TabsRoot, TabsList, TabsTrigger, TabsContent } from "seed-design/ui/tabs";
 
-// "아산병원 근처 …", "건국대병원 근처 …" 처럼 큰 병원 이름 + 근처로 시작하는 키워드.
-// 캡처한 병원 이름이 곧 탭 이름이 된다.
-const NEAR_HOSPITAL = /^\s*(\S*병원)\s*근처/;
+// 광고주 화면 탭: 주요 대학병원 4곳만 따로 두고, 나머지 병원(·병원 없는 키워드)은 "기타"로 묶는다.
+// 탭 순서도 이 배열 순서. 같은 병원의 다른 표기(건국대병원, 삼성서울병원 등)는 aliases 로 함께 잡는다.
+const HOSPITAL_TABS: { name: string; aliases: string[] }[] = [
+  { name: "아산병원", aliases: ["아산병원"] },
+  { name: "삼성병원", aliases: ["삼성병원", "삼성서울병원"] },
+  { name: "건대병원", aliases: ["건대병원", "건국대병원", "건국대학교병원"] },
+  { name: "강남세브란스병원", aliases: ["강남세브란스"] },
+];
+const OTHER_TAB = "기타";
+
+/** "아산병원 근처 …" 처럼 키워드 앞머리('근처' 앞)에 적힌 병원으로 탭을 고른다. */
+function hospitalTabOf(keyword: string): string {
+  const head = (/^\s*(.+?)\s*근처/.exec(keyword)?.[1] ?? "").replace(/\s+/g, "");
+  return HOSPITAL_TABS.find((t) => t.aliases.some((a) => head.includes(a)))?.name ?? OTHER_TAB;
+}
 
 // GEO 노출 리포트 공개 뷰 — 관리자 로그인 없이 광고주에게 체크리스트만 보여준다.
 // 링크(대상 id)만 있으면 열람 가능하다 (ledger/[company]/view, design/[token] 와 같은 방식).
@@ -63,14 +75,17 @@ export default async function GeoReportView({
   const found = results.filter((r) => r.found === true).length;
   const rate = total ? Math.round((found / total) * 100) : 0;
 
-  // 대학병원별로 키워드를 묶는다. 키워드가 많은 병원부터 탭에 놓는다.
+  // 주요 대학병원 4곳 + 기타로 키워드를 묶는다. 빈 탭은 뺀다.
   const byHospital = new Map<string, typeof keywords>();
   for (const k of keywords) {
-    const hospital = NEAR_HOSPITAL.exec(k.keyword)?.[1];
-    if (!hospital) continue;
-    byHospital.set(hospital, [...(byHospital.get(hospital) ?? []), k]);
+    const tab = hospitalTabOf(k.keyword);
+    byHospital.set(tab, [...(byHospital.get(tab) ?? []), k]);
   }
-  const hospitals = [...byHospital.entries()].sort((a, b) => b[1].length - a[1].length);
+  const hospitals = [...HOSPITAL_TABS.map((t) => t.name), OTHER_TAB]
+    .map((name): [string, typeof keywords] => [name, byHospital.get(name) ?? []])
+    .filter(([, list]) => list.length > 0);
+  // 주요 병원 키워드가 하나도 없는 대상(다른 병원 리포트)은 탭 없이 표 하나로 보여준다.
+  const hasMainHospital = HOSPITAL_TABS.some((t) => byHospital.has(t.name));
 
   // 탭마다 같은 표를 키워드만 바꿔 그린다.
   const checklist = (list: typeof keywords) => (
@@ -142,7 +157,7 @@ export default async function GeoReportView({
             <p className="rounded-lg border border-dashed border-gray-200 bg-white px-6 py-12 text-center text-sm text-gray-400">
               아직 점검 결과가 없습니다.
             </p>
-          ) : hospitals.length === 0 ? (
+          ) : !hasMainHospital ? (
             checklist(keywords)
           ) : (
             <TabsRoot defaultValue="all" triggerLayout="hug">
