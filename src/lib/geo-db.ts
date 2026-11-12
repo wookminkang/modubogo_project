@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { publishDateFromMemo } from "@/lib/geo-visible";
 
 // GEO 노출 체크리스트 쿼리 레이어. 스키마는 sql/geo_check.sql 참고.
 //
@@ -218,10 +219,9 @@ export async function listGeoKeywords(targetId: string): Promise<GeoKeyword[]> {
  *
  * 키워드를 미리 등록해 두고 원고가 나가는 날부터 점검에 넣는 운영 방식이라,
  * 비고에 적어둔 발행일이 곧 "이 날부터 점검 대상" 이라는 뜻이다.
+ * 구현은 클라이언트에서도 쓰도록 geo-visible.ts 에 있다 (표 노출 판정과 같은 규칙을 공유).
  */
-export function publishDateFromMemo(memo: string | null | undefined): string | null {
-  return memo?.match(/\d{4}-\d{2}-\d{2}/)?.[0] ?? null;
-}
+export { publishDateFromMemo };
 
 /**
  * 발행일이 지났는데 꺼져 있는 키워드를 켠다. 켠 개수를 돌려준다.

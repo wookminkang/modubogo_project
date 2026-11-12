@@ -4,6 +4,7 @@ import { Fragment, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { GeoKeyword, GeoRunResult } from "@/lib/geo-db";
 import { updateGeoKeywordMeta } from "@/lib/geo-actions";
+import { visibleKeywords } from "@/lib/geo-visible";
 import AnswerView from "./AnswerView";
 import { categoryClass } from "./categories";
 
@@ -60,13 +61,15 @@ export default function ChecklistTable({
   }
 
   // 표는 결과가 아니라 **현재 키워드**를 기준으로 그린다.
-  // 이번 회차에 안 돌린 키워드도 행은 있어야 하고, 그 칸이 "공란=미점검"이다.
+  // 이번 회차에 안 돌린 (켜진) 키워드도 행은 있어야 하고, 그 칸이 "공란=미점검"이다.
+  // 꺼진 키워드는 지금 키워드 세트 시작 전 날짜에 결과가 있을 때만 보인다 (visibleKeywords).
   // 삭제된 키워드는 표에서 완전히 빼므로(결과 스냅샷은 DB에 남지만 화면엔 안 띄움),
   // 현재 키워드 목록에 없는 결과는 렌더하지 않는다.
   const resultByKeywordId = new Map(
     results.filter((r) => r.keywordId).map((r) => [r.keywordId as string, r]),
   );
-  const rows: Row[] = keywords.map((k) => ({
+  const shown = visibleKeywords(keywords, [{ date, keywordIds: resultByKeywordId.keys() }]);
+  const rows: Row[] = shown.map((k) => ({
     key: k.id,
     keywordId: k.id,
     keywordText: k.keyword,

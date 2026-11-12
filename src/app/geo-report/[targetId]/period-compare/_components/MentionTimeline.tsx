@@ -1,13 +1,25 @@
 import { categoryClass } from "@/app/geo-check/_components/categories";
 import type { GeoKeyword, GeoRunDetail } from "@/lib/geo-db";
+import { visibleKeywords } from "@/lib/geo-visible";
 
 type Row = { key: string; text: string; category: string | null };
 
 /** 키워드 마스터 전체를 기준으로 행을 만들고, 결과 스냅샷에만 남은(삭제된) 키워드도
  *  별도 행으로 보존한다. geo-check/CLAUDE.md: "표는 결과가 아니라 키워드 전체를 기준으로 그린다." */
 function buildRows(keywords: GeoKeyword[], detailsByDate: Map<string, GeoRunDetail>): Row[] {
-  const rows: Row[] = keywords.map((k) => ({ key: k.id, text: k.keyword, category: k.category }));
-  const seen = new Set(rows.map((r) => r.key));
+  // 꺼진 키워드는 지금 세트 시작 전 날짜에 결과가 있을 때만 행으로 남긴다 (교체된 옛 키워드 숨김).
+  const checks = [...detailsByDate].map(([date, detail]) => ({
+    date,
+    keywordIds: detail.results.flatMap((r) => (r.keywordId ? [r.keywordId] : [])),
+  }));
+  const rows: Row[] = visibleKeywords(keywords, checks).map((k) => ({
+    key: k.id,
+    text: k.keyword,
+    category: k.category,
+  }));
+  // 키워드 마스터에 있는 키워드는 위에서 이미 보일지 말지 정했으므로, 아래 스냅샷 루프가
+  // 숨긴 키워드를 되살리지 않게 seen 에 전부 넣는다. (삭제된 키워드만 스냅샷으로 보존)
+  const seen = new Set([...rows.map((r) => r.key), ...keywords.map((k) => k.id)]);
   for (const detail of detailsByDate.values()) {
     for (const r of detail.results) {
       const key = r.keywordId ?? r.keywordText;

@@ -7,6 +7,7 @@ import {
   todayKst,
 } from "@/lib/geo-db";
 import { coreToken } from "@/lib/geo-match";
+import { visibleKeywords } from "@/lib/geo-visible";
 import ChecklistTable from "../../geo-check/_components/ChecklistTable";
 import ViewDateNav from "../../geo-check/_components/ViewDateNav";
 import { TabsRoot, TabsList, TabsTrigger, TabsContent } from "seed-design/ui/tabs";
@@ -41,13 +42,23 @@ export default async function GeoReportView({
       ? rawDate
       : fallback;
 
-  const [keywords, detail] = await Promise.all([
+  const [allKeywords, detail] = await Promise.all([
     listGeoKeywords(targetId),
     getGeoRunDetailForDate(targetId, date),
   ]);
+  // 꺼진 키워드는 지금 세트 시작 전 날짜에 결과가 있을 때만 보인다 — 탭 개수도 표와 같은 기준.
+  const keywords = visibleKeywords(allKeywords, [
+    {
+      date,
+      keywordIds: (detail?.results ?? []).flatMap((r) => (r.keywordId ? [r.keywordId] : [])),
+    },
+  ]);
+  const hiddenIds = new Set(
+    allKeywords.filter((k) => !keywords.includes(k)).map((k) => k.id),
+  );
 
-  // 노출률 요약 — 광고주가 맨 위에서 한눈에 보게 한다.
-  const results = detail?.results ?? [];
+  // 노출률 요약 — 광고주가 맨 위에서 한눈에 보게 한다. 표에서 숨긴 키워드의 결과는 빼고 센다.
+  const results = (detail?.results ?? []).filter((r) => !(r.keywordId && hiddenIds.has(r.keywordId)));
   const total = results.length;
   const found = results.filter((r) => r.found === true).length;
   const rate = total ? Math.round((found / total) * 100) : 0;
@@ -69,7 +80,7 @@ export default async function GeoReportView({
       highlightTerms={[target.name, ...target.aliases, coreToken(target.name)]}
       date={date}
       hasRun={!!detail}
-      results={detail?.results ?? []}
+      results={results}
       keywords={list}
       readOnly
     />
@@ -98,9 +109,11 @@ export default async function GeoReportView({
           <div className="mt-5 flex flex-wrap items-center gap-x-8 gap-y-3 rounded-xl border border-gray-200 bg-white px-6 py-5">
             <div>
               <div className="flex items-baseline gap-2">
-                <span className="text-[36px] font-bold leading-none text-[#0e299c]">{rate}%</span>
+                <span className="text-[36px] font-bold leading-none text-[#0e299c]">
+                  {total ? `${rate}%` : "—"}
+                </span>
                 <span className="text-sm text-[#6b7684]">
-                  {found}/{total} 노출
+                  {total ? `${found}/${total} 노출` : "점검 전"}
                 </span>
               </div>
               <p className="mt-1.5 text-xs text-[#8b95a1]">점검일 {date}</p>
