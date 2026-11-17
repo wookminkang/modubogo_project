@@ -16,7 +16,7 @@ export type GeoResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
 /** 한 번에 등록/실행할 수 있는 활성 키워드 상한. 비활성 키워드는 세지 않는다
  *  — 상한의 근거가 1회 실행 예산(BUDGET_MS)이고, 실행 대상은 활성 키워드뿐이기 때문. */
-const MAX_KEYWORDS = 100;
+const MAX_KEYWORDS = 110;
 /** 동시 실행 수. web_search 는 자체 레이트리밋이 있어 올릴수록 429 로 오히려 느려진다. */
 const CONCURRENCY = 4;
 /** 키워드 1건 제한시간. reasoning=low 로 보통 ~30초지만 간헐적 지연을 감안해 여유를 둔다. */
