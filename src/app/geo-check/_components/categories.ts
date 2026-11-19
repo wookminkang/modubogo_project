@@ -7,6 +7,11 @@ export const CATEGORY_STYLE: Record<string, string> = {
   프로그램: "bg-[#f0e4f0] text-[#6a3a6a]",
   증상: "bg-[#e2f0e0] text-[#2f6a2a]",
   브랜드: "bg-[#fce8e6] text-[#8a2a20]",
+  // 티어 분류 (리움한방병원 2026-11 키워드 세트: 1티어 병원 / 1.5티어 / 2티어 암종 / 3티어 치료방법)
+  "1티어": "bg-[var(--seed-color-palette-blue-100)] text-[var(--seed-color-palette-blue-800)]",
+  "1.5티어": "bg-[var(--seed-color-palette-purple-100)] text-[var(--seed-color-palette-purple-800)]",
+  "2티어": "bg-[var(--seed-color-palette-green-100)] text-[var(--seed-color-palette-green-800)]",
+  "3티어": "bg-[var(--seed-color-palette-yellow-100)] text-[var(--seed-color-palette-yellow-900)]",
 };
 
 export const CATEGORY_FALLBACK = "bg-gray-100 text-gray-500";
