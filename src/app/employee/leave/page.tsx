@@ -41,8 +41,13 @@ export default async function EmployeeLeavePage({ searchParams }: Props) {
 
   const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
   const thisYear = String(new Date().getFullYear());
-  const usedDays = requests
-    .filter((r) => r.status === "approved" && r.start_date.startsWith(thisYear))
+  // 신청한 순간(대기중)부터 남은 연차에서 뺀다. 거절·취소되면 계산에서 빠져 저절로 돌아온다.
+  const counted = requests.filter(
+    (r) => r.status !== "rejected" && r.start_date.startsWith(thisYear),
+  );
+  const usedDays = counted.reduce((sum, r) => sum + leaveAmount(r), 0);
+  const pendingDays = counted
+    .filter((r) => r.status === "pending")
     .reduce((sum, r) => sum + leaveAmount(r), 0);
   const entitledDays =
     computeEntitledLeaveDays(employee.hireDate, employee.annualLeaveDays, today) +
@@ -68,6 +73,11 @@ export default async function EmployeeLeavePage({ searchParams }: Props) {
             <span className="text-[#0e299c]">({remainingDays}일 남음)</span>
           </span>
         </div>
+        {pendingDays > 0 && (
+          <p className="text-xs text-gray-400">
+            승인 대기 {pendingDays}일도 미리 뺐어요 · 거절되거나 신청을 취소하면 돌아와요
+          </p>
+        )}
         {isFirstYear && (
           <p className="text-xs text-gray-400">
             입사 {monthsWorked}개월차 · 매달 만근하면 1일씩 늘어나요 (정규 연차{" "}

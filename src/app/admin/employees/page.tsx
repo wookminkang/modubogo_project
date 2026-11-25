@@ -28,19 +28,24 @@ export default async function AdminEmployeesPage() {
   const admin = await isAdmin();
   if (!admin) redirect("/admin/login");
 
-  const [employees, approvedLeave] = await Promise.all([
+  const [employees, allLeave] = await Promise.all([
     listEmployees(),
-    getAllLeaveRequestsForAdmin({ status: "approved" }),
+    getAllLeaveRequestsForAdmin(),
   ]);
   const pending = employees.filter((e) => e.status === "pending");
   const others = employees.filter((e) => e.status !== "pending");
 
   const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
   const thisYear = String(new Date().getFullYear());
+  // 신청한 순간(대기중)부터 남은 연차에서 뺀다. 거절·취소되면 계산에서 빠져 저절로 돌아온다.
   const usedDaysById = new Map<string, number>();
-  for (const r of approvedLeave) {
-    if (!r.start_date.startsWith(thisYear)) continue;
+  const pendingDaysById = new Map<string, number>();
+  for (const r of allLeave) {
+    if (r.status === "rejected" || !r.start_date.startsWith(thisYear)) continue;
     usedDaysById.set(r.employee_id, (usedDaysById.get(r.employee_id) ?? 0) + leaveAmount(r));
+    if (r.status === "pending") {
+      pendingDaysById.set(r.employee_id, (pendingDaysById.get(r.employee_id) ?? 0) + leaveAmount(r));
+    }
   }
 
   return (
@@ -113,6 +118,7 @@ export default async function AdminEmployeesPage() {
           <ul className="flex flex-col gap-2">
             {others.map((emp) => {
               const used = usedDaysById.get(emp.id) ?? 0;
+              const pendingDays = pendingDaysById.get(emp.id) ?? 0;
               const autoEntitled = computeEntitledLeaveDays(
                 emp.hire_date,
                 emp.annual_leave_days,
@@ -179,7 +185,8 @@ export default async function AdminEmployeesPage() {
                       </button>
                       <span className="w-full text-xs text-gray-400">
                         자동 {autoEntitled}일{emp.leave_adjustment_days !== 0 && ` + 보정 ${emp.leave_adjustment_days}일`} = 현재 부여{" "}
-                        {entitled}일 · {thisYear}년 {used}일 사용 ({remaining}일 남음)
+                        {entitled}일 · {thisYear}년 {used}일 사용
+                        {pendingDays > 0 && ` (승인 대기 ${pendingDays}일 포함)`} ({remaining}일 남음)
                       </span>
                     </form>
                   )}

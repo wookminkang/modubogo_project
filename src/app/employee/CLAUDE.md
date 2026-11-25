@@ -71,7 +71,8 @@
 
 - `employees.annual_leave_days`(numeric, 기본 15) — 직원별 연간 부여일수. `sql/employees_leave_quota.sql`(이미 만든 `employees` 테이블에 추가된 마이그레이션, **별도 실행 필요**).
 - 관리자가 `/admin/employees` "전체 직원" 목록에서 승인된 직원마다 인라인으로 수정(`updateLeaveQuotaAction`, `@/lib/employee-actions`).
-- **사용일수 계산은 DB 컬럼이 아니라 매번 즉석 계산**이다 — 저장된 "사용 누계" 컬럼이 없고, `status='approved'`인 `leave_requests` 중 **시작일 기준 올해**인 것만 모아 `leaveAmount(r)`(`@/lib/utils` — 반차는 0.5, 종일은 `daysInclusive`)을 합산한다. 잔여 = 부여일수 − 합산(소수점 가능). 이 로직은 `employee/leave/page.tsx`(본인용)와 `admin/employees/page.tsx`(관리자용)에 각각 있다 — 계산 방식을 바꾸려면 두 군데 다 고칠 것.
+- **사용일수 계산은 DB 컬럼이 아니라 매번 즉석 계산**이다 — 저장된 "사용 누계" 컬럼이 없고, **거절되지 않은(대기중+승인)** `leave_requests` 중 **시작일 기준 올해**인 것만 모아 `leaveAmount(r)`(`@/lib/utils` — 반차는 0.5, 종일은 `daysInclusive`)을 합산한다. 잔여 = 부여일수 − 합산(소수점 가능). 이 로직은 `employee/leave/page.tsx`(본인용)와 `admin/employees/page.tsx`(관리자용)에 각각 있다 — 계산 방식을 바꾸려면 두 군데 다 고칠 것.
+  - **신청하는 순간(대기중)부터 차감**한다(2026-11-25 사용자 요청). 거절되거나 직원이 취소(삭제)하면 즉석 계산에서 빠지니 따로 "복구" 처리가 없다. 두 화면 모두 대기 중인 일수를 "승인 대기 N일 포함"으로 따로 보여준다. 캘린더의 "휴가" 칩은 여전히 승인된 것만.
 - 연차 계산은 **달력일 기준**(주말/공휴일도 포함해서 셈)이다.
 - **반차 지원**: `leave_requests.unit`(`'full' | 'half_am' | 'half_pm'`, `sql/leave_requests_unit.sql` — 별도 마이그레이션 필요)로 구분한다. 반차는 **항상 하루짜리**(`start_date === end_date`)이고 **0.5일 고정 차감** — `leaveAmount(request)`(`@/lib/utils`)가 `unit !== 'full'`이면 무조건 0.5, 아니면 `daysInclusive`를 반환한다. 연차 사용량 합산·목록 표시 전부 `daysInclusive` 대신 이 함수를 쓴다.
   - `submitLeaveRequest`는 **반차일 때 클라이언트가 보낸 종료일을 무시하고 서버에서 `endDate = startDate`로 강제**한다 — 클라이언트 조작으로 반차인데 여러 날짜 범위가 들어가는 것을 막기 위함.
